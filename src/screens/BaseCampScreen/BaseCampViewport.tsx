@@ -1,6 +1,8 @@
 import {
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -22,6 +24,20 @@ type CameraState = {
   offsetY: number;
 };
 
+export type BaseCampCameraSnapshot = CameraState & {
+  focusPointId?: string;
+};
+
+export type BaseCampViewportController = {
+  focus: (
+    focusPointId: string,
+    durationMs: number,
+    signal?: AbortSignal,
+  ) => Promise<void>;
+  restore: (durationMs: number, signal?: AbortSignal) => Promise<void>;
+  getCameraSnapshot: () => BaseCampCameraSnapshot;
+};
+
 type ViewportSize = {
   width: number;
   height: number;
@@ -36,6 +52,8 @@ type BaseCampViewportProps = {
   offsetY?: number;
   selectedRegionId: string | null;
   onSelectRegion: (region: BaseCampInteractionRegion) => void;
+  highlightTargetId?: string | null;
+  onReady?: () => void;
 };
 
 const MIN_ZOOM = 1;
@@ -60,7 +78,7 @@ function cameraFromFocusPoint(
   };
 }
 
-export function BaseCampViewport({
+export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampViewportProps>(function BaseCampViewport({
   map,
   mode,
   focusPointId = "campCenter",
@@ -69,14 +87,30 @@ export function BaseCampViewport({
   offsetY,
   selectedRegionId,
   onSelectRegion,
-}: BaseCampViewportProps) {
+  highlightTargetId = null,
+  onReady,
+}, forwardedRef) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const defaultFocus = map.focusPoints.campCenter;
   const requestedFocus = map.focusPoints[focusPointId] ?? defaultFocus;
   const [viewport, setViewport] = useState<ViewportSize>({ width: 0, height: 0 });
   const [playCamera, setPlayCamera] = useState<CameraState>(() =>
     cameraFromFocusPoint(defaultFocus),
   );
+  const [storyCamera, setStoryCamera] = useState<CameraState>(() =>
+    cameraFromFocusPoint(requestedFocus, zoom, offsetX, offsetY),
+  );
+  const storyCameraRef = useRef(storyCamera);
+  const restoreCameraRef = useRef<BaseCampCameraSnapshot>({
+    ...cameraFromFocusPoint(defaultFocus),
+    focusPointId: "campCenter",
+  });
+
+  const setStoryCameraState = useCallback((camera: CameraState) => {
+    storyCameraRef.current = camera;
+    setStoryCamera(camera);
+  }, []);
 
   useLayoutEffect(() => {
     const element = viewportRef.current;
@@ -96,15 +130,122 @@ export function BaseCampViewport({
   }, []);
 
   useEffect(() => {
+    if (viewport.width > 0 && viewport.height > 0) {
+      onReady?.();
+    }
+  }, [onReady, viewport.height, viewport.width]);
+
+  useEffect(() => {
     if (mode === "play") {
       setPlayCamera(cameraFromFocusPoint(requestedFocus, zoom, offsetX, offsetY));
     }
   }, [focusPointId, mode, offsetX, offsetY, requestedFocus, zoom]);
 
-  const camera =
-    mode === "story"
-      ? cameraFromFocusPoint(requestedFocus, zoom, offsetX, offsetY)
-      : playCamera;
+  useEffect(() => {
+    if (mode !== "story") {
+      restoreCameraRef.current = {
+        ...playCamera,
+        focusPointId,
+      };
+    }
+  }, [focusPointId, mode, playCamera]);
+
+  const animateStoryCamera = useCallback(
+    (
+      target: CameraState,
+      durationMs: number,
+      signal?: AbortSignal,
+    ) =>
+      new Promise<void>((resolve) => {
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
+
+        const start = storyCameraRef.current;
+        if (durationMs <= 0 || signal?.aborted) {
+          setStoryCameraState(target);
+          resolve();
+          return;
+        }
+
+        const startedAt = performance.now();
+        const finish = () => {
+          if (animationFrameRef.current !== null) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+          }
+          resolve();
+        };
+        const abort = () => finish();
+        signal?.addEventListener("abort", abort, { once: true });
+
+        const tick = (now: number) => {
+          if (signal?.aborted) {
+            finish();
+            return;
+          }
+
+          const progress = Math.min((now - startedAt) / durationMs, 1);
+          const eased =
+            progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+          setStoryCameraState({
+            focusX: start.focusX + (target.focusX - start.focusX) * eased,
+            focusY: start.focusY + (target.focusY - start.focusY) * eased,
+            zoom: start.zoom + (target.zoom - start.zoom) * eased,
+            offsetX: start.offsetX + (target.offsetX - start.offsetX) * eased,
+            offsetY: start.offsetY + (target.offsetY - start.offsetY) * eased,
+          });
+
+          if (progress >= 1) {
+            signal?.removeEventListener("abort", abort);
+            animationFrameRef.current = null;
+            resolve();
+            return;
+          }
+          animationFrameRef.current = requestAnimationFrame(tick);
+        };
+
+        animationFrameRef.current = requestAnimationFrame(tick);
+      }),
+    [setStoryCameraState],
+  );
+
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      focus: async (id, durationMs, signal) => {
+        const point = map.focusPoints[id];
+        if (!point) {
+          if (import.meta.env.DEV) {
+            console.warn(`[BaseCamp] Unknown focusPointId: ${id}`);
+          }
+          return;
+        }
+        await animateStoryCamera(cameraFromFocusPoint(point), durationMs, signal);
+      },
+      restore: async (durationMs, signal) => {
+        await animateStoryCamera(restoreCameraRef.current, durationMs, signal);
+      },
+      getCameraSnapshot: () => ({
+        ...storyCameraRef.current,
+      }),
+    }),
+    [animateStoryCamera, map.focusPoints],
+  );
+
+  useEffect(
+    () => () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    },
+    [],
+  );
+
+  const camera = mode === "story" ? storyCamera : playCamera;
 
   const baseScale =
     viewport.width > 0 && viewport.height > 0
@@ -163,6 +304,7 @@ export function BaseCampViewport({
           mode={mode}
           selectedRegionId={selectedRegionId}
           onSelectRegion={onSelectRegion}
+          highlightTargetId={highlightTargetId}
         />
       </div>
       {mode === "play" && (
@@ -179,4 +321,4 @@ export function BaseCampViewport({
       )}
     </div>
   );
-}
+});

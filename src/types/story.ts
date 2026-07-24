@@ -78,6 +78,36 @@ export type StoryStep =
     }
   | {
       id: string;
+      type: "showBaseCamp";
+      mapId: string;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "focusBaseCamp";
+      focusPointId: string;
+      durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "highlightBaseCampTarget";
+      targetId: string;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "clearBaseCampHighlight";
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "restoreBaseCampCamera";
+      durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
       type: "changeScreen";
       screen: ScreenId;
       advanceMode: "auto";
@@ -126,6 +156,7 @@ export type StoryRenderState = {
   backgroundRevision: number;
   portraits: Record<string, VisibleStoryPortrait>;
   dialogue: StoryDialogueState;
+  baseCampMapId: string | null;
   fade: {
     visible: boolean;
     color: string;

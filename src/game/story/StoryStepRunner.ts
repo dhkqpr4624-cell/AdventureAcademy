@@ -9,6 +9,18 @@ export const DEFAULT_STORY_STEP_DURATION_MS = 180;
 export type StoryStepContext = {
   updateState: (updater: (state: StoryRenderState) => StoryRenderState) => void;
   changeScreen: (screen: Extract<StoryStep, { type: "changeScreen" }>["screen"]) => void;
+  showBaseCamp: (mapId: string, signal: AbortSignal) => Promise<void>;
+  focusBaseCamp: (
+    focusPointId: string,
+    durationMs: number,
+    signal: AbortSignal,
+  ) => Promise<void>;
+  highlightBaseCampTarget: (targetId: string) => Promise<void>;
+  clearBaseCampHighlight: () => Promise<void>;
+  restoreBaseCampCamera: (
+    durationMs: number,
+    signal: AbortSignal,
+  ) => Promise<void>;
 };
 
 function waitFor(durationMs: number, signal: AbortSignal) {
@@ -136,6 +148,25 @@ export class StoryStepRunner {
           },
         }));
         break;
+      case "showBaseCamp":
+        await context.showBaseCamp(step.mapId, signal);
+        return;
+      case "focusBaseCamp":
+        await context.focusBaseCamp(
+          step.focusPointId,
+          step.durationMs,
+          signal,
+        );
+        return;
+      case "highlightBaseCampTarget":
+        await context.highlightBaseCampTarget(step.targetId);
+        return;
+      case "clearBaseCampHighlight":
+        await context.clearBaseCampHighlight();
+        return;
+      case "restoreBaseCampCamera":
+        await context.restoreBaseCampCamera(step.durationMs, signal);
+        return;
       case "changeScreen":
         context.changeScreen(step.screen);
         return;

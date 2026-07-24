@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ScreenId } from "../../app/routes";
+import { getBaseCampMap } from "../../data/baseCampMaps";
 import type {
   StoryRenderState,
   StorySequence,
   StoryVisualAsset,
 } from "../../types/story";
 import { StoryStepRunner } from "./StoryStepRunner";
+import {
+  BaseCampStoryAdapter,
+  type BaseCampStoryController,
+} from "./BaseCampStoryAdapter";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
@@ -18,6 +23,7 @@ const INITIAL_RENDER_STATE: StoryRenderState = {
   backgroundRevision: 0,
   portraits: {},
   dialogue: null,
+  baseCampMapId: null,
   fade: { visible: false, color: "#000000", durationMs: 0 },
 };
 
@@ -82,6 +88,32 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
   const clickLockRef = useRef(false);
   const hasNavigatedRef = useRef(false);
   const runnerRef = useRef(new StoryStepRunner());
+  const baseCampControllerRef = useRef<BaseCampStoryController>(null);
+  const baseCampReadyRef = useRef(false);
+
+  const waitForBaseCampController = (signal: AbortSignal) =>
+    new Promise<BaseCampStoryController | null>((resolve) => {
+      const startedAt = performance.now();
+      const check = () => {
+        if (signal.aborted) {
+          resolve(null);
+          return;
+        }
+        if (baseCampReadyRef.current && baseCampControllerRef.current) {
+          resolve(baseCampControllerRef.current);
+          return;
+        }
+        if (performance.now() - startedAt >= 3000) {
+          if (import.meta.env.DEV) {
+            console.warn("[StoryPlayer] BaseCamp camera controller was not ready.");
+          }
+          resolve(null);
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      check();
+    });
 
   useEffect(() => {
     const imageUrls = collectImageUrls(sequence);
@@ -136,6 +168,34 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
               hasNavigatedRef.current = true;
               onNavigate(screen);
             }
+          },
+          showBaseCamp: async (mapId, signal) => {
+            if (!getBaseCampMap(mapId)) {
+              if (import.meta.env.DEV) {
+                console.warn(`[StoryPlayer] Unknown BaseCamp mapId: ${mapId}`);
+              }
+              return;
+            }
+            baseCampReadyRef.current = false;
+            setRenderState((state) => ({
+              ...state,
+              baseCampMapId: mapId,
+            }));
+            await waitForBaseCampController(signal);
+          },
+          focusBaseCamp: async (focusPointId, durationMs, signal) => {
+            const controller = await waitForBaseCampController(signal);
+            await controller?.focus(focusPointId, durationMs, signal);
+          },
+          highlightBaseCampTarget: async (targetId) => {
+            await baseCampControllerRef.current?.highlight(targetId);
+          },
+          clearBaseCampHighlight: async () => {
+            await baseCampControllerRef.current?.clearHighlight();
+          },
+          restoreBaseCampCamera: async (durationMs, signal) => {
+            const controller = await waitForBaseCampController(signal);
+            await controller?.restore(durationMs, signal);
           },
         },
         abortController.signal,
@@ -205,6 +265,16 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
           />
         )}
       </div>
+
+      {renderState.baseCampMapId && (
+        <BaseCampStoryAdapter
+          ref={baseCampControllerRef}
+          mapId={renderState.baseCampMapId}
+          onReady={() => {
+            baseCampReadyRef.current = true;
+          }}
+        />
+      )}
 
       <div className="story-background-shade" aria-hidden="true" />
 

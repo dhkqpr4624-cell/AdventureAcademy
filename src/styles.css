@@ -157,6 +157,18 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.base-camp-target-highlight {
+  position: absolute;
+  border: 6px solid rgba(255, 235, 116, 0.96);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 5px rgba(83, 52, 12, 0.5),
+    0 0 28px 12px rgba(255, 220, 79, 0.68),
+    inset 0 0 24px rgba(255, 239, 135, 0.28);
+  animation: base-camp-highlight-pulse 900ms ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
 .base-camp-layer-debug {
   position: absolute;
   top: 72px;
@@ -452,6 +464,18 @@ button:focus-visible {
   background: #101820;
 }
 
+.story-base-camp-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.story-base-camp-layer .base-camp-viewport {
+  pointer-events: none;
+}
+
 .story-background,
 .story-background-shade,
 .story-portrait-layer,
@@ -472,7 +496,7 @@ button:focus-visible {
 }
 
 .story-background-shade {
-  z-index: -2;
+  z-index: 0;
   pointer-events: none;
   background:
     linear-gradient(to bottom, rgba(6, 12, 14, 0.12), transparent 48%),
@@ -665,6 +689,17 @@ button:focus-visible {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes base-camp-highlight-pulse {
+  from {
+    opacity: 0.7;
+    filter: brightness(0.95);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1.25);
   }
 }
 

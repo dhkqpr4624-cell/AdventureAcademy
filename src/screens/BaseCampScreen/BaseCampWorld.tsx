@@ -10,6 +10,7 @@ type BaseCampWorldProps = {
   mode: BaseCampMode;
   selectedRegionId: string | null;
   onSelectRegion: (region: BaseCampInteractionRegion) => void;
+  highlightTargetId?: string | null;
 };
 
 type LayerName = keyof BaseCampMapDefinition["layers"];
@@ -32,6 +33,7 @@ export function BaseCampWorld({
   mode,
   selectedRegionId,
   onSelectRegion,
+  highlightTargetId = null,
 }: BaseCampWorldProps) {
   const layerStyle = {
     width: map.worldWidth,
@@ -88,6 +90,9 @@ export function BaseCampWorld({
       onError={(event) => handleLayerError(layerName, event.currentTarget)}
     />
   );
+  const highlightedRegion = highlightTargetId
+    ? map.interactionRegions.find((region) => region.id === highlightTargetId)
+    : undefined;
 
   return (
     <div
@@ -146,6 +151,17 @@ export function BaseCampWorld({
         ))}
       </div>
       <div className="base-camp-layer highlight-layer" aria-hidden="true">
+        {highlightedRegion && (
+          <span
+            className="base-camp-target-highlight"
+            style={{
+              left: highlightedRegion.x,
+              top: highlightedRegion.y,
+              width: highlightedRegion.width,
+              height: highlightedRegion.height,
+            }}
+          />
+        )}
         {selectedRegionId && (
           <span className="base-camp-highlight-label">
             선택: {selectedRegionId}
