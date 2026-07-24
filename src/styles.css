@@ -73,9 +73,48 @@ button:focus-visible {
 }
 
 .dungeon-screen {
-  background:
-    linear-gradient(rgba(10, 11, 15, 0.45), rgba(10, 11, 15, 0.82)),
-    repeating-linear-gradient(90deg, #4a4d55 0 4rem, #3e4149 4rem 8rem);
+  position: relative;
+  display: block;
+  padding: 0;
+  background: #090b10;
+}
+
+.dungeon-scene {
+  width: 100%;
+  height: 100vh;
+}
+
+.dungeon-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dungeon-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1rem, 3vw, 2rem);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(4, 5, 8, 0.68),
+    transparent 25%,
+    transparent 70%,
+    rgba(4, 5, 8, 0.64)
+  );
+}
+
+.dungeon-overlay h1 {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  text-shadow: 0 2px 10px #000;
+}
+
+.dungeon-navigation {
+  pointer-events: auto;
 }
 
 .screen-panel {
