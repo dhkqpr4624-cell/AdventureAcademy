@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { ScreenId } from "../../app/routes";
+import {
+  BASIC_SWORD_DEFINITION,
+  SwordViewModel,
+} from "../../three/weapon/SwordViewModel";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -22,6 +26,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 100);
     camera.position.set(0, 0.2, 3.8);
     camera.lookAt(0, -0.15, -4);
+    scene.add(camera);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -82,16 +87,21 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
 
     scene.add(room);
 
+    const swordViewModel = new SwordViewModel(camera);
+
     const updateViewport = () => {
       const width = Math.max(container.clientWidth, 1);
       const height = Math.max(container.clientHeight, 1);
+      const aspect = width / height;
 
-      camera.aspect = width / height;
+      camera.aspect = aspect;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
+      swordViewModel.updateAspect(aspect);
     };
 
     updateViewport();
+    swordViewModel.setDefinition(BASIC_SWORD_DEFINITION, camera.aspect);
     window.addEventListener("resize", updateViewport);
 
     let animationFrameId = 0;
@@ -105,6 +115,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateViewport);
 
+      swordViewModel.dispose();
       scene.remove(room);
       geometries.forEach((geometry) => geometry.dispose());
       materials.forEach((material) => material.dispose());
