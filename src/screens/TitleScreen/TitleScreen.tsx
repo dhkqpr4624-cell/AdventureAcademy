@@ -24,6 +24,9 @@ export function TitleScreen({ onNavigate }: TitleScreenProps) {
           <button type="button" onClick={() => onNavigate("dungeon")}>
             던전 미리 보기
           </button>
+          <button type="button" onClick={() => onNavigate("question")}>
+            퀴즈 테스트
+          </button>
         </div>
         <p className="placeholder-note">현재는 프로젝트 기반 확인용 임시 화면입니다.</p>
       </section>

@@ -3,10 +3,13 @@ import { BaseCampScreen } from "../screens/BaseCampScreen/BaseCampScreen";
 import { DungeonScreen } from "../screens/DungeonScreen/DungeonScreen";
 import { StoryScreen } from "../screens/StoryScreen/StoryScreen";
 import { TitleScreen } from "../screens/TitleScreen/TitleScreen";
+import { QuestionScreen } from "../screens/QuestionScreen/QuestionScreen";
+import type { QuestionResult } from "../types/question";
 import type { ScreenId } from "./routes";
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("title");
+  const [, setQuestionResults] = useState<QuestionResult[]>([]);
 
   switch (currentScreen) {
     case "story":
@@ -15,6 +18,15 @@ export function App() {
       return <BaseCampScreen onNavigate={setCurrentScreen} />;
     case "dungeon":
       return <DungeonScreen onNavigate={setCurrentScreen} />;
+    case "question":
+      return (
+        <QuestionScreen
+          onNavigate={setCurrentScreen}
+          onResult={(result) => {
+            setQuestionResults((current) => [...current, result]);
+          }}
+        />
+      );
     case "title":
     default:
       return <TitleScreen onNavigate={setCurrentScreen} />;

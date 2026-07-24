@@ -3,6 +3,7 @@ export const SCREEN_IDS = [
   "story",
   "baseCamp",
   "dungeon",
+  "question",
 ] as const;
 
 export type ScreenId = (typeof SCREEN_IDS)[number];
