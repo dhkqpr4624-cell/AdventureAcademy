@@ -579,6 +579,15 @@ button:focus-visible {
     0 0 16px rgba(202, 217, 236, 0.7);
 }
 
+.combat-floating-text.is-critical {
+  color: #ffe27a;
+  font-size: clamp(1.7rem, 5vw, 3.5rem);
+  text-shadow:
+    0 3px 0 #6b3600,
+    0 0 12px rgb(255 197 61 / 75%);
+  animation: combat-critical-pop 480ms cubic-bezier(.2, .9, .25, 1.25) both;
+}
+
 .combat-floating-text.is--7 {
   top: 28%;
   color: #ff8a80;
@@ -599,6 +608,47 @@ button:focus-visible {
 
 .combat-damage-flash.is-active {
   opacity: 1;
+}
+
+.combat-critical-accent {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgb(255 213 91 / 18%), transparent 28%),
+    linear-gradient(115deg, transparent 42%, rgb(255 226 128 / 16%) 49%, transparent 56%);
+}
+
+.combat-critical-accent.is-active {
+  animation: combat-critical-accent 430ms ease-out both;
+}
+
+.dungeon-screen.is-critical-impact .dungeon-scene {
+  animation: combat-critical-shake 260ms ease-out both;
+}
+
+.monster-stun-indicator {
+  position: absolute;
+  z-index: 21;
+  top: 18%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: .15rem;
+  color: #ffe27a;
+  text-shadow: 0 2px 0 #603600, 0 0 7px rgb(255 211 85 / 65%);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: monster-stun-bob 700ms ease-in-out infinite alternate;
+}
+
+.monster-stun-indicator strong {
+  padding: .12rem .45rem;
+  border: 2px solid #ffe27a;
+  background: rgb(41 24 7 / 86%);
+  font-size: .75rem;
 }
 
 .combat-dialogue-panel {
@@ -877,6 +927,41 @@ button:focus-visible {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes combat-critical-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.55) rotate(-4deg); }
+  55% { opacity: 1; transform: translate(-50%, -50%) scale(1.16) rotate(2deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+
+@keyframes combat-critical-accent {
+  0% { opacity: 0; transform: translateX(0); }
+  24% { opacity: 1; transform: translateX(-3px); }
+  48% { opacity: .72; transform: translateX(3px); }
+  100% { opacity: 0; transform: translateX(0); }
+}
+
+@keyframes combat-critical-shake {
+  0%, 100% { transform: translate(0); }
+  28% { transform: translate(-4px, 2px); }
+  52% { transform: translate(4px, -2px); }
+  76% { transform: translate(-2px, 1px); }
+}
+
+@keyframes monster-stun-bob {
+  from { transform: translate(-50%, -2px) rotate(-2deg); }
+  to { transform: translate(-50%, 4px) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-floating-text.is-critical,
+  .combat-critical-accent.is-active,
+  .dungeon-screen.is-critical-impact .dungeon-scene,
+  .monster-stun-indicator {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
   }
 }
 

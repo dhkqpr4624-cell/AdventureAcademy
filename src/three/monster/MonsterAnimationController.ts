@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 type MonsterAnimation =
   | "hit"
+  | "criticalHit"
   | "miss"
   | "attack"
   | "stagger"
@@ -19,6 +20,7 @@ type ActiveAnimation = {
 
 const DURATIONS: Record<MonsterAnimation, number> = {
   hit: 0.34,
+  criticalHit: 0.48,
   miss: 0.34,
   attack: 0.62,
   stagger: 0.42,
@@ -111,6 +113,12 @@ export class MonsterAnimationController {
       case "hit":
         this.mesh.position.x += Math.sin(t * Math.PI * 8) * 0.16 * (1 - t);
         this.mesh.material.color.setRGB(1, 1, 1 - pulse * 0.65);
+        break;
+      case "criticalHit":
+        this.mesh.position.x += Math.sin(t * Math.PI * 10) * 0.25 * (1 - t);
+        this.mesh.position.y += pulse * 0.07;
+        this.mesh.rotation.z = Math.sin(t * Math.PI * 4) * 0.1 * (1 - t);
+        this.mesh.material.color.setRGB(1, 1 - pulse * 0.12, 1 - pulse * 0.58);
         break;
       case "miss":
         this.mesh.position.x += pulse * 0.28;

@@ -7,6 +7,14 @@ import {
 } from "../../components/combat/CombatDialoguePanel";
 import { TEST_QUESTIONS } from "../../data/testQuestions";
 import { runNormalCombatChecks } from "../../game/combat/normalCombatChecks";
+import { runCriticalChecks } from "../../game/combat/criticalChecks";
+import {
+  DEFAULT_CRITICAL_CHANCE,
+  applyCriticalResult,
+  consumeEnemyTurnSkip,
+  resolveCritical,
+  type CriticalCombatState,
+} from "../../game/combat/criticalResolver";
 import {
   resolveNormalCombat,
   type NormalCombatResolution,
@@ -35,6 +43,8 @@ type NormalCombatPhase =
   | "awaitPlayerAttack"
   | "playerAttack"
   | "awaitAttackResult"
+  | "awaitCriticalResult"
+  | "awaitStunSkip"
   | "awaitEnemyTurn"
   | "enemyTurn"
   | "awaitDamageResult"
@@ -59,6 +69,11 @@ const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_COMMAND_POSITION = new THREE.Vector3(0, 0.12, -4.7);
 const MONSTER_QUESTION_POSITION = new THREE.Vector3(0, 0.62, -4.7);
 const MONSTER_POSITION_RESPONSE = 13;
+const INITIAL_CRITICAL_STATE: CriticalCombatState = {
+  hasCriticalOccurred: false,
+  enemyStunned: false,
+  pendingSkipEnemyTurn: false,
+};
 
 function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
   switch (phase) {
@@ -87,11 +102,18 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const answersRef = useRef<boolean[]>([]);
   const questionIndexRef = useRef(0);
   const monsterPositionTargetRef = useRef(MONSTER_COMMAND_POSITION);
+  const criticalStateRef = useRef<CriticalCombatState>(INITIAL_CRITICAL_STATE);
+  const forceCriticalNextAttackRef = useRef(false);
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(MAX_HP);
-  const [enemyAttackCount, setEnemyAttackCount] = useState(0);
+  const [actualEnemyAttackCount, setActualEnemyAttackCount] = useState(0);
+  const [skippedEnemyAttackCount, setSkippedEnemyAttackCount] = useState(0);
+  const [hasCriticalOccurred, setHasCriticalOccurred] = useState(false);
+  const [enemyStunned, setEnemyStunned] = useState(false);
+  const [criticalEffect, setCriticalEffect] = useState(false);
+  const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
   const [combatMessage, setCombatMessage] = useState(
     "마늘킹이 나타났다!",
   );
@@ -104,6 +126,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     mountedRef.current = true;
     if (import.meta.env.DEV) {
       runNormalCombatChecks();
+      runCriticalChecks();
     }
     return () => {
       mountedRef.current = false;
@@ -304,7 +327,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         return;
       }
       setPlayerHp((current) => Math.max(0, current - ENEMY_ATTACK));
-      setEnemyAttackCount((current) => current + 1);
+      setActualEnemyAttackCount((current) => current + 1);
       setFloatingText(`-${ENEMY_ATTACK}`);
       setDamageFlash(true);
       window.setTimeout(() => {
@@ -326,6 +349,13 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       return;
     }
     resultFinalizedRef.current = true;
+    criticalStateRef.current = {
+      ...criticalStateRef.current,
+      enemyStunned: false,
+      pendingSkipEnemyTurn: false,
+    };
+    setEnemyStunned(false);
+    setCriticalEffect(false);
     setResolution(finalResolution);
     setPhase("result");
     processingRef.current = false;
@@ -359,14 +389,38 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const playPlayerAttack = async (isCorrect: boolean) => {
     setPhase("playerAttack");
     setCombatMessage(`${DEFAULT_PLAYER_NAME}가 검을 휘두른다!`);
+    const randomValue =
+      isCorrect && forceCriticalNextAttackRef.current ? 0 : Math.random();
+    const criticalResult = resolveCritical(
+      {
+        isCorrect,
+        hasCriticalOccurred: criticalStateRef.current.hasCriticalOccurred,
+        chance: DEFAULT_CRITICAL_CHANCE,
+      },
+      randomValue,
+    );
+    if (isCorrect && forceCriticalNextAttackRef.current) {
+      forceCriticalNextAttackRef.current = false;
+      setForceCriticalNextAttack(false);
+    }
+    criticalStateRef.current = applyCriticalResult(
+      criticalStateRef.current,
+      criticalResult,
+      questionIndexRef.current === 0,
+    );
+    setHasCriticalOccurred(criticalStateRef.current.hasCriticalOccurred);
+    setEnemyStunned(criticalStateRef.current.enemyStunned);
+    setCriticalEffect(criticalResult.isCritical);
     await playSword(isCorrect ? "hit" : "miss");
     if (!mountedRef.current) {
       return;
     }
 
     if (isCorrect) {
-      setFloatingText("HIT");
-      await visualsRef.current?.monster.play("hit");
+      setFloatingText(criticalResult.isCritical ? "CRITICAL" : "HIT");
+      await visualsRef.current?.monster.play(
+        criticalResult.isCritical ? "criticalHit" : "hit",
+      );
     } else {
       setFloatingText("MISS");
       await visualsRef.current?.monster.play("miss");
@@ -374,12 +428,55 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     if (!mountedRef.current) {
       return;
     }
-    setFloatingText(null);
+    if (!criticalResult.isCritical) {
+      setFloatingText(null);
+    }
 
     const nextAnswers = [...answersRef.current, isCorrect];
     answersRef.current = nextAnswers;
-    setPhase("awaitAttackResult");
-    setCombatMessage(isCorrect ? "공격이 적중했다!" : "공격이 빗나갔다!");
+    setPhase(
+      criticalResult.isCritical ? "awaitCriticalResult" : "awaitAttackResult",
+    );
+    setCombatMessage(
+      criticalResult.isCritical
+        ? "치명타!"
+        : isCorrect
+          ? "공격이 적중했다!"
+          : "공격이 빗나갔다!",
+    );
+  };
+
+  const continueAfterAttackResult = async () => {
+    setFloatingText(null);
+    setCriticalEffect(false);
+    if (questionIndexRef.current === 0) {
+      if (criticalStateRef.current.pendingSkipEnemyTurn) {
+        setPhase("awaitStunSkip");
+        setCombatMessage("마늘킹은 기절해서 움직일 수 없다!");
+      } else {
+        setPhase("awaitEnemyTurn");
+        setCombatMessage("마늘킹의 턴!");
+      }
+      return;
+    }
+
+    criticalStateRef.current = {
+      ...criticalStateRef.current,
+      enemyStunned: false,
+      pendingSkipEnemyTurn: false,
+    };
+    setEnemyStunned(false);
+    const finalAnswers = answersRef.current as [boolean, boolean];
+    const correctCount = finalAnswers.filter(Boolean).length;
+    if (correctCount === 2) {
+      await playVictory(finalAnswers);
+    } else if (correctCount === 1) {
+      setPhase("awaitStagger");
+      setCombatMessage("마늘킹이 크게 비틀거린다.");
+    } else {
+      setPhase("awaitEnemyTurn");
+      setCombatMessage("마늘킹의 턴!");
+    }
   };
 
   const advanceCombatMessage = async () => {
@@ -396,23 +493,27 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         return;
       }
 
-      if (phase === "awaitAttackResult") {
-        if (questionIndexRef.current === 0) {
-          setPhase("awaitEnemyTurn");
-          setCombatMessage("마늘킹의 턴!");
-          return;
+      if (
+        phase === "awaitAttackResult" ||
+        phase === "awaitCriticalResult"
+      ) {
+        await continueAfterAttackResult();
+        return;
+      }
+
+      if (phase === "awaitStunSkip") {
+        const consumed = consumeEnemyTurnSkip(criticalStateRef.current);
+        criticalStateRef.current = consumed.state;
+        if (consumed.skipped) {
+          setSkippedEnemyAttackCount((current) => current + 1);
         }
-        const finalAnswers = answersRef.current as [boolean, boolean];
-        const correctCount = finalAnswers.filter(Boolean).length;
-        if (correctCount === 2) {
-          await playVictory(finalAnswers);
-        } else if (correctCount === 1) {
-          setPhase("awaitStagger");
-          setCombatMessage("마늘킹이 크게 비틀거린다.");
-        } else {
-          setPhase("awaitEnemyTurn");
-          setCombatMessage("마늘킹의 턴!");
-        }
+        setEnemyStunned(false);
+        questionIndexRef.current = 1;
+        setQuestionIndex(1);
+        pendingResultRef.current = null;
+        setPhase("playerCommand");
+        setCombatMessage("무엇을 할까?");
+        processingRef.current = false;
         return;
       }
 
@@ -492,13 +593,20 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     processingRef.current = false;
     interactionLockRef.current = false;
     resultFinalizedRef.current = false;
+    criticalStateRef.current = INITIAL_CRITICAL_STATE;
+    forceCriticalNextAttackRef.current = false;
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
       visualsRef.current.sword.root.visible = true;
     }
     setQuestionIndex(0);
     setPlayerHp(MAX_HP);
-    setEnemyAttackCount(0);
+    setActualEnemyAttackCount(0);
+    setSkippedEnemyAttackCount(0);
+    setHasCriticalOccurred(false);
+    setEnemyStunned(false);
+    setCriticalEffect(false);
+    setForceCriticalNextAttack(false);
     setResolution(null);
     setFloatingText(null);
     setDamageFlash(false);
@@ -550,13 +658,29 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   );
 
   return (
-    <main className="game-screen dungeon-screen">
+    <main
+      className={`game-screen dungeon-screen ${criticalEffect ? "is-critical-impact" : ""}`}
+    >
       <div
         ref={sceneContainerRef}
         className="dungeon-scene"
         aria-label="마늘킹과 마주친 던전 방"
       />
       <div className={`combat-damage-flash ${damageFlash ? "is-active" : ""}`} />
+      <div
+        className={`combat-critical-accent ${criticalEffect ? "is-active" : ""}`}
+        aria-hidden="true"
+      />
+      {enemyStunned && (
+        <div
+          className="monster-stun-indicator"
+          role="status"
+          aria-label="마늘킹 기절"
+        >
+          <span aria-hidden="true">★ ✦ ★</span>
+          <strong>기절</strong>
+        </div>
+      )}
       {floatingText && (
         <strong className={`combat-floating-text is-${floatingText.toLowerCase()}`}>
           {floatingText}
@@ -569,7 +693,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
             <p className="eyebrow">NORMAL COMBAT</p>
             <h1>마늘킹</h1>
             <small>
-              {phase === "enemyEscaped"
+              {enemyStunned
+                ? "기절"
+                : phase === "enemyEscaped"
                 ? "도주 중"
                 : phase === "victory" || phase === "result"
                   ? "전투 종료"
@@ -588,21 +714,43 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
           <div className="combat-message-layout">
             <p className="combat-message" role="status">{combatMessage}</p>
             {phase === "playerCommand" && (
-              <div className="combat-command-buttons">
-                <button type="button" onClick={openQuestion}>공격하기</button>
-                <button
-                  type="button"
-                  disabled
-                  title="아직 사용할 수 없습니다."
-                >
-                  아이템
-                  <small>아직 사용할 수 없습니다.</small>
-                </button>
-              </div>
+              <>
+                <div className="combat-command-buttons">
+                  <button type="button" onClick={openQuestion}>공격하기</button>
+                  <button
+                    type="button"
+                    disabled
+                    title="아직 사용할 수 없습니다."
+                  >
+                    아이템
+                    <small>아직 사용할 수 없습니다.</small>
+                  </button>
+                </div>
+                {import.meta.env.DEV && (
+                  <div className="developer-combat-controls">
+                    <button
+                      type="button"
+                      aria-pressed={forceCriticalNextAttack}
+                      onClick={() => {
+                        const next = !forceCriticalNextAttackRef.current;
+                        forceCriticalNextAttackRef.current = next;
+                        setForceCriticalNextAttack(next);
+                      }}
+                    >
+                      {forceCriticalNextAttack
+                        ? "다음 정답 크리티컬 강제: ON"
+                        : "다음 정답 크리티컬 강제"}
+                    </button>
+                    <small>개발 빌드에서만 표시됩니다.</small>
+                  </div>
+                )}
+              </>
             )}
             {[
               "awaitPlayerAttack",
               "awaitAttackResult",
+              "awaitCriticalResult",
+              "awaitStunSkip",
               "awaitEnemyTurn",
               "awaitDamageResult",
               "awaitStagger",
@@ -648,7 +796,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
             <h2 id="combat-result-title">{resultTitle}</h2>
             <dl>
               <div><dt>정답 수</dt><dd>{resolution.correctAnswerCount} / 2</dd></div>
-              <div><dt>받은 몬스터 공격 횟수</dt><dd>{enemyAttackCount}</dd></div>
+              <div><dt>받은 몬스터 공격 횟수</dt><dd>{actualEnemyAttackCount}</dd></div>
+              <div><dt>크리티컬</dt><dd>{hasCriticalOccurred ? "1회" : "없음"}</dd></div>
+              {skippedEnemyAttackCount > 0 && (
+                <div><dt>기절로 공격 무효</dt><dd>{skippedEnemyAttackCount}회</dd></div>
+              )}
             </dl>
             {resolution.outcome === "enemyEscaped" && (
               <p>몬스터가 도망쳤습니다.</p>
