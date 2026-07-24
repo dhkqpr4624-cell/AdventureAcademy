@@ -78,6 +78,38 @@ function cameraFromFocusPoint(
   };
 }
 
+function getClampedCameraCenter(
+  camera: CameraState,
+  viewport: ViewportSize,
+  map: BaseCampMapDefinition,
+) {
+  const baseScale =
+    viewport.width > 0 && viewport.height > 0
+      ? Math.max(
+          viewport.width / map.worldWidth,
+          viewport.height / map.worldHeight,
+        )
+      : 1;
+  const renderedScale = baseScale * camera.zoom;
+  const halfWidth = viewport.width / renderedScale / 2;
+  const halfHeight = viewport.height / renderedScale / 2;
+  const minimumX = halfWidth;
+  const maximumX = map.worldWidth - halfWidth;
+  const minimumY = halfHeight;
+  const maximumY = map.worldHeight - halfHeight;
+
+  return {
+    x:
+      minimumX > maximumX
+        ? map.worldWidth / 2
+        : clamp(camera.focusX + camera.offsetX, minimumX, maximumX),
+    y:
+      minimumY > maximumY
+        ? map.worldHeight / 2
+        : clamp(camera.focusY + camera.offsetY, minimumY, maximumY),
+  };
+}
+
 export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampViewportProps>(function BaseCampViewport({
   map,
   mode,
@@ -162,9 +194,25 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           animationFrameRef.current = null;
         }
 
-        const start = storyCameraRef.current;
+        const current = storyCameraRef.current;
+        const startCenter = getClampedCameraCenter(current, viewport, map);
+        const targetCenter = getClampedCameraCenter(target, viewport, map);
+        const start: CameraState = {
+          focusX: startCenter.x,
+          focusY: startCenter.y,
+          zoom: current.zoom,
+          offsetX: 0,
+          offsetY: 0,
+        };
+        const end: CameraState = {
+          focusX: targetCenter.x,
+          focusY: targetCenter.y,
+          zoom: target.zoom,
+          offsetX: 0,
+          offsetY: 0,
+        };
         if (durationMs <= 0 || signal?.aborted) {
-          setStoryCameraState(target);
+          setStoryCameraState(end);
           resolve();
           return;
         }
@@ -192,11 +240,11 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
               ? 4 * progress * progress * progress
               : 1 - Math.pow(-2 * progress + 2, 3) / 2;
           setStoryCameraState({
-            focusX: start.focusX + (target.focusX - start.focusX) * eased,
-            focusY: start.focusY + (target.focusY - start.focusY) * eased,
-            zoom: start.zoom + (target.zoom - start.zoom) * eased,
-            offsetX: start.offsetX + (target.offsetX - start.offsetX) * eased,
-            offsetY: start.offsetY + (target.offsetY - start.offsetY) * eased,
+            focusX: start.focusX + (end.focusX - start.focusX) * eased,
+            focusY: start.focusY + (end.focusY - start.focusY) * eased,
+            zoom: start.zoom + (end.zoom - start.zoom) * eased,
+            offsetX: 0,
+            offsetY: 0,
           });
 
           if (progress >= 1) {
@@ -210,7 +258,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
 
         animationFrameRef.current = requestAnimationFrame(tick);
       }),
-    [setStoryCameraState],
+    [map, setStoryCameraState, viewport],
   );
 
   useImperativeHandle(
@@ -261,26 +309,9 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
       return "translate3d(0, 0, 0) scale(1)";
     }
 
-    const visibleWorldWidth = viewport.width / renderedScale;
-    const visibleWorldHeight = viewport.height / renderedScale;
-    const halfWidth = visibleWorldWidth / 2;
-    const halfHeight = visibleWorldHeight / 2;
-    const minimumX = halfWidth;
-    const maximumX = map.worldWidth - halfWidth;
-    const minimumY = halfHeight;
-    const maximumY = map.worldHeight - halfHeight;
-    const requestedX = camera.focusX + camera.offsetX;
-    const requestedY = camera.focusY + camera.offsetY;
-    const centerX =
-      minimumX > maximumX
-        ? map.worldWidth / 2
-        : clamp(requestedX, minimumX, maximumX);
-    const centerY =
-      minimumY > maximumY
-        ? map.worldHeight / 2
-        : clamp(requestedY, minimumY, maximumY);
-    const translateX = Math.round(viewport.width / 2 - centerX * renderedScale);
-    const translateY = Math.round(viewport.height / 2 - centerY * renderedScale);
+    const center = getClampedCameraCenter(camera, viewport, map);
+    const translateX = Math.round(viewport.width / 2 - center.x * renderedScale);
+    const translateY = Math.round(viewport.height / 2 - center.y * renderedScale);
 
     return `translate3d(${translateX}px, ${translateY}px, 0) scale(${renderedScale})`;
   }, [camera, map.worldHeight, map.worldWidth, renderedScale, viewport]);
