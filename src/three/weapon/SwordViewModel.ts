@@ -23,9 +23,9 @@ export type SwordDefinition = {
 export const BASIC_SWORD_DEFINITION: SwordDefinition = {
   id: "basic-sword",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/basic-sword.png`,
-  position: [1.22, -0.72, -2.15],
-  rotation: [-0.18, -0.34, -0.12],
-  scale: 1.45,
+  position: [1.02, -1.16, -2.15],
+  rotation: [-0.18, -0.34, -1.25],
+  scale: 1.4,
   pivot: [0.82, 0.82],
   alphaTest: 0.1,
   viewportPresets: [
