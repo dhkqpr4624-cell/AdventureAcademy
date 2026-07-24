@@ -8,9 +8,7 @@ export type WeaponAnimationState =
   | "idle"
   | "windup"
   | "swing"
-  | "hit"
-  | "miss"
-  | "finish"
+  | "settle"
   | "returnToIdle";
 
 export type WeaponAttackType = "hit" | "miss" | "finish";
@@ -18,6 +16,7 @@ export type WeaponAttackType = "hit" | "miss" | "finish";
 export type WeaponAnimationCallbacks = {
   onHit?: () => void;
   onMiss?: () => void;
+  onFinish?: () => void;
   onStateChange?: (state: WeaponAnimationState) => void;
   onComplete?: () => void;
 };
@@ -25,6 +24,7 @@ export type WeaponAnimationCallbacks = {
 type AnimationPose = {
   positionOffset: THREE.Vector3;
   rotationOffset: THREE.Vector3;
+  scaleMultiplier: number;
 };
 
 type AnimationStep = {
@@ -32,38 +32,36 @@ type AnimationStep = {
   duration: number;
   target: AnimationPose;
   easing: (t: number) => number;
-  cameraShake: number;
-  callback?: "hit" | "miss";
 };
 
 const ZERO_POSE: AnimationPose = {
   positionOffset: new THREE.Vector3(),
   rotationOffset: new THREE.Vector3(),
+  scaleMultiplier: 1,
 };
 
-const NORMAL_WINDUP: AnimationPose = {
-  positionOffset: new THREE.Vector3(0.08, -0.015, 0.03),
-  rotationOffset: new THREE.Vector3(-0.08, 0.1, -0.2),
+const ATTACK_WINDUP: AnimationPose = {
+  positionOffset: new THREE.Vector3(0.06, 0.015, -0.06),
+  rotationOffset: new THREE.Vector3(-0.07, 0.12, -0.105),
+  scaleMultiplier: 0.99,
 };
 
-const NORMAL_SWING: AnimationPose = {
-  positionOffset: new THREE.Vector3(-0.34, -0.22, 0.02),
-  rotationOffset: new THREE.Vector3(0.2, -0.1, 2.35),
+const ATTACK_SWING: AnimationPose = {
+  positionOffset: new THREE.Vector3(-0.16, -0.11, 0.08),
+  rotationOffset: new THREE.Vector3(0.14, -0.16, 0.59),
+  scaleMultiplier: 1.045,
 };
 
-const MISS_FOLLOW_THROUGH: AnimationPose = {
-  positionOffset: new THREE.Vector3(-0.43, -0.3, 0.03),
-  rotationOffset: new THREE.Vector3(0.25, -0.14, 2.55),
+const ATTACK_SETTLE: AnimationPose = {
+  positionOffset: new THREE.Vector3(-0.15, -0.12, 0.07),
+  rotationOffset: new THREE.Vector3(0.13, -0.14, 0.56),
+  scaleMultiplier: 1.035,
 };
 
-const FINISH_WINDUP: AnimationPose = {
-  positionOffset: new THREE.Vector3(0.13, 0.015, 0.05),
-  rotationOffset: new THREE.Vector3(-0.13, 0.16, -0.32),
-};
-
-const FINISH_SWING: AnimationPose = {
-  positionOffset: new THREE.Vector3(-0.48, -0.31, 0.01),
-  rotationOffset: new THREE.Vector3(0.3, -0.16, 2.65),
+const RETURN_ARC: AnimationPose = {
+  positionOffset: new THREE.Vector3(0.03, -0.02, -0.04),
+  rotationOffset: new THREE.Vector3(-0.04, 0.08, 0.08),
+  scaleMultiplier: 1.01,
 };
 
 const clamp01 = (value: number) => THREE.MathUtils.clamp(value, 0, 1);
@@ -76,6 +74,7 @@ function clonePose(pose: AnimationPose): AnimationPose {
   return {
     positionOffset: pose.positionOffset.clone(),
     rotationOffset: pose.rotationOffset.clone(),
+    scaleMultiplier: pose.scaleMultiplier,
   };
 }
 
@@ -88,15 +87,13 @@ export class WeaponAnimationController {
   private stepStartPose = clonePose(ZERO_POSE);
   private currentPose = clonePose(ZERO_POSE);
   private callbacks: WeaponAnimationCallbacks = {};
-  private readonly cameraIdlePosition: THREE.Vector3;
+  private attackType: WeaponAttackType | null = null;
   private disposed = false;
 
   constructor(
     private readonly viewModel: SwordViewModel,
-    private readonly camera: THREE.PerspectiveCamera,
-  ) {
-    this.cameraIdlePosition = camera.position.clone();
-  }
+    _camera: THREE.PerspectiveCamera,
+  ) {}
 
   get isPlaying(): boolean {
     return this.state !== "idle";
@@ -112,7 +109,8 @@ export class WeaponAnimationController {
 
     this.idleTransform = this.viewModel.captureTransform();
     this.callbacks = callbacks;
-    this.steps = this.createSteps(attackType);
+    this.attackType = attackType;
+    this.steps = this.createSteps();
     this.stepIndex = 0;
     this.stepElapsed = 0;
     this.currentPose = clonePose(ZERO_POSE);
@@ -152,8 +150,12 @@ export class WeaponAnimationController {
         step.target.rotationOffset,
         easedProgress,
       );
+      this.currentPose.scaleMultiplier = THREE.MathUtils.lerp(
+        this.stepStartPose.scaleMultiplier,
+        step.target.scaleMultiplier,
+        easedProgress,
+      );
       this.applyCurrentPose();
-      this.applyCameraShake(step.cameraShake, progress);
 
       if (progress >= 1) {
         this.finishStep(step);
@@ -184,71 +186,37 @@ export class WeaponAnimationController {
     this.disposed = true;
   }
 
-  private createSteps(attackType: WeaponAttackType): AnimationStep[] {
-    if (attackType === "finish") {
-      return [
-        {
-          state: "windup",
-          duration: 0.14,
-          target: FINISH_WINDUP,
-          easing: easeInOutCubic,
-          cameraShake: 0,
-        },
-        {
-          state: "finish",
-          duration: 0.17,
-          target: FINISH_SWING,
-          easing: easeInCubic,
-          cameraShake: 0,
-        },
-        {
-          state: "hit",
-          duration: 0.08,
-          target: FINISH_SWING,
-          easing: easeOutCubic,
-          cameraShake: 0.022,
-          callback: "hit",
-        },
-        {
-          state: "returnToIdle",
-          duration: 0.26,
-          target: ZERO_POSE,
-          easing: easeInOutCubic,
-          cameraShake: 0,
-        },
-      ];
-    }
-
-    const isMiss = attackType === "miss";
+  private createSteps(): AnimationStep[] {
     return [
       {
         state: "windup",
-        duration: 0.13,
-        target: NORMAL_WINDUP,
+        duration: 0.1,
+        target: ATTACK_WINDUP,
         easing: easeInOutCubic,
-        cameraShake: 0,
       },
       {
         state: "swing",
-        duration: 0.2,
-        target: NORMAL_SWING,
+        duration: 0.13,
+        target: ATTACK_SWING,
         easing: easeInCubic,
-        cameraShake: 0,
       },
       {
-        state: isMiss ? "miss" : "hit",
-        duration: isMiss ? 0.1 : 0.07,
-        target: isMiss ? MISS_FOLLOW_THROUGH : NORMAL_SWING,
+        state: "settle",
+        duration: 0.045,
+        target: ATTACK_SETTLE,
         easing: easeOutCubic,
-        cameraShake: isMiss ? 0.002 : 0.012,
-        callback: isMiss ? "miss" : "hit",
       },
       {
         state: "returnToIdle",
-        duration: 0.24,
+        duration: 0.075,
+        target: RETURN_ARC,
+        easing: easeInOutCubic,
+      },
+      {
+        state: "returnToIdle",
+        duration: 0.115,
         target: ZERO_POSE,
         easing: easeInOutCubic,
-        cameraShake: 0,
       },
     ];
   }
@@ -259,15 +227,11 @@ export class WeaponAnimationController {
       return;
     }
 
-    this.state = step.state;
     this.stepElapsed = 0;
     this.stepStartPose = clonePose(this.currentPose);
-    this.callbacks.onStateChange?.(this.state);
-
-    if (step.callback === "hit") {
-      this.callbacks.onHit?.();
-    } else if (step.callback === "miss") {
-      this.callbacks.onMiss?.();
+    if (this.state !== step.state) {
+      this.state = step.state;
+      this.callbacks.onStateChange?.(this.state);
     }
   }
 
@@ -291,37 +255,30 @@ export class WeaponAnimationController {
         idle.rotation.z + this.currentPose.rotationOffset.z,
         idle.rotation.order,
       ),
-      scale: idle.scale,
+      scale: idle.scale * this.currentPose.scaleMultiplier,
     });
-  }
-
-  private applyCameraShake(amplitude: number, progress: number): void {
-    if (amplitude <= 0) {
-      this.camera.position.copy(this.cameraIdlePosition);
-      return;
-    }
-
-    const envelope = Math.sin(progress * Math.PI);
-    this.camera.position.set(
-      this.cameraIdlePosition.x +
-        Math.sin(progress * Math.PI * 8) * amplitude * envelope,
-      this.cameraIdlePosition.y +
-        Math.cos(progress * Math.PI * 10) * amplitude * envelope,
-      this.cameraIdlePosition.z,
-    );
   }
 
   private restoreIdle(): void {
     if (this.idleTransform) {
       this.viewModel.applyTransform(this.idleTransform);
     }
-    this.camera.position.copy(this.cameraIdlePosition);
   }
 
   private complete(): void {
     this.restoreIdle();
+    const attackType = this.attackType;
+    const { onHit, onMiss, onFinish } = this.callbacks;
     const onComplete = this.callbacks.onComplete;
     this.reset();
+
+    if (attackType === "hit") {
+      onHit?.();
+    } else if (attackType === "miss") {
+      onMiss?.();
+    } else if (attackType === "finish") {
+      onFinish?.();
+    }
     onComplete?.();
   }
 
@@ -331,6 +288,7 @@ export class WeaponAnimationController {
     this.stepIndex = 0;
     this.stepElapsed = 0;
     this.idleTransform = null;
+    this.attackType = null;
     this.currentPose = clonePose(ZERO_POSE);
     this.stepStartPose = clonePose(ZERO_POSE);
     this.callbacks = {};

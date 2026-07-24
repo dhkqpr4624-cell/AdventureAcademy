@@ -18,6 +18,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const animationControllerRef = useRef<WeaponAnimationController | null>(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const [lastAttackResult, setLastAttackResult] = useState("아직 실행되지 않음");
 
   useEffect(() => {
     const container = sceneContainerRef.current;
@@ -149,11 +150,12 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
 
     const started = controller.play(attackType, {
       onHit: () => {
-        // Monster reactions and combat resolution are intentionally deferred.
+        setLastAttackResult("실행된 콜백: onHit");
       },
       onMiss: () => {
-        // MISS combat feedback is intentionally deferred.
+        setLastAttackResult("실행된 콜백: onMiss");
       },
+      onFinish: () => setLastAttackResult("실행된 콜백: onFinish"),
       onComplete: () => setIsAttacking(false),
     });
 
@@ -177,6 +179,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         <div className="dungeon-controls">
           <div className="developer-attack-controls">
             <span>개발용 검 애니메이션 테스트</span>
+            <small className="developer-attack-result">{lastAttackResult}</small>
             <div className="button-group">
               <button
                 type="button"

@@ -30,7 +30,7 @@ export const BASIC_SWORD_DEFINITION: SwordDefinition = {
   id: "basic-sword",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/basic-sword.png`,
   position: [1.6, -1.3, -2.15],
-  rotation: [-0.18, -0.34, -1.25],
+  rotation: [-0.24, -0.42, -1.25],
   scale: 2.1,
   pivot: [0.82, 0.82],
   alphaTest: 0.1,
