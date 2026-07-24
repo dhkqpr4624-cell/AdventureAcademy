@@ -1,14 +1,17 @@
 import type { BaseCampMapDefinition } from "../types/baseCamp";
 
+const baseCampAssetUrl = (fileName: string) =>
+  `${import.meta.env.BASE_URL}assets/baseCamp/${fileName}`;
+
 export const BASE_CAMP_MAP: BaseCampMapDefinition = {
   id: "academy-base-camp",
   worldWidth: 1672,
   worldHeight: 941,
   layers: {
-    background: "/assets/baseCamp/background.png",
-    ground: "/assets/baseCamp/ground.png",
-    dungeonEntrance: "/assets/baseCamp/dungeonEntrance.png",
-    foreground: "/assets/baseCamp/foreground.png",
+    background: baseCampAssetUrl("background.png"),
+    ground: baseCampAssetUrl("ground.png"),
+    dungeonEntrance: baseCampAssetUrl("dungeonEntrance.png"),
+    foreground: baseCampAssetUrl("foreground.png"),
   },
   focusPoints: {
     campCenter: {

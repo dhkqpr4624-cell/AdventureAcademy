@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   BaseCampInteractionRegion,
   BaseCampMapDefinition,
@@ -11,6 +12,21 @@ type BaseCampWorldProps = {
   onSelectRegion: (region: BaseCampInteractionRegion) => void;
 };
 
+type LayerName = keyof BaseCampMapDefinition["layers"];
+
+type LayerLoadState = {
+  status: "loading" | "loaded" | "error";
+  naturalWidth?: number;
+  naturalHeight?: number;
+};
+
+const LAYER_ORDER: LayerName[] = [
+  "background",
+  "ground",
+  "dungeonEntrance",
+  "foreground",
+];
+
 export function BaseCampWorld({
   map,
   mode,
@@ -21,6 +37,57 @@ export function BaseCampWorld({
     width: map.worldWidth,
     height: map.worldHeight,
   };
+  const [layerLoadStates, setLayerLoadStates] = useState<
+    Record<LayerName, LayerLoadState>
+  >(() =>
+    Object.fromEntries(
+      LAYER_ORDER.map((layerName) => [layerName, { status: "loading" }]),
+    ) as Record<LayerName, LayerLoadState>,
+  );
+
+  const handleLayerLoad = (
+    layerName: LayerName,
+    image: HTMLImageElement,
+  ) => {
+    const loadState: LayerLoadState = {
+      status: "loaded",
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+    };
+    setLayerLoadStates((current) => ({
+      ...current,
+      [layerName]: loadState,
+    }));
+
+    if (import.meta.env.DEV) {
+      console.info(
+        `[BaseCamp] ${layerName} loaded: ${image.currentSrc} (${image.naturalWidth}×${image.naturalHeight})`,
+      );
+    }
+  };
+
+  const handleLayerError = (layerName: LayerName, image: HTMLImageElement) => {
+    setLayerLoadStates((current) => ({
+      ...current,
+      [layerName]: { status: "error" },
+    }));
+
+    if (import.meta.env.DEV) {
+      console.error(
+        `[BaseCamp] ${layerName} failed to load: ${image.currentSrc || image.src}`,
+      );
+    }
+  };
+
+  const renderLayerImage = (layerName: LayerName) => (
+    <img
+      src={map.layers[layerName]}
+      alt=""
+      draggable={false}
+      onLoad={(event) => handleLayerLoad(layerName, event.currentTarget)}
+      onError={(event) => handleLayerError(layerName, event.currentTarget)}
+    />
+  );
 
   return (
     <div
@@ -29,17 +96,17 @@ export function BaseCampWorld({
       data-testid="BaseCampWorld"
     >
       <div className="base-camp-layer background-layer" aria-hidden="true">
-        <img src={map.layers.background} alt="" draggable={false} />
+        {renderLayerImage("background")}
       </div>
       <div className="base-camp-layer ground-layer" aria-hidden="true">
-        <img src={map.layers.ground} alt="" draggable={false} />
+        {renderLayerImage("ground")}
       </div>
       <div className="base-camp-layer dungeon-entrance-layer" aria-hidden="true">
-        <img src={map.layers.dungeonEntrance} alt="" draggable={false} />
+        {renderLayerImage("dungeonEntrance")}
       </div>
       <div className="base-camp-layer npc-layer" aria-hidden="true" />
       <div className="base-camp-layer foreground-layer" aria-hidden="true">
-        <img src={map.layers.foreground} alt="" draggable={false} />
+        {renderLayerImage("foreground")}
       </div>
       <div
         className={`base-camp-layer interaction-layer ${
@@ -85,6 +152,21 @@ export function BaseCampWorld({
           </span>
         )}
       </div>
+      {import.meta.env.DEV && (
+        <output className="base-camp-layer-debug" aria-live="polite">
+          {LAYER_ORDER.map((layerName) => {
+            const state = layerLoadStates[layerName];
+            return (
+              <span key={layerName}>
+                {layerName}: {state.status}
+                {state.naturalWidth && state.naturalHeight
+                  ? ` ${state.naturalWidth}×${state.naturalHeight}`
+                  : ""}
+              </span>
+            );
+          })}
+        </output>
+      )}
     </div>
   );
 }

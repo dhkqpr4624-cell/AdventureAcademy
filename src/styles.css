@@ -96,20 +96,32 @@ button:focus-visible {
 }
 
 .base-camp-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1672px;
+  height: 941px;
   overflow: hidden;
+  transform-origin: 0 0;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
 .base-camp-layer {
-  width: 100%;
-  height: 100%;
+  width: 1672px;
+  height: 941px;
 }
 
 .base-camp-layer img {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 1672px;
+  height: 941px;
+  max-width: none;
+  visibility: visible;
+  opacity: 1;
   user-select: none;
   pointer-events: none;
   image-rendering: pixelated;
@@ -121,27 +133,42 @@ button:focus-visible {
 }
 
 .ground-layer {
-  z-index: 1;
+  z-index: 10;
 }
 
 .dungeon-entrance-layer {
-  z-index: 2;
+  z-index: 20;
 }
 
 .npc-layer {
-  z-index: 3;
+  z-index: 30;
 }
 
 .foreground-layer {
-  z-index: 4;
+  z-index: 40;
 }
 
 .interaction-layer {
-  z-index: 5;
+  z-index: 50;
 }
 
 .highlight-layer {
-  z-index: 6;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.base-camp-layer-debug {
+  position: absolute;
+  top: 72px;
+  left: 12px;
+  z-index: 70;
+  display: grid;
+  gap: 2px;
+  padding: 0.4rem 0.5rem;
+  color: #eaf8ff;
+  background: rgba(5, 15, 24, 0.76);
+  font-size: 11px;
+  line-height: 1.2;
   pointer-events: none;
 }
 
