@@ -1,10 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import type { ScreenId } from "../../app/routes";
 import {
   BASIC_SWORD_DEFINITION,
   SwordViewModel,
 } from "../../three/weapon/SwordViewModel";
+import {
+  WeaponAnimationController,
+  type WeaponAttackType,
+} from "../../three/weapon/WeaponAnimationController";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -12,6 +16,8 @@ type DungeonScreenProps = {
 
 export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
+  const animationControllerRef = useRef<WeaponAnimationController | null>(null);
+  const [isAttacking, setIsAttacking] = useState(false);
 
   useEffect(() => {
     const container = sceneContainerRef.current;
@@ -88,8 +94,14 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     scene.add(room);
 
     const swordViewModel = new SwordViewModel(camera);
+    const animationController = new WeaponAnimationController(
+      swordViewModel,
+      camera,
+    );
+    animationControllerRef.current = animationController;
 
     const updateViewport = () => {
+      animationController.cancel();
       const width = Math.max(container.clientWidth, 1);
       const height = Math.max(container.clientHeight, 1);
       const aspect = width / height;
@@ -105,7 +117,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     window.addEventListener("resize", updateViewport);
 
     let animationFrameId = 0;
+    const clock = new THREE.Clock();
     const render = () => {
+      animationController.update(clock.getDelta());
       renderer.render(scene, camera);
       animationFrameId = window.requestAnimationFrame(render);
     };
@@ -115,6 +129,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateViewport);
 
+      animationControllerRef.current = null;
+      animationController.dispose();
       swordViewModel.dispose();
       scene.remove(room);
       geometries.forEach((geometry) => geometry.dispose());
@@ -123,6 +139,28 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       renderer.domElement.remove();
     };
   }, []);
+
+  const playAttack = (attackType: WeaponAttackType) => {
+    const controller = animationControllerRef.current;
+
+    if (!controller || isAttacking) {
+      return;
+    }
+
+    const started = controller.play(attackType, {
+      onHit: () => {
+        // Monster reactions and combat resolution are intentionally deferred.
+      },
+      onMiss: () => {
+        // MISS combat feedback is intentionally deferred.
+      },
+      onComplete: () => setIsAttacking(false),
+    });
+
+    if (started) {
+      setIsAttacking(true);
+    }
+  };
 
   return (
     <main className="game-screen dungeon-screen">
@@ -136,13 +174,41 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
           <p className="eyebrow">DUNGEON</p>
           <h1>빈 던전 방</h1>
         </div>
-        <div className="button-group dungeon-navigation">
-          <button type="button" onClick={() => onNavigate("baseCamp")}>
-            베이스캠프로
-          </button>
-          <button type="button" onClick={() => onNavigate("title")}>
-            타이틀로
-          </button>
+        <div className="dungeon-controls">
+          <div className="developer-attack-controls">
+            <span>개발용 검 애니메이션 테스트</span>
+            <div className="button-group">
+              <button
+                type="button"
+                disabled={isAttacking}
+                onClick={() => playAttack("hit")}
+              >
+                공격 성공
+              </button>
+              <button
+                type="button"
+                disabled={isAttacking}
+                onClick={() => playAttack("miss")}
+              >
+                공격 MISS
+              </button>
+              <button
+                type="button"
+                disabled={isAttacking}
+                onClick={() => playAttack("finish")}
+              >
+                마무리 공격
+              </button>
+            </div>
+          </div>
+          <div className="button-group dungeon-navigation">
+            <button type="button" onClick={() => onNavigate("baseCamp")}>
+              베이스캠프로
+            </button>
+            <button type="button" onClick={() => onNavigate("title")}>
+              타이틀로
+            </button>
+          </div>
         </div>
       </section>
     </main>

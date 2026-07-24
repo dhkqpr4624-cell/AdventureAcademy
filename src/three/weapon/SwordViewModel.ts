@@ -20,6 +20,12 @@ export type SwordDefinition = {
   viewportPresets: WeaponViewportPreset[];
 };
 
+export type WeaponTransform = {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  scale: number;
+};
+
 export const BASIC_SWORD_DEFINITION: SwordDefinition = {
   id: "basic-sword",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/basic-sword.png`,
@@ -104,6 +110,24 @@ export class SwordViewModel {
     if (this.definition) {
       this.applyResponsiveTransform(aspect);
     }
+  }
+
+  captureTransform(): WeaponTransform {
+    return {
+      position: this.root.position.clone(),
+      rotation: this.pivot.rotation.clone(),
+      scale: this.pivot.scale.x,
+    };
+  }
+
+  applyTransform(transform: WeaponTransform): void {
+    if (this.disposed) {
+      return;
+    }
+
+    this.root.position.copy(transform.position);
+    this.pivot.rotation.copy(transform.rotation);
+    this.pivot.scale.setScalar(transform.scale);
   }
 
   dispose(): void {
