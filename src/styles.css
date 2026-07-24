@@ -61,9 +61,223 @@ button:focus-visible {
 }
 
 .base-camp-screen {
-  background:
-    radial-gradient(circle at 24% 30%, rgba(215, 183, 104, 0.28), transparent 20%),
-    linear-gradient(145deg, #355143, #273d39 50%, #1c2d31);
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100svh;
+  min-height: 360px;
+  padding: 0;
+  background: #162738;
+}
+
+.base-camp-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  background: #70b9eb;
+}
+
+.base-camp-world-transform {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1672px;
+  height: 941px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.base-camp-world,
+.base-camp-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.base-camp-world {
+  overflow: hidden;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.base-camp-layer {
+  width: 100%;
+  height: 100%;
+}
+
+.base-camp-layer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.background-layer {
+  z-index: 0;
+}
+
+.ground-layer {
+  z-index: 1;
+}
+
+.dungeon-entrance-layer {
+  z-index: 2;
+}
+
+.npc-layer {
+  z-index: 3;
+}
+
+.foreground-layer {
+  z-index: 4;
+}
+
+.interaction-layer {
+  z-index: 5;
+}
+
+.highlight-layer {
+  z-index: 6;
+  pointer-events: none;
+}
+
+.base-camp-interaction-region {
+  position: absolute;
+  min-height: 0;
+  padding: 0;
+  border: 3px dashed rgba(255, 221, 91, 0.82);
+  border-radius: 0.25rem;
+  background: rgba(255, 221, 91, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(20, 23, 28, 0.38);
+}
+
+.base-camp-interaction-region:hover,
+.base-camp-interaction-region.is-selected {
+  transform: none;
+  border-color: #fff4a8;
+  background: rgba(255, 224, 86, 0.18);
+}
+
+.base-camp-interaction-region:disabled {
+  visibility: hidden;
+}
+
+.base-camp-dev-marker {
+  position: absolute;
+  display: grid;
+  width: max-content;
+  padding: 0.35rem 0.5rem;
+  border: 2px dashed #fff09a;
+  color: #fff7c8;
+  background: rgba(20, 23, 28, 0.78);
+  font-size: 0.72rem;
+  line-height: 1.1;
+  transform: translate(-50%, -50%);
+}
+
+.base-camp-dev-marker small {
+  margin-top: 0.15rem;
+  color: #ffd64f;
+  font-size: 0.66rem;
+}
+
+.base-camp-highlight-label {
+  position: absolute;
+  top: 455px;
+  left: 836px;
+  padding: 0.45rem 0.65rem;
+  border: 2px solid #fff0a3;
+  color: #fff8d6;
+  background: rgba(16, 18, 23, 0.78);
+  font-size: 0.75rem;
+  font-weight: 800;
+  transform: translateX(-50%);
+}
+
+.base-camp-hud,
+.base-camp-dev-controls,
+.base-camp-zoom-controls {
+  position: absolute;
+  z-index: 20;
+  border: 1px dashed rgba(255, 231, 147, 0.66);
+  color: #fff4cc;
+  background: rgba(10, 15, 20, 0.76);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(4px);
+}
+
+.base-camp-hud {
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  padding: 0.65rem 0.75rem;
+}
+
+.base-camp-dev-status {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.3rem;
+  font-size: 0.68rem;
+}
+
+.base-camp-dev-controls {
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  max-width: min(38rem, calc(100% - 1.5rem));
+  padding: 0.55rem;
+}
+
+.base-camp-dev-controls > span,
+.base-camp-zoom-controls > span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #ffdb62;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.base-camp-dev-controls > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.base-camp-dev-controls > div + div {
+  margin-top: 0.35rem;
+}
+
+.base-camp-dev-controls button,
+.base-camp-zoom-controls button {
+  min-height: 32px;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.3rem;
+  font-size: 0.68rem;
+}
+
+.base-camp-zoom-controls {
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.base-camp-zoom-controls > span {
+  grid-column: 1 / -1;
+}
+
+.base-camp-zoom-controls output {
+  min-width: 2.8rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .dungeon-screen {
@@ -454,6 +668,37 @@ button:focus-visible {
 }
 
 @media (max-height: 520px) and (orientation: landscape) {
+  .base-camp-hud {
+    top: 0.4rem;
+    left: 0.4rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .base-camp-dev-status {
+    gap: 0.35rem;
+    font-size: 0.58rem;
+  }
+
+  .base-camp-dev-controls {
+    right: 0.4rem;
+    bottom: 0.4rem;
+    max-width: calc(100% - 0.8rem);
+    padding: 0.35rem;
+  }
+
+  .base-camp-dev-controls button,
+  .base-camp-zoom-controls button {
+    min-height: 28px;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .base-camp-zoom-controls {
+    top: 0.4rem;
+    right: 0.4rem;
+    padding: 0.3rem 0.4rem;
+  }
+
   .story-portrait {
     bottom: 6.6rem;
     width: clamp(125px, 22vw, 210px);
