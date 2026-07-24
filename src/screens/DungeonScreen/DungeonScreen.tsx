@@ -32,11 +32,16 @@ type NormalCombatPhase =
   | "playerCommand"
   | "question"
   | "review"
+  | "awaitPlayerAttack"
   | "playerAttack"
-  | "enemyReaction"
+  | "awaitAttackResult"
+  | "awaitEnemyTurn"
   | "enemyTurn"
+  | "awaitDamageResult"
+  | "awaitStagger"
   | "finishingAttack"
   | "victory"
+  | "awaitEscape"
   | "enemyEscaped"
   | "result";
 
@@ -50,12 +55,10 @@ type CombatVisuals = {
 const NORMAL_COMBAT_QUESTIONS = [TEST_QUESTIONS[0], TEST_QUESTIONS[1]] as const;
 const MAX_HP = 50;
 const ENEMY_ATTACK = 7;
+const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_COMMAND_POSITION = new THREE.Vector3(0, 0.12, -4.7);
 const MONSTER_QUESTION_POSITION = new THREE.Vector3(0, 0.62, -4.7);
 const MONSTER_POSITION_RESPONSE = 13;
-
-const wait = (durationMs: number) =>
-  new Promise<void>((resolve) => window.setTimeout(resolve, durationMs));
 
 function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
   switch (phase) {
@@ -77,6 +80,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const visualsRef = useRef<CombatVisuals | null>(null);
   const mountedRef = useRef(true);
   const processingRef = useRef(false);
+  const interactionLockRef = useRef(false);
+  const resultFinalizedRef = useRef(false);
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const weaponResultRef = useRef<WeaponAttackType | null>(null);
   const answersRef = useRef<boolean[]>([]);
@@ -309,48 +314,56 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         }
       }, 240);
     });
-  };
-
-  const finishCombat = async (finalAnswers: readonly [boolean, boolean]) => {
-    const finalResolution = resolveNormalCombat(finalAnswers);
-
-    if (finalResolution.enemyDefeated) {
-      setPhase("victory");
-      setCombatMessage("마늘킹을 쓰러뜨렸습니다!");
-      await visualsRef.current?.monster.play("defeat");
-    } else {
-      await playEnemyTurn();
-      setPhase("enemyEscaped");
-      setCombatMessage("마늘킹이 경계하다가 도망쳤습니다.");
-      await visualsRef.current?.monster.play("escape");
-    }
-
     if (!mountedRef.current) {
       return;
     }
+    setPhase("awaitDamageResult");
+    setCombatMessage(`${ENEMY_ATTACK}의 피해를 입었다.`);
+  };
+
+  const showResult = (finalResolution: NormalCombatResolution) => {
+    if (!mountedRef.current || resultFinalizedRef.current) {
+      return;
+    }
+    resultFinalizedRef.current = true;
     setResolution(finalResolution);
     setPhase("result");
     processingRef.current = false;
+    interactionLockRef.current = false;
   };
 
-  const processAnswer = async (isCorrect: boolean) => {
-    if (processingRef.current) {
+  const playVictory = async (finalAnswers: readonly [boolean, boolean]) => {
+    const finalResolution = resolveNormalCombat(finalAnswers);
+    setPhase("victory");
+    setCombatMessage("마늘킹을 쓰러뜨렸다!");
+    await visualsRef.current?.monster.play("defeat");
+    if (!mountedRef.current) {
+      return;
+    }
+    showResult(finalResolution);
+  };
+
+  const beginAnswerSequence = () => {
+    if (processingRef.current || phase !== "review") {
       return;
     }
     processingRef.current = true;
     if (visualsRef.current) {
       visualsRef.current.sword.root.visible = true;
     }
-    setPhase("playerAttack");
-    setCombatMessage(isCorrect ? "공격이 적중했다!" : "공격이 빗나갔다!");
+    setPhase("awaitPlayerAttack");
+    setCombatMessage(`${DEFAULT_PLAYER_NAME}의 공격!`);
     setFloatingText(null);
+  };
 
+  const playPlayerAttack = async (isCorrect: boolean) => {
+    setPhase("playerAttack");
+    setCombatMessage(`${DEFAULT_PLAYER_NAME}가 검을 휘두른다!`);
     await playSword(isCorrect ? "hit" : "miss");
     if (!mountedRef.current) {
       return;
     }
 
-    setPhase("enemyReaction");
     if (isCorrect) {
       setFloatingText("HIT");
       await visualsRef.current?.monster.play("hit");
@@ -363,39 +376,87 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     }
     setFloatingText(null);
 
-    const currentQuestion = questionIndexRef.current;
     const nextAnswers = [...answersRef.current, isCorrect];
     answersRef.current = nextAnswers;
+    setPhase("awaitAttackResult");
+    setCombatMessage(isCorrect ? "공격이 적중했다!" : "공격이 빗나갔다!");
+  };
 
-    if (currentQuestion === 0) {
-      await playEnemyTurn();
-      if (!mountedRef.current) {
+  const advanceCombatMessage = async () => {
+    if (interactionLockRef.current) {
+      return;
+    }
+    interactionLockRef.current = true;
+    try {
+      if (phase === "awaitPlayerAttack") {
+        const result = pendingResultRef.current;
+        if (result) {
+          await playPlayerAttack(result.isCorrect);
+        }
         return;
       }
-      questionIndexRef.current = 1;
-      setQuestionIndex(1);
-      setPhase("playerCommand");
-      setCombatMessage("다시 행동할 차례다.");
-      processingRef.current = false;
-      return;
-    }
 
-    const finalAnswers = nextAnswers as [boolean, boolean];
-    const correctCount = finalAnswers.filter(Boolean).length;
-    if (correctCount > 0) {
-      if (!isCorrect) {
-        setPhase("enemyReaction");
-        setCombatMessage("마늘킹이 크게 비틀거린다!");
-        await visualsRef.current?.monster.play("stagger");
+      if (phase === "awaitAttackResult") {
+        if (questionIndexRef.current === 0) {
+          setPhase("awaitEnemyTurn");
+          setCombatMessage("마늘킹의 턴!");
+          return;
+        }
+        const finalAnswers = answersRef.current as [boolean, boolean];
+        const correctCount = finalAnswers.filter(Boolean).length;
+        if (correctCount === 2) {
+          await playVictory(finalAnswers);
+        } else if (correctCount === 1) {
+          setPhase("awaitStagger");
+          setCombatMessage("마늘킹이 크게 비틀거린다.");
+        } else {
+          setPhase("awaitEnemyTurn");
+          setCombatMessage("마늘킹의 턴!");
+        }
+        return;
+      }
+
+      if (phase === "awaitEnemyTurn") {
+        await playEnemyTurn();
+        return;
+      }
+
+      if (phase === "awaitDamageResult") {
+        if (questionIndexRef.current === 0) {
+          questionIndexRef.current = 1;
+          setQuestionIndex(1);
+          pendingResultRef.current = null;
+          setPhase("playerCommand");
+          setCombatMessage("무엇을 할까?");
+          processingRef.current = false;
+        } else {
+          setPhase("awaitEscape");
+          setCombatMessage("마늘킹이 경계하며 뒤로 물러난다.");
+        }
+        return;
+      }
+
+      if (phase === "awaitStagger") {
         setPhase("finishingAttack");
         setCombatMessage("마무리 공격!");
+        await visualsRef.current?.monster.play("stagger");
         await playSword("finish");
+        await playVictory(answersRef.current as [boolean, boolean]);
+        return;
       }
-      await finishCombat(finalAnswers);
-      return;
-    }
 
-    await finishCombat(finalAnswers);
+      if (phase === "awaitEscape") {
+        const finalResolution = resolveNormalCombat(
+          answersRef.current as [boolean, boolean],
+        );
+        setPhase("enemyEscaped");
+        setCombatMessage("마늘킹이 달아난다.");
+        await visualsRef.current?.monster.play("escape");
+        showResult(finalResolution);
+      }
+    } finally {
+      interactionLockRef.current = false;
+    }
   };
 
   const openQuestion = () => {
@@ -418,7 +479,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     if (!result) {
       return;
     }
-    void processAnswer(result.isCorrect);
+    beginAnswerSequence();
   };
 
   const resetCombat = () => {
@@ -429,6 +490,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     questionIndexRef.current = 0;
     pendingResultRef.current = null;
     processingRef.current = false;
+    interactionLockRef.current = false;
+    resultFinalizedRef.current = false;
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
       visualsRef.current.sword.root.visible = true;
@@ -443,22 +506,6 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setPhase("intro");
   };
 
-  const forceResult = (answers: readonly [boolean, boolean]) => {
-    if (!import.meta.env.DEV || phase !== "playerCommand") {
-      return;
-    }
-    answersRef.current = [];
-    questionIndexRef.current = 0;
-    setQuestionIndex(0);
-    void (async () => {
-      await processAnswer(answers[0]);
-      while (processingRef.current) {
-        await wait(20);
-      }
-      await processAnswer(answers[1]);
-    })();
-  };
-
   const resultTitle =
     resolution?.outcome === "perfectVictory"
       ? "완벽한 승리"
@@ -466,9 +513,14 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         ? "힘겨운 승리"
         : "전투 실패";
   const dialogueMode = dialogueModeForPhase(phase);
-  const buttonsLocked =
-    processingRef.current ||
-    !["playerCommand", "question", "review", "result"].includes(phase);
+  const animationInProgress = [
+    "playerAttack",
+    "enemyTurn",
+    "finishingAttack",
+    "victory",
+    "enemyEscaped",
+  ].includes(phase);
+  const buttonsLocked = animationInProgress || interactionLockRef.current;
   const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
   const combatStatusBar = (
     <div
@@ -548,16 +600,22 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
                 </button>
               </div>
             )}
-            {import.meta.env.DEV && phase === "playerCommand" && (
-              <details className="developer-combat-controls">
-                <summary>개발용 결과 강제 실행</summary>
-                <div className="button-group">
-                  <button type="button" onClick={() => forceResult([true, true])}>정답 → 정답</button>
-                  <button type="button" onClick={() => forceResult([true, false])}>정답 → 오답</button>
-                  <button type="button" onClick={() => forceResult([false, true])}>오답 → 정답</button>
-                  <button type="button" onClick={() => forceResult([false, false])}>오답 → 오답</button>
-                </div>
-              </details>
+            {[
+              "awaitPlayerAttack",
+              "awaitAttackResult",
+              "awaitEnemyTurn",
+              "awaitDamageResult",
+              "awaitStagger",
+              "awaitEscape",
+            ].includes(phase) && (
+              <button
+                type="button"
+                className="combat-message-next"
+                disabled={buttonsLocked}
+                onClick={() => void advanceCombatMessage()}
+              >
+                다음
+              </button>
             )}
           </div>
         )}

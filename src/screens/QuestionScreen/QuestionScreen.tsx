@@ -1,9 +1,4 @@
-import {
-  type FormEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ScreenId } from "../../app/routes";
 import { TEST_QUESTIONS } from "../../data/testQuestions";
 import { gradeQuestion } from "../../game/question/questionGrading";
@@ -76,16 +71,31 @@ function OptionButton({
       : selected
         ? "is-wrong is-selected"
         : "";
+  const statusLabel = !submitted
+    ? selected
+      ? "선택됨"
+      : "선택되지 않음"
+    : correct
+      ? selected
+        ? "정답, 내가 선택함"
+        : "정답, 내가 놓침"
+      : selected
+        ? "오답, 내가 선택함"
+        : "오답, 선택하지 않음";
+  const marker = submitted ? (correct ? "○" : selected ? "×" : "·") : "";
 
   return (
     <button
       type="button"
       className={`question-option ${selected ? "is-selected" : ""} ${statusClass}`}
       aria-pressed={selected}
+      aria-label={`${label}, ${statusLabel}`}
       disabled={submitted}
       onClick={onClick}
     >
-      <span className="question-option-marker" aria-hidden="true" />
+      <span className="question-option-marker" aria-hidden="true">
+        {marker}
+      </span>
       <span>{label}</span>
       {submitted && correct && <small>정답</small>}
       {submitted && selected && !correct && <small>선택한 오답</small>}
@@ -97,25 +107,44 @@ function OptionButton({
 function QuestionReviewFooter({
   explanation,
   isSubmitted,
+  canSubmit,
+  shortAnswerSummary,
+  onSubmit,
   onNext,
 }: {
   explanation: string;
   isSubmitted: boolean;
+  canSubmit: boolean;
+  shortAnswerSummary?: {
+    submitted: string;
+    correct: string;
+  };
+  onSubmit: () => void;
   onNext: () => void;
 }) {
   return (
     <footer className={`question-footer ${isSubmitted ? "is-review" : ""}`}>
       {isSubmitted ? (
         <div className="question-review-explanation">
+          {shortAnswerSummary && (
+            <p className="question-compact-answer-summary">
+              <span>제출한 답: <strong>{shortAnswerSummary.submitted}</strong></span>
+              <span>정답: <strong>{shortAnswerSummary.correct}</strong></span>
+            </p>
+          )}
           <strong>해설</strong>
           <p>{explanation}</p>
         </div>
       ) : (
         <span>답을 고른 뒤 제출하세요.</span>
       )}
-      {isSubmitted && (
+      {isSubmitted ? (
         <button type="button" onClick={onNext}>
           다음으로
+        </button>
+      ) : (
+        <button type="button" disabled={!canSubmit} onClick={onSubmit}>
+          답 제출
         </button>
       )}
     </footer>
@@ -169,8 +198,7 @@ export function QuestionScreen({
 
   const canSubmit = !isSubmitted && currentAnswer() !== null;
 
-  const submit = (event?: FormEvent) => {
-    event?.preventDefault();
+  const submit = () => {
     if (submitLockRef.current || isSubmitted) {
       return;
     }
@@ -264,18 +292,19 @@ export function QuestionScreen({
     <>
       <section className="question-card" aria-labelledby="question-prompt">
         <header className="question-header">
-          <div>
+          <div className="question-header-labels">
             <p className="eyebrow">{eyebrow}</p>
             <span className="question-type">{questionTypeLabel(question)}</span>
           </div>
-          <strong>
+          <h1 id="question-prompt" className="question-header-prompt">
+            {question.prompt}
+          </h1>
+          <strong className="question-progress">
             {questionIndex + 1} / {questions.length}
           </strong>
         </header>
 
         <div className="question-scroll-area">
-          <h1 id="question-prompt">{question.prompt}</h1>
-
           {question.imageUrl && (
             <div className="question-image-area">
               {!imageFailed ? (
@@ -290,7 +319,7 @@ export function QuestionScreen({
             </div>
           )}
 
-          <form onSubmit={submit}>
+          <div className="question-answer-body">
             {(question.type === "multipleChoice" ||
               question.type === "multipleSelect") && (
               <div className="question-options">
@@ -350,57 +379,28 @@ export function QuestionScreen({
               </label>
             )}
 
-            {!isSubmitted && (
-              <button
-                type="submit"
-                className="question-submit-button"
-                disabled={!canSubmit}
-              >
-                답 제출
-              </button>
-            )}
-          </form>
+          </div>
 
-          {isSubmitted && isCorrect !== null && (
-            <section
-              className={`question-feedback ${isCorrect ? "is-correct" : "is-wrong"}`}
-              aria-live="polite"
-            >
-              <h2>{isCorrect ? "정답입니다!" : "오답입니다."}</h2>
-              <dl>
-                <div>
-                  <dt>내가 제출한 답</dt>
-                  <dd>{answerText(submittedAnswer)}</dd>
-                </div>
-                <div>
-                  <dt>정답</dt>
-                  <dd>
-                    {question.type === "trueFalse"
-                      ? question.correctAnswer
-                        ? "O"
-                        : "X"
-                      : question.type === "multipleSelect"
-                        ? question.correctAnswers.join(", ")
-                        : question.type === "shortAnswer"
-                          ? question.acceptedAnswers[0]
-                          : question.correctAnswer}
-                  </dd>
-                </div>
-              </dl>
-              {question.type === "shortAnswer" &&
-                question.acceptedAnswers.length > 1 && (
-                  <p className="question-other-answers">
-                    그 밖의 인정 답안:{" "}
-                    {question.acceptedAnswers.slice(1).join(", ")}
-                  </p>
-                )}
-            </section>
+          {isSubmitted && (
+            <span className="visually-hidden" role="status" aria-live="polite">
+              {isCorrect ? "정답입니다." : "오답입니다."}
+            </span>
           )}
         </div>
 
         <QuestionReviewFooter
           explanation={question.explanation}
           isSubmitted={isSubmitted}
+          canSubmit={canSubmit}
+          shortAnswerSummary={
+            isSubmitted && question.type === "shortAnswer"
+              ? {
+                  submitted: answerText(submittedAnswer),
+                  correct: question.acceptedAnswers[0],
+                }
+              : undefined
+          }
+          onSubmit={submit}
           onNext={moveNext}
         />
       </section>
