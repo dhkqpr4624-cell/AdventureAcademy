@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import type { ScreenId } from "../../app/routes";
+import {
+  CombatDialoguePanel,
+  type CombatDialogueMode,
+} from "../../components/combat/CombatDialoguePanel";
 import { TEST_QUESTIONS } from "../../data/testQuestions";
 import { runNormalCombatChecks } from "../../game/combat/normalCombatChecks";
 import {
@@ -24,8 +28,10 @@ type DungeonScreenProps = {
 };
 
 type NormalCombatPhase =
+  | "intro"
   | "playerCommand"
   | "question"
+  | "review"
   | "playerAttack"
   | "enemyReaction"
   | "enemyTurn"
@@ -47,6 +53,21 @@ const ENEMY_ATTACK = 7;
 const wait = (durationMs: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, durationMs));
 
+function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
+  switch (phase) {
+    case "playerCommand":
+      return "command";
+    case "question":
+      return "question";
+    case "review":
+      return "review";
+    case "result":
+      return "result";
+    default:
+      return "message";
+  }
+}
+
 export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<CombatVisuals | null>(null);
@@ -57,12 +78,12 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const answersRef = useRef<boolean[]>([]);
   const questionIndexRef = useRef(0);
 
-  const [phase, setPhase] = useState<NormalCombatPhase>("playerCommand");
+  const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(MAX_HP);
   const [enemyAttackCount, setEnemyAttackCount] = useState(0);
   const [combatMessage, setCombatMessage] = useState(
-    "마늘킹이 길을 막고 있습니다.",
+    "마늘킹이 나타났다!",
   );
   const [floatingText, setFloatingText] = useState<string | null>(null);
   const [damageFlash, setDamageFlash] = useState(false);
@@ -78,6 +99,19 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "intro") {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      if (mountedRef.current && !processingRef.current) {
+        setPhase("playerCommand");
+        setCombatMessage("무엇을 할까?");
+      }
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   useEffect(() => {
     const container = sceneContainerRef.current;
@@ -286,7 +320,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       visualsRef.current.sword.root.visible = true;
     }
     setPhase("playerAttack");
-    setCombatMessage(isCorrect ? "정답! 공격합니다." : "공격했지만 빗나갔습니다.");
+    setCombatMessage(isCorrect ? "공격이 적중했다!" : "공격이 빗나갔다!");
     setFloatingText(null);
 
     await playSword(isCorrect ? "hit" : "miss");
@@ -319,7 +353,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       questionIndexRef.current = 1;
       setQuestionIndex(1);
       setPhase("playerCommand");
-      setCombatMessage("두 번째 공격 기회입니다.");
+      setCombatMessage("다시 행동할 차례다.");
       processingRef.current = false;
       return;
     }
@@ -329,7 +363,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     if (correctCount > 0) {
       if (!isCorrect) {
         setPhase("enemyReaction");
-        setCombatMessage("마늘킹이 비틀거립니다.");
+        setCombatMessage("마늘킹이 크게 비틀거린다!");
         await visualsRef.current?.monster.play("stagger");
         setPhase("finishingAttack");
         setCombatMessage("마무리 공격!");
@@ -355,7 +389,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   };
 
   const completeQuestionReview = () => {
-    if (phase !== "question" || processingRef.current) {
+    if (phase !== "review" || processingRef.current) {
       return;
     }
     const result = pendingResultRef.current;
@@ -383,8 +417,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setResolution(null);
     setFloatingText(null);
     setDamageFlash(false);
-    setCombatMessage("마늘킹이 길을 막고 있습니다.");
-    setPhase("playerCommand");
+    setCombatMessage("마늘킹이 나타났다!");
+    setPhase("intro");
   };
 
   const forceResult = (answers: readonly [boolean, boolean]) => {
@@ -409,6 +443,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       : resolution?.outcome === "hardVictory"
         ? "힘겨운 승리"
         : "전투 실패";
+  const dialogueMode = dialogueModeForPhase(phase);
+  const buttonsLocked =
+    processingRef.current ||
+    !["playerCommand", "question", "review", "result"].includes(phase);
+  const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
 
   return (
     <main className="game-screen dungeon-screen">
@@ -426,54 +465,95 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
 
       <section className="dungeon-overlay">
         <header className="combat-hud">
-          <div>
+          <div className="monster-status-hud">
             <p className="eyebrow">NORMAL COMBAT</p>
             <h1>마늘킹</h1>
+            <small>
+              {phase === "enemyEscaped"
+                ? "도주 중"
+                : phase === "victory" || phase === "result"
+                  ? "전투 종료"
+                  : "일반 몬스터"}
+            </small>
           </div>
-          <div className="combat-hud-values">
-            <span>HP {playerHp} / {MAX_HP}</span>
-            <span>문제 {Math.min(questionIndex + 1, 2)} / 2</span>
+          <div className="player-status-hud" aria-label={`플레이어 체력 ${playerHp} / ${MAX_HP}`}>
+            <div className="player-status-topline">
+              <strong>LV.1</strong>
+              <span>PLAYER</span>
+            </div>
+            <div className="player-hp-row">
+              <span>HP</span>
+              <div className="player-hp-track" aria-hidden="true">
+                <div className="player-hp-fill" style={{ width: `${hpPercent}%` }} />
+              </div>
+              <strong>{playerHp} / {MAX_HP}</strong>
+            </div>
+            <div className="player-question-progress">
+              <span>QUESTION</span>
+              <strong>{Math.min(questionIndex + 1, 2)} / 2</strong>
+            </div>
           </div>
         </header>
-
-        <div className="dungeon-controls">
-          <p className="combat-message" role="status">{combatMessage}</p>
-          {phase === "playerCommand" && (
-            <button type="button" onClick={openQuestion}>공격하기</button>
-          )}
-          {import.meta.env.DEV && phase === "playerCommand" && (
-            <div className="developer-combat-controls">
-              <span>개발용 결과 강제 실행</span>
-              <div className="button-group">
-                <button type="button" onClick={() => forceResult([true, true])}>정답 → 정답</button>
-                <button type="button" onClick={() => forceResult([true, false])}>정답 → 오답</button>
-                <button type="button" onClick={() => forceResult([false, true])}>오답 → 정답</button>
-                <button type="button" onClick={() => forceResult([false, false])}>오답 → 오답</button>
-              </div>
-            </div>
-          )}
-        </div>
       </section>
 
-      {phase === "question" && (
-        <QuestionScreen
-          key={questionIndex}
-          embedded
-          eyebrow="NORMAL COMBAT"
-          questions={[NORMAL_COMBAT_QUESTIONS[questionIndex]]}
-          onNavigate={onNavigate}
-          onResult={(result) => {
-            if (!pendingResultRef.current) {
-              pendingResultRef.current = result;
-            }
-          }}
-          onComplete={completeQuestionReview}
-        />
-      )}
+      <CombatDialoguePanel
+        mode={dialogueMode}
+        busy={buttonsLocked}
+      >
+        {(dialogueMode === "message" || dialogueMode === "command") && (
+          <div className="combat-message-layout">
+            <p className="combat-message" role="status">{combatMessage}</p>
+            {phase === "playerCommand" && (
+              <div className="combat-command-buttons">
+                <button type="button" onClick={openQuestion}>공격하기</button>
+                <button
+                  type="button"
+                  disabled
+                  title="아직 사용할 수 없습니다."
+                >
+                  아이템
+                  <small>아직 사용할 수 없습니다.</small>
+                </button>
+              </div>
+            )}
+            {import.meta.env.DEV && phase === "playerCommand" && (
+              <details className="developer-combat-controls">
+                <summary>개발용 결과 강제 실행</summary>
+                <div className="button-group">
+                  <button type="button" onClick={() => forceResult([true, true])}>정답 → 정답</button>
+                  <button type="button" onClick={() => forceResult([true, false])}>정답 → 오답</button>
+                  <button type="button" onClick={() => forceResult([false, true])}>오답 → 정답</button>
+                  <button type="button" onClick={() => forceResult([false, false])}>오답 → 오답</button>
+                </div>
+              </details>
+            )}
+          </div>
+        )}
 
-      {phase === "result" && resolution && (
-        <section className="combat-result-overlay" aria-labelledby="combat-result-title">
-          <div className="combat-result-card">
+        {(phase === "question" || phase === "review") && (
+          <QuestionScreen
+            key={questionIndex}
+            embedded
+            eyebrow={`QUESTION ${questionIndex + 1}`}
+            questions={[NORMAL_COMBAT_QUESTIONS[questionIndex]]}
+            onNavigate={onNavigate}
+            onReviewChange={(result) => {
+              if (!pendingResultRef.current) {
+                pendingResultRef.current = result;
+                setPhase("review");
+              }
+            }}
+            onResult={(result) => {
+              if (!pendingResultRef.current) {
+                pendingResultRef.current = result;
+              }
+            }}
+            onComplete={completeQuestionReview}
+          />
+        )}
+
+        {phase === "result" && resolution && (
+          <div className="combat-result-card" aria-labelledby="combat-result-title">
             <p className="eyebrow">COMBAT RESULT</p>
             <h2 id="combat-result-title">{resultTitle}</h2>
             <dl>
@@ -489,8 +569,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
               <button type="button" onClick={() => onNavigate("title")}>타이틀로 돌아가기</button>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </CombatDialoguePanel>
     </main>
   );
 }

@@ -457,15 +457,15 @@ button:focus-visible {
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: clamp(1rem, 3vw, 2rem);
   pointer-events: none;
   background: linear-gradient(
     to bottom,
     rgba(4, 5, 8, 0.68),
     transparent 25%,
-    transparent 70%,
-    rgba(4, 5, 8, 0.64)
+    transparent 72%,
+    rgba(4, 5, 8, 0.34)
   );
 }
 
@@ -494,44 +494,112 @@ button:focus-visible {
   gap: 1rem;
 }
 
-.combat-hud-values {
+.monster-status-hud {
+  min-width: 10rem;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid #d7b65f;
+  background: linear-gradient(90deg, rgba(9, 11, 16, 0.88), transparent);
+}
+
+.monster-status-hud small {
+  color: #b9b3a7;
+  font-size: 0.68rem;
+}
+
+.player-status-hud {
   display: grid;
-  gap: 0.35rem;
-  min-width: 9rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid rgba(233, 201, 120, 0.55);
-  border-radius: 0.55rem;
+  gap: 0.48rem;
+  width: min(22rem, 45vw);
+  min-width: 15rem;
+  padding: 0.7rem 0.85rem;
+  border: 2px solid #8b7138;
+  border-radius: 0.3rem;
   color: #fff1c0;
-  background: rgba(9, 11, 16, 0.78);
-  text-align: right;
+  background:
+    linear-gradient(135deg, rgba(38, 35, 31, 0.96), rgba(9, 11, 16, 0.94));
+  box-shadow:
+    inset 0 0 0 2px rgba(20, 16, 11, 0.9),
+    0 5px 18px rgba(0, 0, 0, 0.38);
   font-size: 0.82rem;
   font-weight: 800;
 }
 
+.player-status-topline,
+.player-question-progress,
+.player-hp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.player-status-topline {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(233, 201, 120, 0.28);
+}
+
+.player-status-topline span,
+.player-question-progress span {
+  color: #aaa496;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+}
+
+.player-hp-row > span {
+  color: #f3d577;
+  font-size: 0.72rem;
+}
+
+.player-hp-track {
+  flex: 1 1 auto;
+  height: 0.8rem;
+  overflow: hidden;
+  border: 2px solid #17130e;
+  background: #302b29;
+  box-shadow: inset 0 1px 3px #050505;
+}
+
+.player-hp-fill {
+  height: 100%;
+  background:
+    linear-gradient(to bottom, #ef765b 0 35%, #b83535 36% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 194, 153, 0.3);
+  transition: width 220ms ease-out;
+}
+
+.player-hp-row > strong {
+  min-width: 4.3rem;
+  color: #f4ead1;
+  text-align: right;
+  font-size: 0.75rem;
+}
+
 .combat-message {
-  max-width: min(32rem, calc(100vw - 2rem));
+  max-width: 62ch;
   margin: 0;
-  padding: 0.55rem 0.8rem;
-  border-radius: 0.55rem;
   color: #fff2ca;
-  background: rgba(9, 11, 16, 0.8);
-  text-align: center;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  line-height: 1.55;
 }
 
 .developer-combat-controls {
   display: grid;
   gap: 0.4rem;
   padding: 0.55rem;
-  border: 1px dashed rgba(233, 201, 120, 0.5);
+  border-top: 1px dashed rgba(233, 201, 120, 0.35);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
   border-radius: 0.5rem;
   background: rgba(9, 11, 16, 0.78);
   text-align: center;
 }
 
-.developer-combat-controls > span {
+.developer-combat-controls > summary {
   color: #e9c978;
   font-size: 0.68rem;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .developer-combat-controls button {
@@ -584,11 +652,159 @@ button:focus-visible {
   opacity: 1;
 }
 
-.question-screen.is-embedded {
+.combat-dialogue-panel {
   position: absolute;
-  inset: 0;
   z-index: 20;
-  background: rgba(8, 11, 15, 0.96);
+  right: max(10%, env(safe-area-inset-right));
+  bottom: max(2.2vh, env(safe-area-inset-bottom));
+  left: max(10%, env(safe-area-inset-left));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(80%, 980px);
+  min-height: clamp(9.5rem, 25vh, 14rem);
+  max-height: 40vh;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 2px solid #9a7d3e;
+  border-radius: 0.35rem;
+  color: #f4ead1;
+  background:
+    linear-gradient(145deg, rgba(34, 31, 29, 0.97), rgba(10, 13, 18, 0.97));
+  box-shadow:
+    inset 0 0 0 2px rgba(10, 8, 5, 0.9),
+    0 16px 46px rgba(0, 0, 0, 0.55);
+}
+
+.combat-dialogue-panel.is-question,
+.combat-dialogue-panel.is-review {
+  height: min(40vh, 25rem);
+}
+
+.combat-dialogue-label {
+  width: fit-content;
+  margin: 0 0 -1px 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border-right: 1px solid rgba(233, 201, 120, 0.4);
+  border-bottom: 1px solid rgba(233, 201, 120, 0.4);
+  border-left: 1px solid rgba(233, 201, 120, 0.4);
+  color: #e9c978;
+  background: #191716;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.combat-dialogue-content {
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(0.8rem, 2vw, 1.2rem);
+}
+
+.combat-dialogue-panel.is-message .combat-dialogue-content,
+.combat-dialogue-panel.is-command .combat-dialogue-content,
+.combat-dialogue-panel.is-result .combat-dialogue-content {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.combat-message-layout {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  align-content: center;
+  gap: 0.85rem;
+}
+
+.combat-command-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.combat-command-buttons button {
+  min-height: 3.2rem;
+}
+
+.combat-command-buttons button small {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.58rem;
+  font-weight: 500;
+}
+
+.combat-command-buttons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.question-screen.is-embedded {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.question-screen.is-embedded .question-card {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.question-screen.is-embedded .question-header,
+.question-screen.is-embedded .question-footer {
+  padding: 0.45rem 0.65rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.question-screen.is-embedded .question-header .eyebrow {
+  display: none;
+}
+
+.question-screen.is-embedded .question-scroll-area {
+  padding: 0.65rem;
+}
+
+.question-screen.is-embedded .question-scroll-area h1 {
+  margin-bottom: 0.7rem;
+  font-size: clamp(0.98rem, 2.1vw, 1.25rem);
+}
+
+.question-screen.is-embedded .question-options {
+  gap: 0.45rem;
+}
+
+.question-screen.is-embedded .question-option {
+  min-height: 2.65rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.question-screen.is-embedded .question-submit-button {
+  min-height: 2.4rem;
+  margin-top: 0.6rem;
+  padding-block: 0.35rem;
+}
+
+.question-screen.is-embedded .question-feedback {
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+}
+
+.question-screen.is-embedded .question-feedback h2 {
+  margin-bottom: 0.45rem;
+}
+
+.question-screen.is-embedded .question-explanation {
+  max-height: 8rem;
+}
+
+.question-screen.is-embedded .question-footer span {
+  font-size: 0.68rem;
 }
 
 .combat-result-overlay {
@@ -604,32 +820,28 @@ button:focus-visible {
 }
 
 .combat-result-card {
-  width: min(560px, 100%);
-  padding: clamp(1.25rem, 4vw, 2.5rem);
-  border: 1px solid rgba(245, 218, 166, 0.5);
-  border-radius: 1rem;
-  background: #161920;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+  width: 100%;
+  padding: 0;
   text-align: center;
 }
 
 .combat-result-card h2 {
-  margin: 0.45rem 0 1.25rem;
+  margin: 0.25rem 0 0.65rem;
   color: #f5d987;
   font-size: clamp(1.7rem, 5vw, 2.8rem);
 }
 
 .combat-result-card dl {
   display: grid;
-  gap: 0.55rem;
-  margin: 0 0 1.15rem;
+  gap: 0.35rem;
+  margin: 0 0 0.65rem;
 }
 
 .combat-result-card dl div {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.65rem 0.8rem;
+  padding: 0.4rem 0.65rem;
   border-radius: 0.45rem;
   background: rgba(255, 255, 255, 0.055);
 }
@@ -652,6 +864,103 @@ button:focus-visible {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 720px) {
+  .dungeon-overlay {
+    padding: 0.65rem;
+  }
+
+  .monster-status-hud {
+    min-width: 0;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .monster-status-hud h1 {
+    font-size: 1.15rem;
+  }
+
+  .player-status-hud {
+    width: min(60vw, 19rem);
+    min-width: 12rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .combat-dialogue-panel {
+    right: max(0.5rem, env(safe-area-inset-right));
+    left: max(0.5rem, env(safe-area-inset-left));
+    width: auto;
+    max-height: 42vh;
+  }
+
+  .combat-dialogue-panel.is-question,
+  .combat-dialogue-panel.is-review {
+    height: 42vh;
+  }
+
+  .question-screen.is-embedded .question-options {
+    grid-template-columns: 1fr;
+  }
+
+  .question-screen.is-embedded .question-true-false {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .combat-hud {
+    gap: 0.45rem;
+  }
+
+  .monster-status-hud {
+    padding-block: 0.35rem;
+  }
+
+  .monster-status-hud small,
+  .player-status-topline span {
+    display: none;
+  }
+
+  .player-status-hud {
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .player-status-topline {
+    padding-bottom: 0.15rem;
+  }
+
+  .combat-dialogue-panel {
+    bottom: max(0.35rem, env(safe-area-inset-bottom));
+    min-height: 7rem;
+    max-height: 44vh;
+  }
+
+  .combat-dialogue-panel.is-question,
+  .combat-dialogue-panel.is-review {
+    height: 44vh;
+  }
+
+  .combat-dialogue-content {
+    padding: 0.4rem 0.55rem;
+  }
+
+  .combat-dialogue-label {
+    padding-block: 0.18rem;
+  }
+
+  .question-screen.is-embedded .question-header,
+  .question-screen.is-embedded .question-footer {
+    padding: 0.3rem 0.5rem;
+  }
+
+  .question-screen.is-embedded .question-scroll-area {
+    padding: 0.4rem 0.55rem;
+  }
+
+  .question-screen.is-embedded .question-option {
+    min-height: 2.25rem;
   }
 }
 

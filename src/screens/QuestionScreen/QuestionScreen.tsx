@@ -21,6 +21,7 @@ type QuestionScreenProps = {
   onComplete?: () => void;
   embedded?: boolean;
   eyebrow?: string;
+  onReviewChange?: (result: QuestionResult) => void;
 };
 
 function questionTypeLabel(question: Question) {
@@ -100,6 +101,7 @@ export function QuestionScreen({
   onComplete,
   embedded = false,
   eyebrow = "QUESTION TEST",
+  onReviewChange,
 }: QuestionScreenProps) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedSingle, setSelectedSingle] = useState<string | null>(null);
@@ -151,8 +153,10 @@ export function QuestionScreen({
     }
 
     submitLockRef.current = true;
+    const correct = gradeQuestion(question, answer);
     setSubmittedAnswer(answer);
-    setIsCorrect(gradeQuestion(question, answer));
+    setIsCorrect(correct);
+    onReviewChange?.({ questionId: question.id, isCorrect: correct });
   };
 
   const moveNext = () => {
@@ -228,10 +232,8 @@ export function QuestionScreen({
         ? question.correctAnswers
         : [];
 
-  return (
-    <main
-      className={`game-screen question-screen ${embedded ? "is-embedded" : ""}`}
-    >
+  const content = (
+    <>
       <section className="question-card" aria-labelledby="question-prompt">
         <header className="question-header">
           <div>
@@ -381,6 +383,18 @@ export function QuestionScreen({
           )}
         </footer>
       </section>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="question-screen is-embedded">{content}</div>;
+  }
+
+  return (
+    <main
+      className={`game-screen question-screen ${embedded ? "is-embedded" : ""}`}
+    >
+      {content}
     </main>
   );
 }
