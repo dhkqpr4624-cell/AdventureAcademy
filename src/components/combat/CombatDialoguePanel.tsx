@@ -10,12 +10,14 @@ export type CombatDialogueMode =
 type CombatDialoguePanelProps = {
   mode: CombatDialogueMode;
   children: ReactNode;
+  statusBar: ReactNode;
   busy?: boolean;
 };
 
 export function CombatDialoguePanel({
   mode,
   children,
+  statusBar,
   busy = false,
 }: CombatDialoguePanelProps) {
   return (
@@ -27,6 +29,7 @@ export function CombatDialoguePanel({
     >
       <div className="combat-dialogue-label">DIALOGUE</div>
       <div className="combat-dialogue-content">{children}</div>
+      <div className="combat-dialogue-status">{statusBar}</div>
     </section>
   );
 }

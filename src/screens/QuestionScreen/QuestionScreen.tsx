@@ -94,6 +94,34 @@ function OptionButton({
   );
 }
 
+function QuestionReviewFooter({
+  explanation,
+  isSubmitted,
+  onNext,
+}: {
+  explanation: string;
+  isSubmitted: boolean;
+  onNext: () => void;
+}) {
+  return (
+    <footer className={`question-footer ${isSubmitted ? "is-review" : ""}`}>
+      {isSubmitted ? (
+        <div className="question-review-explanation">
+          <strong>해설</strong>
+          <p>{explanation}</p>
+        </div>
+      ) : (
+        <span>답을 고른 뒤 제출하세요.</span>
+      )}
+      {isSubmitted && (
+        <button type="button" onClick={onNext}>
+          다음으로
+        </button>
+      )}
+    </footer>
+  );
+}
+
 export function QuestionScreen({
   onNavigate,
   onResult,
@@ -366,22 +394,15 @@ export function QuestionScreen({
                     {question.acceptedAnswers.slice(1).join(", ")}
                   </p>
                 )}
-              <div className="question-explanation">
-                <strong>해설</strong>
-                <p>{question.explanation}</p>
-              </div>
             </section>
           )}
         </div>
 
-        <footer className="question-footer">
-          <span>{isSubmitted ? "해설을 확인한 뒤 직접 진행하세요." : "답을 고른 뒤 제출하세요."}</span>
-          {isSubmitted && (
-            <button type="button" onClick={moveNext}>
-              다음으로
-            </button>
-          )}
-        </footer>
+        <QuestionReviewFooter
+          explanation={question.explanation}
+          isSubmitted={isSubmitted}
+          onNext={moveNext}
+        />
       </section>
     </>
   );

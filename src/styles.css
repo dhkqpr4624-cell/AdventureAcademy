@@ -506,50 +506,6 @@ button:focus-visible {
   font-size: 0.68rem;
 }
 
-.player-status-hud {
-  display: grid;
-  gap: 0.48rem;
-  width: min(22rem, 45vw);
-  min-width: 15rem;
-  padding: 0.7rem 0.85rem;
-  border: 2px solid #8b7138;
-  border-radius: 0.3rem;
-  color: #fff1c0;
-  background:
-    linear-gradient(135deg, rgba(38, 35, 31, 0.96), rgba(9, 11, 16, 0.94));
-  box-shadow:
-    inset 0 0 0 2px rgba(20, 16, 11, 0.9),
-    0 5px 18px rgba(0, 0, 0, 0.38);
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.player-status-topline,
-.player-question-progress,
-.player-hp-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-}
-
-.player-status-topline {
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid rgba(233, 201, 120, 0.28);
-}
-
-.player-status-topline span,
-.player-question-progress span {
-  color: #aaa496;
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
-}
-
-.player-hp-row > span {
-  color: #f3d577;
-  font-size: 0.72rem;
-}
-
 .player-hp-track {
   flex: 1 1 auto;
   height: 0.8rem;
@@ -565,13 +521,6 @@ button:focus-visible {
     linear-gradient(to bottom, #ef765b 0 35%, #b83535 36% 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 194, 153, 0.3);
   transition: width 220ms ease-out;
-}
-
-.player-hp-row > strong {
-  min-width: 4.3rem;
-  color: #f4ead1;
-  text-align: right;
-  font-size: 0.75rem;
 }
 
 .combat-message {
@@ -659,10 +608,10 @@ button:focus-visible {
   bottom: max(2.2vh, env(safe-area-inset-bottom));
   left: max(10%, env(safe-area-inset-left));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(80%, 980px);
-  min-height: clamp(9.5rem, 25vh, 14rem);
-  max-height: 40vh;
+  min-height: clamp(8.5rem, 20vh, 11.5rem);
+  max-height: 36vh;
   margin-inline: auto;
   overflow: hidden;
   border: 2px solid #9a7d3e;
@@ -677,7 +626,11 @@ button:focus-visible {
 
 .combat-dialogue-panel.is-question,
 .combat-dialogue-panel.is-review {
-  height: min(40vh, 25rem);
+  height: min(34vh, 22rem);
+}
+
+.combat-dialogue-panel.is-review {
+  height: min(36vh, 23rem);
 }
 
 .combat-dialogue-label {
@@ -698,6 +651,58 @@ button:focus-visible {
   min-height: 0;
   overflow: hidden;
   padding: clamp(0.8rem, 2vw, 1.2rem);
+}
+
+.combat-dialogue-status {
+  min-width: 0;
+  border-top: 1px solid rgba(233, 201, 120, 0.35);
+  background:
+    linear-gradient(90deg, rgba(38, 33, 27, 0.98), rgba(9, 11, 16, 0.98));
+}
+
+.combat-status-bar {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 1fr) auto;
+  align-items: center;
+  min-height: 2.65rem;
+  gap: clamp(0.65rem, 2vw, 1.25rem);
+  padding: 0.42rem clamp(0.7rem, 2vw, 1rem);
+  color: #f4ead1;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.combat-status-level {
+  padding-right: 0.8rem;
+  border-right: 1px solid rgba(233, 201, 120, 0.3);
+  color: #f3d577;
+  white-space: nowrap;
+}
+
+.combat-status-hp,
+.combat-status-question {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.55rem;
+}
+
+.combat-status-hp > span,
+.combat-status-question > span {
+  color: #d5bb70;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+}
+
+.combat-status-hp > strong {
+  min-width: 4.25rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.combat-status-question {
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
 .combat-dialogue-panel.is-message .combat-dialogue-content,
@@ -799,12 +804,18 @@ button:focus-visible {
   margin-bottom: 0.45rem;
 }
 
-.question-screen.is-embedded .question-explanation {
-  max-height: 8rem;
-}
-
 .question-screen.is-embedded .question-footer span {
   font-size: 0.68rem;
+}
+
+.question-screen.is-embedded .question-footer.is-review {
+  gap: 0.7rem;
+  min-height: 4.2rem;
+  align-items: stretch;
+}
+
+.question-screen.is-embedded .question-review-explanation {
+  max-height: 4.8rem;
 }
 
 .combat-result-overlay {
@@ -881,22 +892,16 @@ button:focus-visible {
     font-size: 1.15rem;
   }
 
-  .player-status-hud {
-    width: min(60vw, 19rem);
-    min-width: 12rem;
-    padding: 0.5rem 0.6rem;
-  }
-
   .combat-dialogue-panel {
     right: max(0.5rem, env(safe-area-inset-right));
     left: max(0.5rem, env(safe-area-inset-left));
     width: auto;
-    max-height: 42vh;
+    max-height: 38vh;
   }
 
   .combat-dialogue-panel.is-question,
   .combat-dialogue-panel.is-review {
-    height: 42vh;
+    height: 38vh;
   }
 
   .question-screen.is-embedded .question-options {
@@ -905,6 +910,18 @@ button:focus-visible {
 
   .question-screen.is-embedded .question-true-false {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .combat-status-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0.3rem;
+  }
+
+  .combat-status-question {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba(233, 201, 120, 0.2);
   }
 }
 
@@ -917,29 +934,19 @@ button:focus-visible {
     padding-block: 0.35rem;
   }
 
-  .monster-status-hud small,
-  .player-status-topline span {
+  .monster-status-hud small {
     display: none;
-  }
-
-  .player-status-hud {
-    gap: 0.25rem;
-    padding: 0.35rem 0.5rem;
-  }
-
-  .player-status-topline {
-    padding-bottom: 0.15rem;
   }
 
   .combat-dialogue-panel {
     bottom: max(0.35rem, env(safe-area-inset-bottom));
     min-height: 7rem;
-    max-height: 44vh;
+    max-height: 40vh;
   }
 
   .combat-dialogue-panel.is-question,
   .combat-dialogue-panel.is-review {
-    height: 44vh;
+    height: 40vh;
   }
 
   .combat-dialogue-content {
@@ -961,6 +968,19 @@ button:focus-visible {
 
   .question-screen.is-embedded .question-option {
     min-height: 2.25rem;
+  }
+
+  .question-screen.is-embedded .question-footer.is-review {
+    min-height: 3.35rem;
+  }
+
+  .question-screen.is-embedded .question-review-explanation {
+    max-height: 3.35rem;
+  }
+
+  .combat-status-bar {
+    min-height: 2.1rem;
+    padding-block: 0.25rem;
   }
 }
 
@@ -1338,6 +1358,38 @@ button:focus-visible {
   border-top: 1px solid rgba(245, 218, 166, 0.2);
 }
 
+.question-footer.is-review {
+  align-items: center;
+}
+
+.question-review-explanation {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: min(9rem, 18vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(233, 201, 120, 0.22);
+  border-radius: 0.45rem;
+  color: #ded8ca;
+  background: rgba(5, 8, 12, 0.4);
+  text-align: left;
+  scrollbar-gutter: stable;
+}
+
+.question-review-explanation strong {
+  color: #e7cc82;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.question-review-explanation p {
+  margin: 0.25rem 0 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .question-footer span {
   color: #bcb5a8;
   font-size: 0.8rem;
@@ -1372,6 +1424,15 @@ button:focus-visible {
 
   .question-footer {
     justify-content: flex-end;
+  }
+
+  .question-footer.is-review {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .question-footer.is-review button {
+    width: 100%;
   }
 }
 

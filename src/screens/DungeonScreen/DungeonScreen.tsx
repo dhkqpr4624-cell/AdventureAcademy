@@ -44,11 +44,15 @@ type CombatVisuals = {
   sword: SwordViewModel;
   weapon: WeaponAnimationController;
   monster: MonsterAnimationController;
+  monsterRoot: THREE.Group;
 };
 
 const NORMAL_COMBAT_QUESTIONS = [TEST_QUESTIONS[0], TEST_QUESTIONS[1]] as const;
 const MAX_HP = 50;
 const ENEMY_ATTACK = 7;
+const MONSTER_COMMAND_POSITION = new THREE.Vector3(0, 0.12, -4.7);
+const MONSTER_QUESTION_POSITION = new THREE.Vector3(0, 0.62, -4.7);
+const MONSTER_POSITION_RESPONSE = 13;
 
 const wait = (durationMs: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, durationMs));
@@ -77,6 +81,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const weaponResultRef = useRef<WeaponAttackType | null>(null);
   const answersRef = useRef<boolean[]>([]);
   const questionIndexRef = useRef(0);
+  const monsterPositionTargetRef = useRef(MONSTER_COMMAND_POSITION);
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -111,6 +116,13 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       }
     }, 900);
     return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    monsterPositionTargetRef.current =
+      phase === "question" || phase === "review"
+        ? MONSTER_QUESTION_POSITION
+        : MONSTER_COMMAND_POSITION;
   }, [phase]);
 
   useEffect(() => {
@@ -173,7 +185,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     const monster = new THREE.Mesh(monsterGeometry, monsterMaterial);
     const monsterBillboard = new THREE.Group();
     monsterBillboard.name = "MonsterBillboard";
-    monsterBillboard.position.set(0, -0.35, -4.7);
+    monsterBillboard.position.copy(MONSTER_COMMAND_POSITION);
     monster.renderOrder = 100;
     monsterBillboard.add(monster);
     monsterBillboard.lookAt(camera.position);
@@ -195,7 +207,12 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
 
     const sword = new SwordViewModel(camera);
     const weapon = new WeaponAnimationController(sword, camera);
-    visualsRef.current = { sword, weapon, monster: monsterAnimation };
+    visualsRef.current = {
+      sword,
+      weapon,
+      monster: monsterAnimation,
+      monsterRoot: monsterBillboard,
+    };
 
     const updateViewport = () => {
       weapon.cancel();
@@ -218,6 +235,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       const delta = clock.getDelta();
       weapon.update(delta);
       monsterAnimation.update(delta);
+      const positionBlend = 1 - Math.exp(-MONSTER_POSITION_RESPONSE * delta);
+      monsterBillboard.position.lerp(
+        monsterPositionTargetRef.current,
+        positionBlend,
+      );
       monsterBillboard.lookAt(camera.position);
       renderer.render(scene, camera);
       animationFrameId = window.requestAnimationFrame(render);
@@ -448,6 +470,32 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     processingRef.current ||
     !["playerCommand", "question", "review", "result"].includes(phase);
   const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
+  const combatStatusBar = (
+    <div
+      className="combat-status-bar"
+      aria-label={`레벨 1, 플레이어 체력 ${playerHp} / ${MAX_HP}, 문제 ${Math.min(questionIndex + 1, 2)} / 2`}
+    >
+      <strong className="combat-status-level">LV.1</strong>
+      <div className="combat-status-hp">
+        <span>HP</span>
+        <div
+          className="player-hp-track"
+          role="progressbar"
+          aria-label="플레이어 HP"
+          aria-valuemin={0}
+          aria-valuemax={MAX_HP}
+          aria-valuenow={playerHp}
+        >
+          <div className="player-hp-fill" style={{ width: `${hpPercent}%` }} />
+        </div>
+        <strong>{playerHp} / {MAX_HP}</strong>
+      </div>
+      <div className="combat-status-question">
+        <span>QUESTION</span>
+        <strong>{Math.min(questionIndex + 1, 2)} / 2</strong>
+      </div>
+    </div>
+  );
 
   return (
     <main className="game-screen dungeon-screen">
@@ -476,29 +524,13 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
                   : "일반 몬스터"}
             </small>
           </div>
-          <div className="player-status-hud" aria-label={`플레이어 체력 ${playerHp} / ${MAX_HP}`}>
-            <div className="player-status-topline">
-              <strong>LV.1</strong>
-              <span>PLAYER</span>
-            </div>
-            <div className="player-hp-row">
-              <span>HP</span>
-              <div className="player-hp-track" aria-hidden="true">
-                <div className="player-hp-fill" style={{ width: `${hpPercent}%` }} />
-              </div>
-              <strong>{playerHp} / {MAX_HP}</strong>
-            </div>
-            <div className="player-question-progress">
-              <span>QUESTION</span>
-              <strong>{Math.min(questionIndex + 1, 2)} / 2</strong>
-            </div>
-          </div>
         </header>
       </section>
 
       <CombatDialoguePanel
         mode={dialogueMode}
         busy={buttonsLocked}
+        statusBar={combatStatusBar}
       >
         {(dialogueMode === "message" || dialogueMode === "command") && (
           <div className="combat-message-layout">
