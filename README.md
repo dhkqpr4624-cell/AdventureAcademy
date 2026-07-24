@@ -74,6 +74,13 @@ env:
   VITE_BASE_PATH: ${{ github.event.repository.name }}
 ```
 
+### GitHub Pages 활성화
+
+저장소의 `Settings` → `Pages` → `Build and deployment`에서 `Source`를
+`GitHub Actions`로 선택합니다. 이후 `main` 브랜치에 push하면
+`.github/workflows/deploy.yml`이 `npm ci`, 빌드, `dist/` 업로드와 배포를
+자동으로 실행합니다.
+
 현재 앱은 URL 라우팅을 사용하지 않으므로 GitHub Pages의 하위 경로에서
 직접 새로고침할 때 별도의 SPA fallback 파일이 필요하지 않습니다. 향후
 `public/` 에셋을 추가할 때는 루트 절대 경로를 하드코딩하지 말고
