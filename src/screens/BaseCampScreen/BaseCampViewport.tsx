@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type PointerEvent,
 } from "react";
 import type {
   BaseCampFocusPoint,
@@ -15,6 +16,11 @@ import type {
   BaseCampMode,
 } from "../../types/baseCamp";
 import { BaseCampWorld } from "./BaseCampWorld";
+import {
+  BaseCampFocusDevTool,
+  type BaseCampCameraDiagnostics,
+  type BaseCampFocusDraft,
+} from "./BaseCampFocusDevTool";
 
 type CameraState = {
   focusX: number;
@@ -124,6 +130,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
 }, forwardedRef) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const playAnimationFrameRef = useRef<number | null>(null);
   const defaultFocus = map.focusPoints.campCenter;
   const requestedFocus = map.focusPoints[focusPointId] ?? defaultFocus;
   const [viewport, setViewport] = useState<ViewportSize>({ width: 0, height: 0 });
@@ -133,6 +140,8 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
   const [storyCamera, setStoryCamera] = useState<CameraState>(() =>
     cameraFromFocusPoint(requestedFocus, zoom, offsetX, offsetY),
   );
+  const [clickedWorld, setClickedWorld] = useState<{ x: number; y: number } | null>(null);
+  const [devDraft, setDevDraft] = useState<BaseCampFocusDraft | null>(null);
   const storyCameraRef = useRef(storyCamera);
   const restoreCameraRef = useRef<BaseCampCameraSnapshot>({
     ...cameraFromFocusPoint(defaultFocus),
@@ -289,6 +298,9 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (playAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(playAnimationFrameRef.current);
+      }
     },
     [],
   );
@@ -303,18 +315,103 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
         )
       : 1;
   const renderedScale = baseScale * camera.zoom;
+  const clampedCenter = getClampedCameraCenter(camera, viewport, map);
+  const devRequestedCamera: CameraState = devDraft
+    ? {
+        focusX: devDraft.x,
+        focusY: devDraft.y,
+        zoom: clamp(devDraft.zoom, MIN_ZOOM, MAX_ZOOM),
+        offsetX: devDraft.offsetX ?? 0,
+        offsetY: devDraft.offsetY ?? 0,
+      }
+    : camera;
+  const devClampedCenter = getClampedCameraCenter(
+    devRequestedCamera,
+    viewport,
+    map,
+  );
+
+  const diagnostics: BaseCampCameraDiagnostics = {
+    viewportWidth: viewport.width,
+    viewportHeight: viewport.height,
+    worldWidth: map.worldWidth,
+    worldHeight: map.worldHeight,
+    baseScale,
+    zoom: camera.zoom,
+    cameraCenterX: clampedCenter.x,
+    cameraCenterY: clampedCenter.y,
+    offsetX: camera.offsetX,
+    offsetY: camera.offsetY,
+    requestedX: devRequestedCamera.focusX,
+    requestedY: devRequestedCamera.focusY,
+    offsetTargetX: devRequestedCamera.focusX + devRequestedCamera.offsetX,
+    offsetTargetY: devRequestedCamera.focusY + devRequestedCamera.offsetY,
+    clampedX: devClampedCenter.x,
+    clampedY: devClampedCenter.y,
+    visibleWorldWidth: renderedScale > 0 ? viewport.width / renderedScale : 0,
+    visibleWorldHeight: renderedScale > 0 ? viewport.height / renderedScale : 0,
+  };
 
   const transform = useMemo(() => {
     if (viewport.width === 0 || viewport.height === 0) {
       return "translate3d(0, 0, 0) scale(1)";
     }
 
-    const center = getClampedCameraCenter(camera, viewport, map);
-    const translateX = Math.round(viewport.width / 2 - center.x * renderedScale);
-    const translateY = Math.round(viewport.height / 2 - center.y * renderedScale);
+    const translateX = Math.round(viewport.width / 2 - clampedCenter.x * renderedScale);
+    const translateY = Math.round(viewport.height / 2 - clampedCenter.y * renderedScale);
 
     return `translate3d(${translateX}px, ${translateY}px, 0) scale(${renderedScale})`;
-  }, [camera, map.worldHeight, map.worldWidth, renderedScale, viewport]);
+  }, [clampedCenter.x, clampedCenter.y, renderedScale, viewport.height, viewport.width]);
+
+  const animatePlayCamera = useCallback((target: CameraState, durationMs: number) => {
+    if (playAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(playAnimationFrameRef.current);
+    }
+    const start = playCamera;
+    if (durationMs <= 0) {
+      setPlayCamera(target);
+      return;
+    }
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const eased = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      setPlayCamera({
+        focusX: start.focusX + (target.focusX - start.focusX) * eased,
+        focusY: start.focusY + (target.focusY - start.focusY) * eased,
+        zoom: start.zoom + (target.zoom - start.zoom) * eased,
+        offsetX: start.offsetX + (target.offsetX - start.offsetX) * eased,
+        offsetY: start.offsetY + (target.offsetY - start.offsetY) * eased,
+      });
+      if (progress < 1) {
+        playAnimationFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        playAnimationFrameRef.current = null;
+      }
+    };
+    playAnimationFrameRef.current = requestAnimationFrame(tick);
+  }, [playCamera]);
+
+  const handleViewportPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!import.meta.env.DEV || mode !== "play" || renderedScale <= 0) {
+      return;
+    }
+    if (
+      event.target instanceof Element &&
+      event.target.closest(".base-camp-focus-dev-tool")
+    ) {
+      return;
+    }
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const localX = event.clientX - bounds.left;
+    const localY = event.clientY - bounds.top;
+    setClickedWorld({
+      x: clampedCenter.x + (localX - viewport.width / 2) / renderedScale,
+      y: clampedCenter.y + (localY - viewport.height / 2) / renderedScale,
+    });
+  }, [clampedCenter.x, clampedCenter.y, mode, renderedScale, viewport.height, viewport.width]);
 
   const adjustZoom = useCallback((delta: number) => {
     setPlayCamera((current) => ({
@@ -328,6 +425,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
       ref={viewportRef}
       className="base-camp-viewport"
       data-testid="BaseCampViewport"
+      onPointerDown={import.meta.env.DEV && mode === "play" ? handleViewportPointerDown : undefined}
     >
       <div className="base-camp-world-transform" style={{ transform }}>
         <BaseCampWorld
@@ -337,6 +435,13 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           onSelectRegion={onSelectRegion}
           highlightTargetId={highlightTargetId}
         />
+        {import.meta.env.DEV && mode === "play" && devDraft && (
+          <span
+            className="base-camp-focus-preview"
+            style={{ left: devDraft.x, top: devDraft.y }}
+            aria-hidden="true"
+          />
+        )}
       </div>
       {mode === "play" && (
         <div className="base-camp-zoom-controls" aria-label="개발용 확대 축소">
@@ -349,6 +454,28 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
             +
           </button>
         </div>
+      )}
+      {import.meta.env.DEV && mode === "play" && (
+        <BaseCampFocusDevTool
+          mode={mode}
+          map={map}
+          diagnostics={diagnostics}
+          clickedWorld={clickedWorld}
+          onDraftChange={setDevDraft}
+          onTestMove={(draft) =>
+            animatePlayCamera(
+              {
+                focusX: draft.x,
+                focusY: draft.y,
+                zoom: clamp(draft.zoom, MIN_ZOOM, MAX_ZOOM),
+                offsetX: draft.offsetX ?? 0,
+                offsetY: draft.offsetY ?? 0,
+              },
+              Math.max(0, draft.durationMs),
+            )
+          }
+          onResetCamera={() => animatePlayCamera(cameraFromFocusPoint(defaultFocus), 0)}
+        />
       )}
     </div>
   );

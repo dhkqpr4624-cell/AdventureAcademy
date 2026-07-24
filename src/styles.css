@@ -237,6 +237,121 @@ button:focus-visible {
   transform: translateX(-50%);
 }
 
+.base-camp-focus-preview {
+  position: absolute;
+  z-index: 65;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #52f7ff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(2, 22, 27, 0.72), 0 0 18px #52f7ff;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.base-camp-focus-preview::before,
+.base-camp-focus-preview::after {
+  position: absolute;
+  content: "";
+  background: #52f7ff;
+}
+
+.base-camp-focus-preview::before {
+  top: 8px;
+  left: -10px;
+  width: 36px;
+  height: 2px;
+}
+
+.base-camp-focus-preview::after {
+  top: -10px;
+  left: 8px;
+  width: 2px;
+  height: 36px;
+}
+
+.base-camp-focus-dev-tool {
+  position: absolute;
+  top: 5.5rem;
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 80;
+  width: min(390px, calc(100% - 1.5rem));
+  max-height: calc(100% - 11rem);
+  overflow: auto;
+  padding: 0.65rem;
+  border: 1px solid rgba(82, 247, 255, 0.72);
+  color: #e9fdff;
+  background: rgba(4, 13, 19, 0.9);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42);
+  font: 11px/1.3 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.base-camp-focus-dev-tool > strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #52f7ff;
+}
+
+.base-camp-focus-dev-grid {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.15rem 0.5rem;
+}
+
+.base-camp-focus-dev-grid span {
+  color: #9bbbc2;
+}
+
+.base-camp-focus-dev-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.base-camp-focus-dev-fields label {
+  display: grid;
+  gap: 0.15rem;
+  color: #9bbbc2;
+}
+
+.base-camp-focus-dev-fields input,
+.base-camp-focus-dev-tool textarea {
+  min-width: 0;
+  padding: 0.3rem;
+  border: 1px solid #43636b;
+  color: #fff;
+  background: #0c2028;
+  font: inherit;
+}
+
+.base-camp-focus-dev-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.55rem;
+}
+
+.base-camp-focus-dev-buttons button {
+  min-height: 28px;
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 10px;
+}
+
+.base-camp-focus-copy-status {
+  display: block;
+  margin-top: 0.45rem;
+  color: #ffe57a;
+}
+
+.base-camp-focus-dev-tool textarea {
+  width: 100%;
+  min-height: 8rem;
+  margin-top: 0.4rem;
+  resize: vertical;
+}
+
 .base-camp-hud,
 .base-camp-dev-controls,
 .base-camp-zoom-controls {
