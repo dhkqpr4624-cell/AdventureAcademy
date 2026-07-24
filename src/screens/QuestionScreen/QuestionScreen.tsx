@@ -17,6 +17,10 @@ import type {
 type QuestionScreenProps = {
   onNavigate: (screen: ScreenId) => void;
   onResult: (result: QuestionResult) => void;
+  questions?: readonly Question[];
+  onComplete?: () => void;
+  embedded?: boolean;
+  eyebrow?: string;
 };
 
 function questionTypeLabel(question: Question) {
@@ -92,6 +96,10 @@ function OptionButton({
 export function QuestionScreen({
   onNavigate,
   onResult,
+  questions = TEST_QUESTIONS,
+  onComplete,
+  embedded = false,
+  eyebrow = "QUESTION TEST",
 }: QuestionScreenProps) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedSingle, setSelectedSingle] = useState<string | null>(null);
@@ -113,7 +121,7 @@ export function QuestionScreen({
     }
   }, []);
 
-  const question = TEST_QUESTIONS[questionIndex];
+  const question = questions[questionIndex];
   const isSubmitted = submittedAnswer !== null;
 
   const currentAnswer = (): SubmittedAnswer | null => {
@@ -159,7 +167,11 @@ export function QuestionScreen({
     nextLockRef.current = true;
     onResult({ questionId: question.id, isCorrect });
 
-    if (questionIndex === TEST_QUESTIONS.length - 1) {
+    if (questionIndex === questions.length - 1) {
+      if (onComplete) {
+        onComplete();
+        return;
+      }
       setIsComplete(true);
       return;
     }
@@ -217,15 +229,17 @@ export function QuestionScreen({
         : [];
 
   return (
-    <main className="game-screen question-screen">
+    <main
+      className={`game-screen question-screen ${embedded ? "is-embedded" : ""}`}
+    >
       <section className="question-card" aria-labelledby="question-prompt">
         <header className="question-header">
           <div>
-            <p className="eyebrow">QUESTION TEST</p>
+            <p className="eyebrow">{eyebrow}</p>
             <span className="question-type">{questionTypeLabel(question)}</span>
           </div>
           <strong>
-            {questionIndex + 1} / {TEST_QUESTIONS.length}
+            {questionIndex + 1} / {questions.length}
           </strong>
         </header>
 

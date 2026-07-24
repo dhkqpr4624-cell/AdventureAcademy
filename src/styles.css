@@ -487,6 +487,174 @@ button:focus-visible {
   pointer-events: auto;
 }
 
+.combat-hud {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.combat-hud-values {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 9rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(233, 201, 120, 0.55);
+  border-radius: 0.55rem;
+  color: #fff1c0;
+  background: rgba(9, 11, 16, 0.78);
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.combat-message {
+  max-width: min(32rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.55rem;
+  color: #fff2ca;
+  background: rgba(9, 11, 16, 0.8);
+  text-align: center;
+}
+
+.developer-combat-controls {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  border: 1px dashed rgba(233, 201, 120, 0.5);
+  border-radius: 0.5rem;
+  background: rgba(9, 11, 16, 0.78);
+  text-align: center;
+}
+
+.developer-combat-controls > span {
+  color: #e9c978;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.developer-combat-controls button {
+  min-height: 34px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.68rem;
+}
+
+.combat-floating-text {
+  position: absolute;
+  top: 43%;
+  left: 50%;
+  z-index: 8;
+  color: #fff3af;
+  font-size: clamp(2rem, 7vw, 4rem);
+  text-shadow:
+    0 3px 0 #4b2b16,
+    0 0 18px rgba(255, 219, 105, 0.8);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: combat-text-pop 300ms ease-out both;
+}
+
+.combat-floating-text.is-miss {
+  color: #e8edf4;
+  text-shadow:
+    0 3px 0 #252d39,
+    0 0 16px rgba(202, 217, 236, 0.7);
+}
+
+.combat-floating-text.is--7 {
+  top: 28%;
+  color: #ff8a80;
+  text-shadow:
+    0 3px 0 #591e1e,
+    0 0 18px rgba(255, 72, 72, 0.76);
+}
+
+.combat-damage-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: rgba(255, 72, 56, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 80ms linear;
+}
+
+.combat-damage-flash.is-active {
+  opacity: 1;
+}
+
+.question-screen.is-embedded {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(8, 11, 15, 0.96);
+}
+
+.combat-result-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  place-items: center;
+  background: rgba(5, 7, 10, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.combat-result-card {
+  width: min(560px, 100%);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid rgba(245, 218, 166, 0.5);
+  border-radius: 1rem;
+  background: #161920;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+  text-align: center;
+}
+
+.combat-result-card h2 {
+  margin: 0.45rem 0 1.25rem;
+  color: #f5d987;
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+}
+
+.combat-result-card dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 1.15rem;
+}
+
+.combat-result-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.combat-result-card dt {
+  color: #c8c4ba;
+}
+
+.combat-result-card dd {
+  margin: 0;
+  color: #fff1bd;
+  font-weight: 800;
+}
+
+@keyframes combat-text-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -35%) scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 .developer-attack-controls {
   display: flex;
   flex-direction: column;
