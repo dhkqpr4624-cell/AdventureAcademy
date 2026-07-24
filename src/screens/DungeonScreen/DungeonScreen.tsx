@@ -96,6 +96,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const mountedRef = useRef(true);
   const processingRef = useRef(false);
   const interactionLockRef = useRef(false);
+  const enemyTurnProcessingRef = useRef(false);
   const resultFinalizedRef = useRef(false);
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const weaponResultRef = useRef<WeaponAttackType | null>(null);
@@ -114,6 +115,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const [enemyStunned, setEnemyStunned] = useState(false);
   const [criticalEffect, setCriticalEffect] = useState(false);
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
+  const [interactionLocked, setInteractionLocked] = useState(false);
   const [combatMessage, setCombatMessage] = useState(
     "마늘킹이 나타났다!",
   );
@@ -317,31 +319,36 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   };
 
   const playEnemyTurn = async () => {
-    if (!mountedRef.current) {
+    if (!mountedRef.current || enemyTurnProcessingRef.current) {
       return;
     }
-    setPhase("enemyTurn");
-    setCombatMessage("마늘킹의 공격!");
-    await visualsRef.current?.monster.play("attack", () => {
+    enemyTurnProcessingRef.current = true;
+    try {
+      setPhase("enemyTurn");
+      setCombatMessage("마늘킹의 공격!");
+      await visualsRef.current?.monster.play("attack", () => {
+        if (!mountedRef.current) {
+          return;
+        }
+        setPlayerHp((current) => Math.max(0, current - ENEMY_ATTACK));
+        setActualEnemyAttackCount((current) => current + 1);
+        setFloatingText(`-${ENEMY_ATTACK}`);
+        setDamageFlash(true);
+        window.setTimeout(() => {
+          if (mountedRef.current) {
+            setFloatingText(null);
+            setDamageFlash(false);
+          }
+        }, 240);
+      });
       if (!mountedRef.current) {
         return;
       }
-      setPlayerHp((current) => Math.max(0, current - ENEMY_ATTACK));
-      setActualEnemyAttackCount((current) => current + 1);
-      setFloatingText(`-${ENEMY_ATTACK}`);
-      setDamageFlash(true);
-      window.setTimeout(() => {
-        if (mountedRef.current) {
-          setFloatingText(null);
-          setDamageFlash(false);
-        }
-      }, 240);
-    });
-    if (!mountedRef.current) {
-      return;
+      setPhase("awaitDamageResult");
+      setCombatMessage(`${ENEMY_ATTACK}의 피해를 입었다.`);
+    } finally {
+      enemyTurnProcessingRef.current = false;
     }
-    setPhase("awaitDamageResult");
-    setCombatMessage(`${ENEMY_ATTACK}의 피해를 입었다.`);
   };
 
   const showResult = (finalResolution: NormalCombatResolution) => {
@@ -484,6 +491,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       return;
     }
     interactionLockRef.current = true;
+    setInteractionLocked(true);
     try {
       if (phase === "awaitPlayerAttack") {
         const result = pendingResultRef.current;
@@ -557,6 +565,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       }
     } finally {
       interactionLockRef.current = false;
+      setInteractionLocked(false);
     }
   };
 
@@ -592,6 +601,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     pendingResultRef.current = null;
     processingRef.current = false;
     interactionLockRef.current = false;
+    enemyTurnProcessingRef.current = false;
     resultFinalizedRef.current = false;
     criticalStateRef.current = INITIAL_CRITICAL_STATE;
     forceCriticalNextAttackRef.current = false;
@@ -607,6 +617,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setEnemyStunned(false);
     setCriticalEffect(false);
     setForceCriticalNextAttack(false);
+    setInteractionLocked(false);
     setResolution(null);
     setFloatingText(null);
     setDamageFlash(false);
@@ -628,7 +639,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     "victory",
     "enemyEscaped",
   ].includes(phase);
-  const buttonsLocked = animationInProgress || interactionLockRef.current;
+  const buttonsLocked = animationInProgress || interactionLocked;
   const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
   const combatStatusBar = (
     <div
