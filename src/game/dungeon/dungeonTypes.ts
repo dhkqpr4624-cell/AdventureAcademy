@@ -1,4 +1,4 @@
-export type DungeonRoomType = "start" | "empty" | "combat";
+export type DungeonRoomType = "start" | "empty" | "combat" | "treasure" | "trap";
 
 export type DungeonDirection = "forward" | "left" | "right" | "back";
 
@@ -34,6 +34,21 @@ export type DungeonCombatConfig = {
   combatCameraPose: DungeonCameraPose;
 };
 
+export type DungeonTreasureEventConfig = {
+  treasureId: string;
+  questionSetId: string;
+  rewardId: string;
+};
+
+export type DungeonTrapEventConfig = {
+  questionSetId: string;
+  damage: number;
+};
+
+export type DungeonRoomEventConfig =
+  | DungeonTreasureEventConfig
+  | DungeonTrapEventConfig;
+
 export type DungeonRoomNode = {
   id: string;
   type: DungeonRoomType;
@@ -45,6 +60,7 @@ export type DungeonRoomNode = {
   facing: DungeonFacing;
   explorationCameraPose: DungeonCameraPose;
   combatConfig?: DungeonCombatConfig;
+  eventConfig?: DungeonRoomEventConfig;
 };
 
 export type DungeonConnection = {
@@ -59,6 +75,11 @@ export type DungeonConnection = {
 export type DungeonRoomProgress = {
   roomId: string;
   eventCompleted: boolean;
+  eventResult?:
+    | "treasureOpened"
+    | "treasureLocked"
+    | "trapAvoided"
+    | "trapTriggered";
 };
 
 export type DungeonMapDefinition = {

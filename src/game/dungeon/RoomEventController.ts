@@ -6,7 +6,9 @@ import type {
 export type RoomEntryAction =
   | { type: "explore"; message: string }
   | { type: "startCombat" }
-  | { type: "skipCompletedCombat"; message: string };
+  | { type: "skipCompletedCombat"; message: string }
+  | { type: "showTreasure"; message: string }
+  | { type: "startTrap"; message: string };
 
 export function resolveRoomEntry(
   room: DungeonRoomNode,
@@ -24,5 +26,18 @@ export function resolveRoomEntry(
             message: "이미 이벤트가 끝난 방이다.",
           }
         : { type: "startCombat" };
+    case "treasure":
+      return {
+        type: "showTreasure",
+        message: progress.eventCompleted
+          ? progress.eventResult === "treasureOpened"
+            ? "이미 연 보물상자다."
+            : "상자는 단단히 잠겨 있다."
+          : "닫힌 보물상자가 놓여 있다.",
+      };
+    case "trap":
+      return progress.eventCompleted
+        ? { type: "explore", message: "이미 작동이 끝난 함정이다." }
+        : { type: "startTrap", message: "스위치를 밟았다!" };
   }
 }

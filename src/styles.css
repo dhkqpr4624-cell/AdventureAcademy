@@ -2062,6 +2062,74 @@ button:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.dungeon-room-event-image {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.dungeon-room-event-image img {
+  display: block;
+  width: min(34vw, 440px);
+  max-height: 52vh;
+  object-fit: contain;
+  filter: drop-shadow(0 1.2rem 1.5rem rgba(0, 0, 0, 0.65));
+}
+
+.dungeon-room-event-image img.is-trap {
+  width: min(58vw, 720px);
+  max-height: 64vh;
+}
+
+.dungeon-room-event-action,
+.dungeon-room-event-panel {
+  position: absolute;
+  left: 50%;
+  z-index: 24;
+  width: min(720px, calc(100% - 2rem));
+  transform: translateX(-50%);
+  border: 2px solid #c9a96e;
+  border-radius: 12px;
+  color: #fff7e7;
+  background: rgba(18, 17, 19, 0.96);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.62);
+  text-align: center;
+}
+
+.dungeon-room-event-action {
+  top: clamp(1rem, 4vh, 2.5rem);
+  padding: 0.8rem 1rem;
+}
+
+.dungeon-room-event-action p {
+  margin: 0 0 0.6rem;
+}
+
+.dungeon-room-event-panel.is-question {
+  bottom: clamp(1rem, 3vh, 2rem);
+  height: min(42vh, 430px);
+  overflow: hidden;
+}
+
+.dungeon-room-event-panel.is-question .question-screen {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.dungeon-room-event-panel.is-result {
+  bottom: clamp(1rem, 4vh, 2.5rem);
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+}
+
+.dungeon-room-event-panel.is-result h2 {
+  margin: 0.45rem 0 0.8rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dungeon-direction-buttons button,
   .dungeon-reset-button {

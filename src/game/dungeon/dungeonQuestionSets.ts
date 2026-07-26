@@ -5,16 +5,21 @@ import type { DungeonMapDefinition } from "./dungeonTypes";
 export const DUNGEON_QUESTION_SETS: Readonly<Record<string, readonly Question[]>> = {
   "normal-garlic-a": [TEST_QUESTIONS[0], TEST_QUESTIONS[1]],
   "normal-garlic-b": [TEST_QUESTIONS[2], TEST_QUESTIONS[3]],
+  "treasure-test-a": [TEST_QUESTIONS[4]],
+  "trap-test-a": [TEST_QUESTIONS[5]],
 };
 
-export function getDungeonQuestionSet(questionSetId: string): readonly Question[] {
+export function getDungeonQuestionSet(
+  questionSetId: string,
+  expectedCount = 2,
+): readonly Question[] {
   const questions = DUNGEON_QUESTION_SETS[questionSetId];
   if (!questions) {
     throw new Error(`[dungeonQuestionSets] Unknown question set: ${questionSetId}`);
   }
-  if (questions.length !== 2) {
+  if (questions.length !== expectedCount) {
     throw new Error(
-      `[dungeonQuestionSets] ${questionSetId} must contain exactly 2 questions`,
+      `[dungeonQuestionSets] ${questionSetId} must contain exactly ${expectedCount} questions`,
     );
   }
   return questions;
@@ -33,6 +38,14 @@ export function runDungeonQuestionChecks(map: DungeonMapDefinition): void {
       }
       usedQuestionIds.add(question.id);
     }
+  }
+  for (const room of map.rooms.filter(
+    (candidate) => candidate.type === "treasure" || candidate.type === "trap",
+  )) {
+    if (!room.eventConfig) {
+      throw new Error(`[dungeonQuestionChecks] ${room.id} needs eventConfig`);
+    }
+    getDungeonQuestionSet(room.eventConfig.questionSetId, 1);
   }
   console.info("dungeon question checks: PASS");
 }

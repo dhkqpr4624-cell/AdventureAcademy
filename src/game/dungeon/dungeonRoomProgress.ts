@@ -29,12 +29,20 @@ export function completeRoomEvent(
   progress: Record<string, DungeonRoomProgress>,
   roomId: string,
 ): Record<string, DungeonRoomProgress> {
+  return completeRoomEventWithResult(progress, roomId);
+}
+
+export function completeRoomEventWithResult(
+  progress: Record<string, DungeonRoomProgress>,
+  roomId: string,
+  eventResult?: DungeonRoomProgress["eventResult"],
+): Record<string, DungeonRoomProgress> {
   const current = progress[roomId];
   if (!current || current.eventCompleted) {
     return progress;
   }
   return {
     ...progress,
-    [roomId]: { ...current, eventCompleted: true },
+    [roomId]: { ...current, eventCompleted: true, eventResult },
   };
 }

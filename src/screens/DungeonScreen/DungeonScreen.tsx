@@ -18,10 +18,13 @@ import {
 } from "../../game/dungeon/dungeonQuestionSets";
 import {
   completeRoomEvent,
+  completeRoomEventWithResult,
   createInitialRoomProgress,
   shouldCompleteCombatRoom,
 } from "../../game/dungeon/dungeonRoomProgress";
 import { resolveRoomEntry } from "../../game/dungeon/RoomEventController";
+import { runDungeonRoomEventChecks } from "../../game/dungeon/dungeonRoomEventChecks";
+import { resolveDungeonRoomEvent } from "../../game/dungeon/dungeonRoomEventResolver";
 import {
   getConnectionsForRoom,
   getDungeonRoom,
@@ -29,9 +32,14 @@ import {
 } from "../../game/dungeon/testDungeonMap";
 import type {
   DungeonDirection,
+  DungeonRoomNode,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
+import treasureClosedUrl from "../../assets/dungeon/events/treasure_closed.png";
+import treasureOpenUrl from "../../assets/dungeon/events/treasure_open.png";
+import trapIdleUrl from "../../assets/dungeon/events/trap_idle.png";
+import trapTriggeredUrl from "../../assets/dungeon/events/trap_triggered.png";
 import {
   getPotionHealAmount,
   resolvePotionUse,
@@ -100,6 +108,15 @@ type CombatVisuals = {
 };
 
 type DungeonMode = "exploration" | "moving" | "roomEvent" | "combat";
+type RoomEventKind = "treasure" | "trap";
+type RoomEventPhase = "question" | "review" | "result";
+type ActiveRoomEvent = {
+  roomId: string;
+  kind: RoomEventKind;
+  phase: RoomEventPhase;
+  isCorrect?: boolean;
+  message?: string;
+};
 
 const MAX_HP = 50;
 const ENEMY_ATTACK = 7;
@@ -127,6 +144,20 @@ const DIRECTION_LABELS: Record<DungeonDirection, string> = {
   right: "오른쪽 길로 가기",
   back: "뒤로가기",
 };
+
+function requireTreasureConfig(room: DungeonRoomNode) {
+  if (!room.eventConfig || !("rewardId" in room.eventConfig)) {
+    throw new Error(`[DungeonScreen] Treasure room ${room.id} has no treasure config`);
+  }
+  return room.eventConfig;
+}
+
+function requireTrapConfig(room: DungeonRoomNode) {
+  if (!room.eventConfig || !("damage" in room.eventConfig)) {
+    throw new Error(`[DungeonScreen] Trap room ${room.id} has no trap config`);
+  }
+  return room.eventConfig;
+}
 
 function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
   switch (phase) {
@@ -166,6 +197,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const roomEventProcessingRef = useRef(false);
   const dungeonCompletionProcessingRef = useRef(false);
   const activeCombatRoomIdRef = useRef<string | null>(null);
+  const pendingRoomEventResultRef = useRef<QuestionResult | null>(null);
   const activeQuestionsRef = useRef(
     getDungeonQuestionSet("normal-garlic-a"),
   );
@@ -215,6 +247,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const [activeQuestions, setActiveQuestions] = useState(
     activeQuestionsRef.current,
   );
+  const [activeRoomEvent, setActiveRoomEvent] =
+    useState<ActiveRoomEvent | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -226,6 +260,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       runDungeonCameraChecks();
       runDungeonQuestionChecks(TEST_DUNGEON_MAP);
       runDungeonCompletionChecks();
+      runDungeonRoomEventChecks();
     }
     return () => {
       mountedRef.current = false;
@@ -1027,6 +1062,72 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     dungeonCompletionProcessingRef.current = false;
   };
 
+  const startRoomEvent = (roomId: string, kind: RoomEventKind) => {
+    if (
+      activeRoomEvent ||
+      roomProgressRef.current[roomId]?.eventCompleted
+    ) {
+      return;
+    }
+    const room = getDungeonRoom(roomId);
+    const config =
+      kind === "treasure"
+        ? requireTreasureConfig(room)
+        : requireTrapConfig(room);
+    const questions = getDungeonQuestionSet(config.questionSetId, 1);
+    pendingRoomEventResultRef.current = null;
+    setActiveRoomEvent({ roomId, kind, phase: "question" });
+    setActiveQuestions(questions);
+    setDungeonMode("roomEvent");
+    setExplorationMessage(
+      kind === "trap" ? "스위치를 밟았다!" : "보물상자를 조사한다.",
+    );
+  };
+
+  const finishRoomEventAfterReview = () => {
+    const event = activeRoomEvent;
+    const result = pendingRoomEventResultRef.current;
+    if (!event || event.phase !== "review" || !result) {
+      return;
+    }
+    const room = getDungeonRoom(event.roomId);
+    const resolution = resolveDungeonRoomEvent(room, result.isCorrect);
+    if (resolution.damage > 0) {
+      setPlayerHp((current) => Math.max(0, current - resolution.damage));
+      setFloatingText(`-${resolution.damage}`);
+      setDamageFlash(true);
+      window.setTimeout(() => {
+        if (mountedRef.current) {
+          setFloatingText(null);
+          setDamageFlash(false);
+        }
+      }, 240);
+    }
+    const nextProgress = completeRoomEventWithResult(
+      roomProgressRef.current,
+      event.roomId,
+      resolution.eventResult,
+    );
+    roomProgressRef.current = nextProgress;
+    setRoomProgress(nextProgress);
+    setExplorationMessage(resolution.message);
+    setActiveRoomEvent({
+      ...event,
+      phase: "result",
+      isCorrect: result.isCorrect,
+      message: resolution.message,
+    });
+  };
+
+  const continueAfterRoomEvent = () => {
+    if (!activeRoomEvent || activeRoomEvent.phase !== "result") {
+      return;
+    }
+    pendingRoomEventResultRef.current = null;
+    setActiveRoomEvent(null);
+    setDungeonMode("exploration");
+  };
+
   const handleRoomEntered = (roomId: string) => {
     if (roomEventProcessingRef.current) {
       return;
@@ -1038,6 +1139,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       const action = resolveRoomEntry(room, roomProgressRef.current[roomId]);
       if (action.type === "startCombat") {
         startCombatForRoom(roomId);
+        return;
+      }
+      if (action.type === "startTrap") {
+        setExplorationMessage(action.message);
+        startRoomEvent(roomId, "trap");
         return;
       }
       setExplorationMessage(action.message);
@@ -1085,11 +1191,13 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     movementProcessingRef.current = false;
     roomEventProcessingRef.current = false;
     activeCombatRoomIdRef.current = null;
+    pendingRoomEventResultRef.current = null;
     dungeonCompletionProcessingRef.current = false;
     const nextProgress = createInitialRoomProgress(TEST_DUNGEON_MAP);
     roomProgressRef.current = nextProgress;
     setRoomProgress(nextProgress);
     setActiveCombatRoomId(null);
+    setActiveRoomEvent(null);
     setPreviousRoomId(null);
     setCurrentRoomId(TEST_DUNGEON_MAP.startRoomId);
     setDungeonMode("exploration");
@@ -1125,6 +1233,21 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   ].includes(phase);
   const buttonsLocked = animationInProgress || interactionLocked;
   const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
+  const currentRoom = getDungeonRoom(currentRoomId);
+  const currentRoomProgress = roomProgress[currentRoomId];
+  const treasureVisible = currentRoom.type === "treasure";
+  const roomEventImage =
+    treasureVisible
+      ? currentRoomProgress?.eventResult === "treasureOpened"
+        ? treasureOpenUrl
+        : treasureClosedUrl
+      : activeRoomEvent?.kind === "trap"
+        ? activeRoomEvent.phase === "result"
+          ? activeRoomEvent.isCorrect
+            ? null
+            : trapTriggeredUrl
+          : trapIdleUrl
+        : null;
   const combatStatusBar = (
     <div
       className="combat-status-bar"
@@ -1184,6 +1307,73 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         }`}>
           {floatingText}
         </strong>
+      )}
+
+      {roomEventImage && (
+        <div className="dungeon-room-event-image" aria-hidden="true">
+          <img
+            src={roomEventImage}
+            alt=""
+            className={activeRoomEvent?.kind === "trap" ? "is-trap" : "is-treasure"}
+          />
+        </div>
+      )}
+
+      {treasureVisible &&
+        dungeonMode === "exploration" &&
+        !currentRoomProgress?.eventCompleted && (
+          <section className="dungeon-room-event-action" aria-label="보물상자">
+            <p>닫힌 보물상자가 놓여 있다.</p>
+            <button
+              type="button"
+              onClick={() => startRoomEvent(currentRoomId, "treasure")}
+            >
+              조사하기
+            </button>
+          </section>
+        )}
+
+      {activeRoomEvent &&
+        (activeRoomEvent.phase === "question" ||
+          activeRoomEvent.phase === "review") && (
+          <section
+            className="dungeon-room-event-panel is-question"
+            aria-label={activeRoomEvent.kind === "treasure" ? "보물상자 문제" : "함정 문제"}
+          >
+            <QuestionScreen
+              key={`${activeRoomEvent.roomId}-${activeRoomEvent.kind}`}
+              embedded
+              eyebrow={activeRoomEvent.kind === "treasure" ? "TREASURE QUESTION" : "TRAP QUESTION"}
+              questions={activeQuestions}
+              onNavigate={onNavigate}
+              onReviewChange={(result) => {
+                pendingRoomEventResultRef.current = result;
+                setActiveRoomEvent((current) =>
+                  current ? { ...current, phase: "review" } : current,
+                );
+              }}
+              onResult={(result) => {
+                pendingRoomEventResultRef.current = result;
+              }}
+              onComplete={finishRoomEventAfterReview}
+            />
+          </section>
+        )}
+
+      {activeRoomEvent?.phase === "result" && (
+        <section className="dungeon-room-event-panel is-result" role="status">
+          <p className="eyebrow">
+            {activeRoomEvent.kind === "treasure" ? "TREASURE RESULT" : "TRAP RESULT"}
+          </p>
+          <h2>{activeRoomEvent.message}</h2>
+          {activeRoomEvent.kind === "treasure" &&
+            activeRoomEvent.isCorrect && (
+              <p>보물을 획득했다!</p>
+            )}
+          <button type="button" onClick={continueAfterRoomEvent}>
+            이동 계속하기
+          </button>
+        </section>
       )}
 
       {dungeonMode === "combat" && <section className="dungeon-overlay">
