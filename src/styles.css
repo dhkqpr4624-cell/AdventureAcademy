@@ -2084,6 +2084,19 @@ button:focus-visible {
   max-height: 64vh;
 }
 
+.dungeon-room-event-image img.is-revealing {
+  animation: dungeon-event-reveal 220ms ease-out both;
+}
+
+@keyframes dungeon-event-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .dungeon-room-event-action,
 .dungeon-room-event-panel {
   position: absolute;
@@ -2131,6 +2144,10 @@ button:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dungeon-room-event-image img.is-revealing {
+    animation-duration: 60ms;
+  }
+
   .dungeon-direction-buttons button,
   .dungeon-reset-button {
     transition: none;

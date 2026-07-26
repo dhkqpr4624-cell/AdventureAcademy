@@ -156,7 +156,7 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "right",
       directionFromTarget: "back",
       cameraPath: [
-        { kind: "roomExit", position: [0, CAMERA_Y, -17] },
+        { kind: "roomExit", position: [0, CAMERA_Y, -15] },
         { kind: "junction", position: [0, CAMERA_Y, -16] },
         { kind: "corridor", position: [6, CAMERA_Y, -16] },
         { kind: "roomEntrance", position: [11, CAMERA_Y, -16] },
@@ -184,7 +184,7 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "left",
       directionFromTarget: "back",
       cameraPath: [
-        { kind: "roomExit", position: [0, CAMERA_Y, -33] },
+        { kind: "roomExit", position: [0, CAMERA_Y, -31] },
         { kind: "junction", position: [0, CAMERA_Y, -32] },
         { kind: "corridor", position: [-6, CAMERA_Y, -32] },
         { kind: "roomEntrance", position: [-11, CAMERA_Y, -32] },
