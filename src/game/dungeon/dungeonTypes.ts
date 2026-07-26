@@ -6,16 +6,32 @@ export type DungeonFacing = "north" | "east" | "south" | "west";
 
 export type DungeonVector3 = [number, number, number];
 
+export type DungeonCameraPathPointKind =
+  | "roomCenter"
+  | "roomExit"
+  | "junction"
+  | "corridor"
+  | "roomEntrance";
+
 export type DungeonCameraPathPoint = {
+  kind?: DungeonCameraPathPointKind;
   position: DungeonVector3;
+  lookAt?: DungeonVector3;
   rotationY?: number;
   duration?: number;
 };
 
-export type DungeonCameraPoint = {
+export type DungeonCameraPose = {
   position: DungeonVector3;
   lookAt: DungeonVector3;
-  rotationY: number;
+  rotationY?: number;
+};
+
+export type DungeonCombatConfig = {
+  monsterId: string;
+  questionSetId: string;
+  monsterPosition: DungeonVector3;
+  combatCameraPose: DungeonCameraPose;
 };
 
 export type DungeonRoomNode = {
@@ -27,7 +43,8 @@ export type DungeonRoomNode = {
     z: number;
   };
   facing: DungeonFacing;
-  cameraPoint: DungeonCameraPoint;
+  explorationCameraPose: DungeonCameraPose;
+  combatConfig?: DungeonCombatConfig;
 };
 
 export type DungeonConnection = {

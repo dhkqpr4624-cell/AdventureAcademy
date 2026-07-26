@@ -37,7 +37,15 @@ export function runDungeonMapChecks(): void {
     check(roomIdSet.has(connection.fromRoomId), "fromRoomId must exist");
     check(roomIdSet.has(connection.toRoomId), "toRoomId must exist");
     check(connection.fromRoomId !== connection.toRoomId, "self links are invalid");
-    check(connection.cameraPath.length >= 2, "cameraPath needs at least 2 points");
+    check(connection.cameraPath.length >= 4, "cameraPath needs at least 4 points");
+    check(
+      connection.cameraPath.some((point) => point.kind === "roomExit"),
+      "cameraPath needs a room exit",
+    );
+    check(
+      connection.cameraPath.some((point) => point.kind === "roomEntrance"),
+      "cameraPath needs a room entrance",
+    );
     check(
       getConnectionsForRoom(connection.fromRoomId).some(
         (item) => item.targetRoomId === connection.toRoomId,

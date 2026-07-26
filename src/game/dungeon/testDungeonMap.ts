@@ -5,7 +5,7 @@ import type {
   TraversableDungeonConnection,
 } from "./dungeonTypes";
 
-const PI = Math.PI;
+const CAMERA_Y = 0.2;
 
 export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
   startRoomId: "room-start",
@@ -15,10 +15,9 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       type: "start",
       position: { x: 0, y: 0, z: 0 },
       facing: "north",
-      cameraPoint: {
+      explorationCameraPose: {
         position: [0, 0.2, 3.8],
         lookAt: [0, -0.15, -4],
-        rotationY: 0,
       },
     },
     {
@@ -26,10 +25,9 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       type: "empty",
       position: { x: 0, y: 0, z: -16 },
       facing: "north",
-      cameraPoint: {
+      explorationCameraPose: {
         position: [0, 0.2, -12.2],
         lookAt: [0, -0.15, -20],
-        rotationY: 0,
       },
     },
     {
@@ -37,10 +35,18 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       type: "combat",
       position: { x: -16, y: 0, z: -16 },
       facing: "west",
-      cameraPoint: {
+      explorationCameraPose: {
         position: [-12.2, 0.2, -16],
         lookAt: [-20, -0.15, -16],
-        rotationY: -PI / 2,
+      },
+      combatConfig: {
+        monsterId: "garlic-king",
+        questionSetId: "normal-garlic-a",
+        monsterPosition: [-17.2, 0.05, -16],
+        combatCameraPose: {
+          position: [-12.2, 0.2, -16],
+          lookAt: [-17.2, 0.05, -16],
+        },
       },
     },
     {
@@ -48,10 +54,9 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       type: "empty",
       position: { x: 0, y: 0, z: -32 },
       facing: "north",
-      cameraPoint: {
+      explorationCameraPose: {
         position: [0, 0.2, -28.2],
         lookAt: [0, -0.15, -36],
-        rotationY: 0,
       },
     },
     {
@@ -59,10 +64,18 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       type: "combat",
       position: { x: 16, y: 0, z: -32 },
       facing: "east",
-      cameraPoint: {
+      explorationCameraPose: {
         position: [12.2, 0.2, -32],
         lookAt: [20, -0.15, -32],
-        rotationY: PI / 2,
+      },
+      combatConfig: {
+        monsterId: "garlic-king",
+        questionSetId: "normal-garlic-b",
+        monsterPosition: [17.2, 0.05, -32],
+        combatCameraPose: {
+          position: [12.2, 0.2, -32],
+          lookAt: [17.2, 0.05, -32],
+        },
       },
     },
   ],
@@ -74,9 +87,10 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "forward",
       directionFromTarget: "back",
       cameraPath: [
-        { position: [0, 0.2, -2], rotationY: 0, duration: 260 },
-        { position: [0, 0.2, -8], rotationY: 0, duration: 420 },
-        { position: [0, 0.2, -12.2], rotationY: 0, duration: 300 },
+        { kind: "roomExit", position: [0, CAMERA_Y, 0] },
+        { kind: "corridor", position: [0, CAMERA_Y, -5] },
+        { kind: "roomEntrance", position: [0, CAMERA_Y, -10] },
+        { kind: "roomCenter", position: [0, CAMERA_Y, -12.2] },
       ],
     },
     {
@@ -86,9 +100,11 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "left",
       directionFromTarget: "back",
       cameraPath: [
-        { position: [-2, 0.2, -16], rotationY: -PI / 4, duration: 300 },
-        { position: [-8, 0.2, -16], rotationY: -PI / 2, duration: 420 },
-        { position: [-12.2, 0.2, -16], rotationY: -PI / 2, duration: 300 },
+        { kind: "roomExit", position: [0, CAMERA_Y, -15] },
+        { kind: "junction", position: [0, CAMERA_Y, -16] },
+        { kind: "corridor", position: [-6, CAMERA_Y, -16] },
+        { kind: "roomEntrance", position: [-11, CAMERA_Y, -16] },
+        { kind: "roomCenter", position: [-12.2, CAMERA_Y, -16] },
       ],
     },
     {
@@ -98,9 +114,10 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "forward",
       directionFromTarget: "back",
       cameraPath: [
-        { position: [0, 0.2, -18], rotationY: 0, duration: 260 },
-        { position: [0, 0.2, -24], rotationY: 0, duration: 420 },
-        { position: [0, 0.2, -28.2], rotationY: 0, duration: 300 },
+        { kind: "roomExit", position: [0, CAMERA_Y, -20] },
+        { kind: "corridor", position: [0, CAMERA_Y, -24] },
+        { kind: "roomEntrance", position: [0, CAMERA_Y, -27] },
+        { kind: "roomCenter", position: [0, CAMERA_Y, -28.2] },
       ],
     },
     {
@@ -110,9 +127,11 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
       directionFromSource: "right",
       directionFromTarget: "back",
       cameraPath: [
-        { position: [2, 0.2, -32], rotationY: PI / 4, duration: 300 },
-        { position: [8, 0.2, -32], rotationY: PI / 2, duration: 420 },
-        { position: [12.2, 0.2, -32], rotationY: PI / 2, duration: 300 },
+        { kind: "roomExit", position: [0, CAMERA_Y, -31] },
+        { kind: "junction", position: [0, CAMERA_Y, -32] },
+        { kind: "corridor", position: [6, CAMERA_Y, -32] },
+        { kind: "roomEntrance", position: [11, CAMERA_Y, -32] },
+        { kind: "roomCenter", position: [12.2, CAMERA_Y, -32] },
       ],
     },
   ],
@@ -130,16 +149,23 @@ function reversePath(
   destination: DungeonRoomNode,
   cameraPath: DungeonCameraPathPoint[],
 ): DungeonCameraPathPoint[] {
-  const reversed = cameraPath
-    .slice(0, -1)
-    .reverse()
-    .map((point) => ({ ...point }));
+  const reversed = cameraPath.slice(0, -1).reverse().map((point) => ({
+    ...point,
+    kind:
+      point.kind === "roomExit"
+        ? "roomEntrance" as const
+        : point.kind === "roomEntrance"
+          ? "roomExit" as const
+          : point.kind,
+    rotationY: undefined,
+    lookAt: undefined,
+  }));
   return [
     ...reversed,
     {
-      position: destination.cameraPoint.position,
-      rotationY: destination.cameraPoint.rotationY,
-      duration: 300,
+      kind: "roomCenter",
+      position: destination.explorationCameraPose.position,
+      lookAt: destination.explorationCameraPose.lookAt,
     },
   ];
 }

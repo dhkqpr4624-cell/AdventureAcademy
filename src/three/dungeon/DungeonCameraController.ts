@@ -1,19 +1,68 @@
 import * as THREE from "three";
-import type { DungeonCameraPathPoint } from "../../game/dungeon/dungeonTypes";
+import type {
+  DungeonCameraPathPoint,
+  DungeonCameraPose,
+} from "../../game/dungeon/dungeonTypes";
 
 type MovementOptions = {
   reducedMotion: boolean;
   onComplete: () => void;
 };
 
-function easeInOutCubic(value: number): number {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2;
+type PreparedCameraSegment = {
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  length: number;
+  cumulativeStart: number;
+  cumulativeEnd: number;
+  yaw: number;
+};
+
+const CAMERA_SPEED_UNITS_PER_SECOND = 10;
+
+function easeAtWholePathEnds(progress: number): number {
+  const edge = 0.12;
+  if (progress < edge) {
+    const local = progress / edge;
+    // Starts at velocity 0 and joins the linear middle with velocity 1.
+    return edge * local * local * (2 - local);
+  }
+  if (progress > 1 - edge) {
+    const remaining = (1 - progress) / edge;
+    return 1 - edge * remaining * remaining * (2 - remaining);
+  }
+  return progress;
 }
 
 function shortestAngleDelta(from: number, to: number): number {
   return THREE.MathUtils.euclideanModulo(to - from + Math.PI, Math.PI * 2) - Math.PI;
+}
+
+export function getYawFromDirection(
+  from: THREE.Vector3,
+  to: THREE.Vector3,
+): number {
+  const direction = to.clone().sub(from);
+  if (direction.lengthSq() < Number.EPSILON) {
+    return 0;
+  }
+  // A Three.js camera looks along local -Z. This yaw maps -Z to the
+  // movement vector, so left (-X) is +PI/2 and right (+X) is -PI/2.
+  return Math.atan2(-direction.x, -direction.z);
+}
+
+export function getCameraForwardFromYaw(yaw: number): THREE.Vector3 {
+  return new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize();
+}
+
+function yawFromPose(pose: DungeonCameraPose): number {
+  if (pose.rotationY !== undefined) {
+    return pose.rotationY;
+  }
+  return getYawFromDirection(
+    new THREE.Vector3(...pose.position),
+    new THREE.Vector3(...pose.lookAt),
+  );
 }
 
 export class DungeonCameraController {
@@ -24,10 +73,26 @@ export class DungeonCameraController {
     this.camera.rotation.order = "YXZ";
   }
 
-  setPose(position: readonly number[], rotationY: number): void {
+  setPose(pose: DungeonCameraPose): void {
     this.cancel();
-    this.camera.position.set(position[0], position[1], position[2]);
-    this.camera.rotation.set(0, rotationY, 0);
+    this.camera.position.set(...pose.position);
+    this.camera.rotation.set(0, yawFromPose(pose), 0);
+  }
+
+  transitionToPose(
+    pose: DungeonCameraPose,
+    reducedMotion: boolean,
+    onComplete: () => void,
+  ): void {
+    this.moveAlongPath(
+      [{
+        kind: "roomCenter",
+        position: pose.position,
+        lookAt: pose.lookAt,
+        rotationY: pose.rotationY,
+      }],
+      { reducedMotion, onComplete },
+    );
   }
 
   moveAlongPath(
@@ -36,51 +101,87 @@ export class DungeonCameraController {
   ): void {
     this.cancel();
     const sequenceId = ++this.sequenceId;
-    const points = options.reducedMotion ? path.slice(-1) : path;
-    let pointIndex = 0;
+    if (path.length === 0) {
+      options.onComplete();
+      return;
+    }
 
-    const moveToNextPoint = () => {
+    const positions = [
+      this.camera.position.clone(),
+      ...path.map((point) => new THREE.Vector3(...point.position)),
+    ];
+    let cumulative = 0;
+    const segments: PreparedCameraSegment[] = [];
+    for (let index = 0; index < positions.length - 1; index += 1) {
+      const from = positions[index];
+      const to = positions[index + 1];
+      const length = from.distanceTo(to);
+      if (length <= Number.EPSILON) {
+        continue;
+      }
+      segments.push({
+        from,
+        to,
+        length,
+        cumulativeStart: cumulative,
+        cumulativeEnd: cumulative + length,
+        yaw: getYawFromDirection(from, to),
+      });
+      cumulative += length;
+    }
+    if (segments.length === 0) {
+      options.onComplete();
+      return;
+    }
+
+    const totalLength = cumulative;
+    const duration = options.reducedMotion
+      ? 80
+      : Math.max(500, (totalLength / CAMERA_SPEED_UNITS_PER_SECOND) * 1000);
+    const initialYaw = this.camera.rotation.y;
+    const startedAt = performance.now();
+
+    const animate = (now: number) => {
       if (sequenceId !== this.sequenceId) {
         return;
       }
-      const point = points[pointIndex];
-      if (!point) {
+      const rawProgress = Math.min(1, (now - startedAt) / duration);
+      const travelled = easeAtWholePathEnds(rawProgress) * totalLength;
+      const segment =
+        segments.find((candidate) => travelled <= candidate.cumulativeEnd) ??
+        segments[segments.length - 1];
+      const localProgress = THREE.MathUtils.clamp(
+        (travelled - segment.cumulativeStart) / segment.length,
+        0,
+        1,
+      );
+      this.camera.position.lerpVectors(segment.from, segment.to, localProgress);
+
+      const segmentIndex = segments.indexOf(segment);
+      const previousYaw =
+        segmentIndex === 0 ? initialYaw : segments[segmentIndex - 1].yaw;
+      const turnProgress = THREE.MathUtils.smoothstep(localProgress, 0, 0.32);
+      this.camera.rotation.y =
+        previousYaw + shortestAngleDelta(previousYaw, segment.yaw) * turnProgress;
+
+      if (rawProgress >= 1) {
+        const finalPoint = path[path.length - 1];
+        const finalPosition = new THREE.Vector3(...finalPoint.position);
+        this.camera.position.copy(finalPosition);
+        const finalYaw = finalPoint.lookAt
+          ? getYawFromDirection(
+              finalPosition,
+              new THREE.Vector3(...finalPoint.lookAt),
+            )
+          : finalPoint.rotationY ?? segments[segments.length - 1].yaw;
+        this.camera.rotation.y = finalYaw;
         this.frameId = null;
         options.onComplete();
         return;
       }
-
-      const startPosition = this.camera.position.clone();
-      const targetPosition = new THREE.Vector3(...point.position);
-      const startRotationY = this.camera.rotation.y;
-      const targetRotationY = point.rotationY ?? startRotationY;
-      const rotationDelta = shortestAngleDelta(startRotationY, targetRotationY);
-      const duration = options.reducedMotion
-        ? 40
-        : Math.max(80, point.duration ?? 360);
-      const startedAt = performance.now();
-
-      const animate = (now: number) => {
-        if (sequenceId !== this.sequenceId) {
-          return;
-        }
-        const progress = Math.min(1, (now - startedAt) / duration);
-        const eased = easeInOutCubic(progress);
-        this.camera.position.lerpVectors(startPosition, targetPosition, eased);
-        this.camera.rotation.y = startRotationY + rotationDelta * eased;
-        if (progress >= 1) {
-          this.camera.position.copy(targetPosition);
-          this.camera.rotation.y = targetRotationY;
-          pointIndex += 1;
-          moveToNextPoint();
-          return;
-        }
-        this.frameId = requestAnimationFrame(animate);
-      };
       this.frameId = requestAnimationFrame(animate);
     };
-
-    moveToNextPoint();
+    this.frameId = requestAnimationFrame(animate);
   }
 
   cancel(): void {
