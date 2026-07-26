@@ -596,6 +596,14 @@ button:focus-visible {
     0 0 18px rgba(255, 72, 72, 0.76);
 }
 
+.combat-floating-text.is-heal {
+  top: 28%;
+  color: #8ff0a4;
+  text-shadow:
+    0 3px 0 #174d2a,
+    0 0 18px rgba(77, 224, 126, 0.72);
+}
+
 .combat-damage-flash {
   position: absolute;
   inset: 0;
@@ -795,6 +803,45 @@ button:focus-visible {
 .combat-command-buttons button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
+}
+
+.combat-item-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 0.65rem;
+}
+
+.combat-item-panel button {
+  display: grid;
+  min-height: 3.8rem;
+  align-content: center;
+  gap: 0.12rem;
+}
+
+.combat-item-panel button span,
+.combat-item-panel button small {
+  font-size: 0.68rem;
+}
+
+.combat-item-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.combat-item-confirm {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.combat-item-confirm p {
+  margin: 0;
+  color: #f7e9bd;
+}
+
+.combat-item-confirm > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
 .question-screen.is-embedded {

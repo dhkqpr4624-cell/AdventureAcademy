@@ -8,6 +8,13 @@ import {
 import { TEST_QUESTIONS } from "../../data/testQuestions";
 import { runNormalCombatChecks } from "../../game/combat/normalCombatChecks";
 import { runCriticalChecks } from "../../game/combat/criticalChecks";
+import { runPotionChecks } from "../../game/combat/potionChecks";
+import {
+  getPotionHealAmount,
+  resolvePotionUse,
+  type PotionKind,
+  type PotionUseResult,
+} from "../../game/combat/potionResolver";
 import {
   DEFAULT_CRITICAL_CHANCE,
   applyCriticalResult,
@@ -38,6 +45,10 @@ type DungeonScreenProps = {
 type NormalCombatPhase =
   | "intro"
   | "playerCommand"
+  | "itemSelect"
+  | "awaitItemUse"
+  | "itemUse"
+  | "awaitHealResult"
   | "question"
   | "review"
   | "awaitPlayerAttack"
@@ -65,6 +76,8 @@ type CombatVisuals = {
 const NORMAL_COMBAT_QUESTIONS = [TEST_QUESTIONS[0], TEST_QUESTIONS[1]] as const;
 const MAX_HP = 50;
 const ENEMY_ATTACK = 7;
+const INITIAL_SMALL_POTION_QUANTITY = 2;
+const INITIAL_MEDIUM_POTION_QUANTITY = 1;
 const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_COMMAND_POSITION = new THREE.Vector3(0, 0.12, -4.7);
 const MONSTER_QUESTION_POSITION = new THREE.Vector3(0, 0.62, -4.7);
@@ -105,6 +118,10 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const monsterPositionTargetRef = useRef(MONSTER_COMMAND_POSITION);
   const criticalStateRef = useRef<CriticalCombatState>(INITIAL_CRITICAL_STATE);
   const forceCriticalNextAttackRef = useRef(false);
+  const itemProcessingRef = useRef(false);
+  const selectedPotionRef = useRef<PotionKind | null>(null);
+  const pendingPotionResultRef = useRef<PotionUseResult | null>(null);
+  const enemyTurnFromItemRef = useRef(false);
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -116,6 +133,14 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const [criticalEffect, setCriticalEffect] = useState(false);
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
   const [interactionLocked, setInteractionLocked] = useState(false);
+  const [smallPotionQuantity, setSmallPotionQuantity] = useState(
+    INITIAL_SMALL_POTION_QUANTITY,
+  );
+  const [mediumPotionQuantity, setMediumPotionQuantity] = useState(
+    INITIAL_MEDIUM_POTION_QUANTITY,
+  );
+  const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
+  const [mustAttackNextTurn, setMustAttackNextTurn] = useState(false);
   const [combatMessage, setCombatMessage] = useState(
     "마늘킹이 나타났다!",
   );
@@ -129,6 +154,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     if (import.meta.env.DEV) {
       runNormalCombatChecks();
       runCriticalChecks();
+      runPotionChecks();
     }
     return () => {
       mountedRef.current = false;
@@ -486,6 +512,112 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     }
   };
 
+  const potionName = (kind: PotionKind) =>
+    kind === "smallPotion" ? "소형 회복 물약" : "중형 회복 물약";
+
+  const potionQuantity = (kind: PotionKind) =>
+    kind === "smallPotion" ? smallPotionQuantity : mediumPotionQuantity;
+
+  const openItemSelect = () => {
+    if (
+      phase !== "playerCommand" ||
+      processingRef.current ||
+      mustAttackNextTurn ||
+      playerHp >= MAX_HP
+    ) {
+      return;
+    }
+    setPhase("itemSelect");
+    setCombatMessage("사용할 아이템을 선택하세요.");
+  };
+
+  const selectPotion = (kind: PotionKind) => {
+    if (
+      phase !== "itemSelect" ||
+      itemProcessingRef.current ||
+      potionQuantity(kind) <= 0 ||
+      playerHp >= MAX_HP
+    ) {
+      return;
+    }
+    selectedPotionRef.current = kind;
+    setSelectedPotion(kind);
+    setPhase("awaitItemUse");
+    setCombatMessage(`${potionName(kind)}을 사용할까?`);
+  };
+
+  const cancelItemSelect = () => {
+    if (itemProcessingRef.current) {
+      return;
+    }
+    selectedPotionRef.current = null;
+    setSelectedPotion(null);
+    setPhase("playerCommand");
+    setCombatMessage("무엇을 할까?");
+  };
+
+  const confirmPotionUse = () => {
+    const kind = selectedPotionRef.current;
+    if (
+      phase !== "awaitItemUse" ||
+      !kind ||
+      itemProcessingRef.current ||
+      processingRef.current
+    ) {
+      return;
+    }
+
+    itemProcessingRef.current = true;
+    const result = resolvePotionUse({
+      currentHp: playerHp,
+      maxHp: MAX_HP,
+      potionKind: kind,
+      quantity: potionQuantity(kind),
+    });
+    if (!result.success) {
+      itemProcessingRef.current = false;
+      selectedPotionRef.current = null;
+      setSelectedPotion(null);
+      setPhase("itemSelect");
+      setCombatMessage(
+        result.failureReason === "fullHp"
+          ? "HP가 가득 차 있어 물약을 사용할 수 없다."
+          : "해당 물약을 가지고 있지 않다.",
+      );
+      return;
+    }
+
+    processingRef.current = true;
+    enemyTurnFromItemRef.current = true;
+    pendingPotionResultRef.current = result;
+    if (kind === "smallPotion") {
+      setSmallPotionQuantity(result.remainingQuantity);
+    } else {
+      setMediumPotionQuantity(result.remainingQuantity);
+    }
+    setMustAttackNextTurn(true);
+    setPhase("itemUse");
+    setCombatMessage(
+      `${DEFAULT_PLAYER_NAME}는 ${potionName(kind)}을 사용했다.`,
+    );
+  };
+
+  const applyPotionHealing = () => {
+    const result = pendingPotionResultRef.current;
+    if (phase !== "itemUse" || !result) {
+      return;
+    }
+    setPlayerHp(result.nextHp);
+    setFloatingText(`+${result.healedAmount}`);
+    setPhase("awaitHealResult");
+    setCombatMessage(`HP가 ${result.healedAmount} 회복되었다.`);
+    window.setTimeout(() => {
+      if (mountedRef.current) {
+        setFloatingText(null);
+      }
+    }, 520);
+  };
+
   const advanceCombatMessage = async () => {
     if (interactionLockRef.current) {
       return;
@@ -498,6 +630,21 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         if (result) {
           await playPlayerAttack(result.isCorrect);
         }
+        return;
+      }
+
+      if (phase === "itemUse") {
+        applyPotionHealing();
+        return;
+      }
+
+      if (phase === "awaitHealResult") {
+        pendingPotionResultRef.current = null;
+        selectedPotionRef.current = null;
+        setSelectedPotion(null);
+        itemProcessingRef.current = false;
+        setPhase("awaitEnemyTurn");
+        setCombatMessage("마늘킹의 턴!");
         return;
       }
 
@@ -531,7 +678,13 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       }
 
       if (phase === "awaitDamageResult") {
-        if (questionIndexRef.current === 0) {
+        if (enemyTurnFromItemRef.current) {
+          enemyTurnFromItemRef.current = false;
+          pendingResultRef.current = null;
+          setPhase("playerCommand");
+          setCombatMessage("무엇을 할까?");
+          processingRef.current = false;
+        } else if (questionIndexRef.current === 0) {
           questionIndexRef.current = 1;
           setQuestionIndex(1);
           pendingResultRef.current = null;
@@ -542,6 +695,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
           setPhase("awaitEscape");
           setCombatMessage("마늘킹이 경계하며 뒤로 물러난다.");
         }
+        itemProcessingRef.current = false;
         return;
       }
 
@@ -574,6 +728,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       return;
     }
     pendingResultRef.current = null;
+    setMustAttackNextTurn(false);
     if (visualsRef.current) {
       visualsRef.current.sword.root.visible = false;
     }
@@ -605,6 +760,10 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     resultFinalizedRef.current = false;
     criticalStateRef.current = INITIAL_CRITICAL_STATE;
     forceCriticalNextAttackRef.current = false;
+    itemProcessingRef.current = false;
+    selectedPotionRef.current = null;
+    pendingPotionResultRef.current = null;
+    enemyTurnFromItemRef.current = false;
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
       visualsRef.current.sword.root.visible = true;
@@ -618,6 +777,10 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setCriticalEffect(false);
     setForceCriticalNextAttack(false);
     setInteractionLocked(false);
+    setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
+    setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
+    setSelectedPotion(null);
+    setMustAttackNextTurn(false);
     setResolution(null);
     setFloatingText(null);
     setDamageFlash(false);
@@ -693,7 +856,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         </div>
       )}
       {floatingText && (
-        <strong className={`combat-floating-text is-${floatingText.toLowerCase()}`}>
+        <strong className={`combat-floating-text ${
+          floatingText.startsWith("+")
+            ? "is-heal"
+            : `is-${floatingText.toLowerCase()}`
+        }`}>
           {floatingText}
         </strong>
       )}
@@ -730,11 +897,25 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
                   <button type="button" onClick={openQuestion}>공격하기</button>
                   <button
                     type="button"
-                    disabled
-                    title="아직 사용할 수 없습니다."
+                    onClick={openItemSelect}
+                    disabled={
+                      mustAttackNextTurn ||
+                      playerHp >= MAX_HP ||
+                      (smallPotionQuantity <= 0 &&
+                        mediumPotionQuantity <= 0)
+                    }
+                    title={
+                      mustAttackNextTurn
+                        ? "이번 턴에는 공격해야 합니다."
+                        : playerHp >= MAX_HP
+                          ? "HP가 가득 차 있습니다."
+                          : undefined
+                    }
                   >
                     아이템
-                    <small>아직 사용할 수 없습니다.</small>
+                    {mustAttackNextTurn && (
+                      <small>이번 턴에는 공격해야 합니다.</small>
+                    )}
                   </button>
                 </div>
                 {import.meta.env.DEV && (
@@ -757,7 +938,44 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
                 )}
               </>
             )}
+            {phase === "itemSelect" && (
+              <div className="combat-item-panel" aria-label="아이템 선택">
+                {(
+                  [
+                    ["smallPotion", smallPotionQuantity],
+                    ["mediumPotion", mediumPotionQuantity],
+                  ] as const
+                ).map(([kind, quantity]) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    disabled={quantity <= 0 || playerHp >= MAX_HP}
+                    onClick={() => selectPotion(kind)}
+                  >
+                    <strong>{potionName(kind)}</strong>
+                    <span>HP +{getPotionHealAmount(kind)}</span>
+                    <small>보유 {quantity}개</small>
+                  </button>
+                ))}
+                <button type="button" onClick={cancelItemSelect}>뒤로</button>
+              </div>
+            )}
+            {phase === "awaitItemUse" && selectedPotion && (
+              <div className="combat-item-confirm">
+                <p>
+                  {potionName(selectedPotion)} · HP +
+                  {getPotionHealAmount(selectedPotion)} · 보유{" "}
+                  {potionQuantity(selectedPotion)}개
+                </p>
+                <div>
+                  <button type="button" onClick={confirmPotionUse}>사용</button>
+                  <button type="button" onClick={cancelItemSelect}>취소</button>
+                </div>
+              </div>
+            )}
             {[
+              "itemUse",
+              "awaitHealResult",
               "awaitPlayerAttack",
               "awaitAttackResult",
               "awaitCriticalResult",
