@@ -9,6 +9,23 @@ import { TEST_QUESTIONS } from "../../data/testQuestions";
 import { runNormalCombatChecks } from "../../game/combat/normalCombatChecks";
 import { runCriticalChecks } from "../../game/combat/criticalChecks";
 import { runPotionChecks } from "../../game/combat/potionChecks";
+import { runDungeonMapChecks } from "../../game/dungeon/dungeonMapChecks";
+import {
+  completeRoomEvent,
+  createInitialRoomProgress,
+  shouldCompleteCombatRoom,
+} from "../../game/dungeon/dungeonRoomProgress";
+import { resolveRoomEntry } from "../../game/dungeon/RoomEventController";
+import {
+  getConnectionsForRoom,
+  getDungeonRoom,
+  TEST_DUNGEON_MAP,
+} from "../../game/dungeon/testDungeonMap";
+import type {
+  DungeonDirection,
+  DungeonRoomProgress,
+  TraversableDungeonConnection,
+} from "../../game/dungeon/dungeonTypes";
 import {
   getPotionHealAmount,
   resolvePotionUse,
@@ -29,6 +46,7 @@ import {
 import type { QuestionResult } from "../../types/question";
 import { QuestionScreen } from "../QuestionScreen/QuestionScreen";
 import { MonsterAnimationController } from "../../three/monster/MonsterAnimationController";
+import { DungeonCameraController } from "../../three/dungeon/DungeonCameraController";
 import {
   BASIC_SWORD_DEFINITION,
   SwordViewModel,
@@ -71,7 +89,11 @@ type CombatVisuals = {
   weapon: WeaponAnimationController;
   monster: MonsterAnimationController;
   monsterRoot: THREE.Group;
+  camera: THREE.PerspectiveCamera;
+  dungeonCamera: DungeonCameraController;
 };
+
+type DungeonMode = "exploration" | "moving" | "roomEvent" | "combat";
 
 const NORMAL_COMBAT_QUESTIONS = [TEST_QUESTIONS[0], TEST_QUESTIONS[1]] as const;
 const MAX_HP = 50;
@@ -86,6 +108,18 @@ const INITIAL_CRITICAL_STATE: CriticalCombatState = {
   hasCriticalOccurred: false,
   enemyStunned: false,
   pendingSkipEnemyTurn: false,
+};
+const DIRECTION_ORDER: DungeonDirection[] = [
+  "forward",
+  "left",
+  "right",
+  "back",
+];
+const DIRECTION_LABELS: Record<DungeonDirection, string> = {
+  forward: "앞으로 가기",
+  left: "왼쪽 길로 가기",
+  right: "오른쪽 길로 가기",
+  back: "뒤로가기",
 };
 
 function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
@@ -122,8 +156,28 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   const selectedPotionRef = useRef<PotionKind | null>(null);
   const pendingPotionResultRef = useRef<PotionUseResult | null>(null);
   const enemyTurnFromItemRef = useRef(false);
+  const movementProcessingRef = useRef(false);
+  const roomEventProcessingRef = useRef(false);
+  const activeCombatRoomIdRef = useRef<string | null>(null);
+  const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>(
+    createInitialRoomProgress(TEST_DUNGEON_MAP),
+  );
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
+  const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
+  const [currentRoomId, setCurrentRoomId] = useState(
+    TEST_DUNGEON_MAP.startRoomId,
+  );
+  const [previousRoomId, setPreviousRoomId] = useState<string | null>(null);
+  const [activeCombatRoomId, setActiveCombatRoomId] = useState<string | null>(
+    null,
+  );
+  const [roomProgress, setRoomProgress] = useState(
+    roomProgressRef.current,
+  );
+  const [explorationMessage, setExplorationMessage] = useState(
+    "던전의 시작점이다.",
+  );
   const [questionIndex, setQuestionIndex] = useState(0);
   const [playerHp, setPlayerHp] = useState(MAX_HP);
   const [actualEnemyAttackCount, setActualEnemyAttackCount] = useState(0);
@@ -155,6 +209,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       runNormalCombatChecks();
       runCriticalChecks();
       runPotionChecks();
+      runDungeonMapChecks();
     }
     return () => {
       mountedRef.current = false;
@@ -162,7 +217,19 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
   }, []);
 
   useEffect(() => {
-    if (phase !== "intro") {
+    const visuals = visualsRef.current;
+    if (!visuals) {
+      return;
+    }
+    const showMonster =
+      dungeonMode === "combat" &&
+      activeCombatRoomId === currentRoomId &&
+      !roomProgress[currentRoomId]?.eventCompleted;
+    visuals.monsterRoot.visible = showMonster;
+  }, [activeCombatRoomId, currentRoomId, dungeonMode, roomProgress]);
+
+  useEffect(() => {
+    if (dungeonMode !== "combat" || phase !== "intro") {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -172,14 +239,19 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       }
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [phase]);
+  }, [dungeonMode, phase]);
 
   useEffect(() => {
-    monsterPositionTargetRef.current =
+    const room = getDungeonRoom(currentRoomId);
+    const localPosition =
       phase === "question" || phase === "review"
         ? MONSTER_QUESTION_POSITION
         : MONSTER_COMMAND_POSITION;
-  }, [phase]);
+    monsterPositionTargetRef.current = localPosition
+      .clone()
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), room.cameraPoint.rotationY)
+      .add(new THREE.Vector3(room.position.x, room.position.y, room.position.z));
+  }, [currentRoomId, phase]);
 
   useEffect(() => {
     const container = sceneContainerRef.current;
@@ -191,19 +263,22 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     scene.background = new THREE.Color(0x090b10);
 
     const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 100);
-    camera.position.set(0, 0.2, 3.8);
-    camera.lookAt(0, -0.15, -4);
+    const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
+    camera.position.set(...startRoom.cameraPoint.position);
+    camera.lookAt(...startRoom.cameraPoint.lookAt);
     scene.add(camera);
+    const dungeonCamera = new DungeonCameraController(camera);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
-    const room = new THREE.Group();
+    const dungeonWorld = new THREE.Group();
     const geometries: THREE.BufferGeometry[] = [];
     const materials: THREE.Material[] = [];
     const addRoomPlane = (
+      parent: THREE.Group,
       width: number,
       height: number,
       color: number,
@@ -218,18 +293,41 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       const plane = new THREE.Mesh(geometry, material);
       plane.position.set(...position);
       plane.rotation.set(...rotation);
-      room.add(plane);
+      parent.add(plane);
       geometries.push(geometry);
       materials.push(material);
     };
 
-    addRoomPlane(10, 12, 0x2b2927, [0, -3, -2], [-Math.PI / 2, 0, 0]);
-    addRoomPlane(10, 12, 0x17191e, [0, 3, -2], [Math.PI / 2, 0, 0]);
-    addRoomPlane(10, 6, 0x34363d, [0, 0, -8], [0, 0, 0]);
-    addRoomPlane(10, 6, 0x292b31, [0, 0, 4], [0, Math.PI, 0]);
-    addRoomPlane(12, 6, 0x24262c, [-5, 0, -2], [0, Math.PI / 2, 0]);
-    addRoomPlane(12, 6, 0x24262c, [5, 0, -2], [0, -Math.PI / 2, 0]);
-    scene.add(room);
+    TEST_DUNGEON_MAP.rooms.forEach((roomNode, index) => {
+      const room = new THREE.Group();
+      room.position.set(roomNode.position.x, roomNode.position.y, roomNode.position.z);
+      const floorColor = index % 2 === 0 ? 0x2b2927 : 0x302d29;
+      addRoomPlane(room, 10, 12, floorColor, [0, -3, -2], [-Math.PI / 2, 0, 0]);
+      addRoomPlane(room, 10, 12, 0x17191e, [0, 3, -2], [Math.PI / 2, 0, 0]);
+      addRoomPlane(room, 10, 6, 0x34363d, [0, 0, -8], [0, 0, 0]);
+      addRoomPlane(room, 10, 6, 0x292b31, [0, 0, 4], [0, Math.PI, 0]);
+      addRoomPlane(room, 12, 6, 0x24262c, [-5, 0, -2], [0, Math.PI / 2, 0]);
+      addRoomPlane(room, 12, 6, 0x24262c, [5, 0, -2], [0, -Math.PI / 2, 0]);
+      dungeonWorld.add(room);
+    });
+    TEST_DUNGEON_MAP.connections.forEach((connection) => {
+      const source = getDungeonRoom(connection.fromRoomId);
+      const target = getDungeonRoom(connection.toRoomId);
+      const dx = target.position.x - source.position.x;
+      const dz = target.position.z - source.position.z;
+      const length = Math.hypot(dx, dz);
+      const corridor = new THREE.Group();
+      corridor.position.set(
+        (source.position.x + target.position.x) / 2,
+        0,
+        (source.position.z + target.position.z) / 2,
+      );
+      corridor.rotation.y = Math.atan2(dx, dz);
+      addRoomPlane(corridor, 4, length, 0x25231f, [0, -2.98, 0], [-Math.PI / 2, 0, 0]);
+      addRoomPlane(corridor, 4, length, 0x15171b, [0, 2.98, 0], [Math.PI / 2, 0, 0]);
+      dungeonWorld.add(corridor);
+    });
+    scene.add(dungeonWorld);
 
     const monsterGeometry = new THREE.PlaneGeometry(2.9, 2.8);
     const monsterMaterial = new THREE.MeshBasicMaterial({
@@ -241,7 +339,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     const monster = new THREE.Mesh(monsterGeometry, monsterMaterial);
     const monsterBillboard = new THREE.Group();
     monsterBillboard.name = "MonsterBillboard";
-    monsterBillboard.position.copy(MONSTER_COMMAND_POSITION);
+    monsterBillboard.position.copy(monsterPositionTargetRef.current);
+    monsterBillboard.visible = false;
     monster.renderOrder = 100;
     monsterBillboard.add(monster);
     monsterBillboard.lookAt(camera.position);
@@ -268,6 +367,8 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       weapon,
       monster: monsterAnimation,
       monsterRoot: monsterBillboard,
+      camera,
+      dungeonCamera,
     };
 
     const updateViewport = () => {
@@ -306,6 +407,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateViewport);
       visualsRef.current = null;
+      dungeonCamera.dispose();
       monsterAnimation.dispose();
       weapon.dispose();
       sword.dispose();
@@ -314,7 +416,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       monster.removeFromParent();
       monsterGeometry.dispose();
       monsterMaterial.dispose();
-      scene.remove(room);
+      scene.remove(dungeonWorld);
       geometries.forEach((geometry) => geometry.dispose());
       materials.forEach((material) => material.dispose());
       renderer.dispose();
@@ -391,6 +493,19 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setCriticalEffect(false);
     setResolution(finalResolution);
     setPhase("result");
+    const combatRoomId = activeCombatRoomIdRef.current;
+    if (
+      combatRoomId &&
+      getDungeonRoom(combatRoomId).type === "combat" &&
+      shouldCompleteCombatRoom(finalResolution.outcome)
+    ) {
+      const nextProgress = completeRoomEvent(
+        roomProgressRef.current,
+        combatRoomId,
+      );
+      roomProgressRef.current = nextProgress;
+      setRoomProgress(nextProgress);
+    }
     processingRef.current = false;
     interactionLockRef.current = false;
   };
@@ -747,10 +862,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     beginAnswerSequence();
   };
 
-  const resetCombat = () => {
-    if (phase !== "result") {
-      return;
-    }
+  const initializeCombatState = () => {
     answersRef.current = [];
     questionIndexRef.current = 0;
     pendingResultRef.current = null;
@@ -788,6 +900,128 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setPhase("intro");
   };
 
+  const startCombatForRoom = (roomId: string) => {
+    if (
+      activeCombatRoomIdRef.current ||
+      roomProgressRef.current[roomId]?.eventCompleted
+    ) {
+      return;
+    }
+    activeCombatRoomIdRef.current = roomId;
+    setActiveCombatRoomId(roomId);
+    setDungeonMode("combat");
+    initializeCombatState();
+  };
+
+  const resetCombat = () => {
+    if (phase !== "result" || !activeCombatRoomIdRef.current) {
+      return;
+    }
+    const roomId = activeCombatRoomIdRef.current;
+    const nextProgress = {
+      ...roomProgressRef.current,
+      [roomId]: { roomId, eventCompleted: false },
+    };
+    roomProgressRef.current = nextProgress;
+    setRoomProgress(nextProgress);
+    activeCombatRoomIdRef.current = null;
+    setActiveCombatRoomId(null);
+    startCombatForRoom(roomId);
+  };
+
+  const continueExplorationAfterResult = () => {
+    if (phase !== "result") {
+      return;
+    }
+    activeCombatRoomIdRef.current = null;
+    setActiveCombatRoomId(null);
+    setDungeonMode("exploration");
+    setExplorationMessage("전투 이벤트가 끝났다. 이동할 길을 선택하자.");
+    visualsRef.current?.monster.reset();
+    if (visualsRef.current) {
+      visualsRef.current.monsterRoot.visible = false;
+      visualsRef.current.sword.root.visible = true;
+    }
+  };
+
+  const handleRoomEntered = (roomId: string) => {
+    if (roomEventProcessingRef.current) {
+      return;
+    }
+    roomEventProcessingRef.current = true;
+    setDungeonMode("roomEvent");
+    try {
+      const room = getDungeonRoom(roomId);
+      const action = resolveRoomEntry(room, roomProgressRef.current[roomId]);
+      if (action.type === "startCombat") {
+        startCombatForRoom(roomId);
+        return;
+      }
+      setExplorationMessage(action.message);
+      setDungeonMode("exploration");
+    } finally {
+      roomEventProcessingRef.current = false;
+    }
+  };
+
+  const moveToConnectedRoom = (route: TraversableDungeonConnection) => {
+    if (
+      dungeonMode !== "exploration" ||
+      movementProcessingRef.current ||
+      activeCombatRoomIdRef.current
+    ) {
+      return;
+    }
+    const controller = visualsRef.current?.dungeonCamera;
+    if (!controller) {
+      return;
+    }
+    movementProcessingRef.current = true;
+    setDungeonMode("moving");
+    setExplorationMessage("복도를 따라 이동하는 중...");
+    const sourceRoomId = currentRoomId;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    controller.moveAlongPath(route.cameraPath, {
+      reducedMotion,
+      onComplete: () => {
+        if (!mountedRef.current || !movementProcessingRef.current) {
+          return;
+        }
+        movementProcessingRef.current = false;
+        setPreviousRoomId(sourceRoomId);
+        setCurrentRoomId(route.targetRoomId);
+        handleRoomEntered(route.targetRoomId);
+      },
+    });
+  };
+
+  const restartTestDungeon = () => {
+    movementProcessingRef.current = false;
+    roomEventProcessingRef.current = false;
+    activeCombatRoomIdRef.current = null;
+    const nextProgress = createInitialRoomProgress(TEST_DUNGEON_MAP);
+    roomProgressRef.current = nextProgress;
+    setRoomProgress(nextProgress);
+    setActiveCombatRoomId(null);
+    setPreviousRoomId(null);
+    setCurrentRoomId(TEST_DUNGEON_MAP.startRoomId);
+    setDungeonMode("exploration");
+    setExplorationMessage("던전의 시작점이다.");
+    initializeCombatState();
+    const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
+    visualsRef.current?.dungeonCamera.setPose(
+      startRoom.cameraPoint.position,
+      startRoom.cameraPoint.rotationY,
+    );
+    visualsRef.current?.monster.reset();
+    if (visualsRef.current) {
+      visualsRef.current.monsterRoot.visible = false;
+      visualsRef.current.sword.root.visible = true;
+    }
+  };
+
   const resultTitle =
     resolution?.outcome === "perfectVictory"
       ? "완벽한 승리"
@@ -795,6 +1029,11 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         ? "힘겨운 승리"
         : "전투 실패";
   const dialogueMode = dialogueModeForPhase(phase);
+  const availableConnections = getConnectionsForRoom(currentRoomId).sort(
+    (left, right) =>
+      DIRECTION_ORDER.indexOf(left.direction) -
+      DIRECTION_ORDER.indexOf(right.direction),
+  );
   const animationInProgress = [
     "playerAttack",
     "enemyTurn",
@@ -838,14 +1077,14 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       <div
         ref={sceneContainerRef}
         className="dungeon-scene"
-        aria-label="마늘킹과 마주친 던전 방"
+        aria-label="고정 테스트 던전"
       />
       <div className={`combat-damage-flash ${damageFlash ? "is-active" : ""}`} />
       <div
         className={`combat-critical-accent ${criticalEffect ? "is-active" : ""}`}
         aria-hidden="true"
       />
-      {enemyStunned && (
+      {dungeonMode === "combat" && enemyStunned && (
         <div
           className="monster-stun-indicator"
           role="status"
@@ -855,7 +1094,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
           <strong>기절</strong>
         </div>
       )}
-      {floatingText && (
+      {dungeonMode === "combat" && floatingText && (
         <strong className={`combat-floating-text ${
           floatingText.startsWith("+")
             ? "is-heal"
@@ -865,7 +1104,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         </strong>
       )}
 
-      <section className="dungeon-overlay">
+      {dungeonMode === "combat" && <section className="dungeon-overlay">
         <header className="combat-hud">
           <div className="monster-status-hud">
             <p className="eyebrow">NORMAL COMBAT</p>
@@ -881,9 +1120,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
             </small>
           </div>
         </header>
-      </section>
+      </section>}
 
-      <CombatDialoguePanel
+      {dungeonMode === "combat" && <CombatDialoguePanel
         mode={dialogueMode}
         busy={buttonsLocked}
         statusBar={combatStatusBar}
@@ -1035,13 +1274,59 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
               <p>몬스터가 도망쳤습니다.</p>
             )}
             <div className="button-group">
-              <button type="button" onClick={resetCombat}>다시 테스트</button>
+              <button type="button" onClick={continueExplorationAfterResult}>
+                이동 계속하기
+              </button>
+              {import.meta.env.DEV && (
+                <button type="button" onClick={resetCombat}>이 전투 다시 테스트</button>
+              )}
               <button type="button" onClick={() => onNavigate("baseCamp")}>베이스캠프로 돌아가기</button>
               <button type="button" onClick={() => onNavigate("title")}>타이틀로 돌아가기</button>
             </div>
           </div>
         )}
-      </CombatDialoguePanel>
+      </CombatDialoguePanel>}
+
+      {(dungeonMode === "exploration" || dungeonMode === "moving") && (
+        <section className="dungeon-movement-panel" aria-label="던전 이동 선택">
+          <p className="eyebrow">DUNGEON EXPLORATION</p>
+          <p className="dungeon-movement-message" role="status">
+            {explorationMessage}
+          </p>
+          <h2>어느 길로 이동할까?</h2>
+          <div className="dungeon-direction-buttons">
+            {availableConnections.map((route) => (
+              <button
+                key={route.connection.id}
+                type="button"
+                disabled={dungeonMode === "moving"}
+                aria-label={`${DIRECTION_LABELS[route.direction]}: ${route.targetRoomId}`}
+                onClick={() => moveToConnectedRoom(route)}
+              >
+                {DIRECTION_LABELS[route.direction]}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="dungeon-reset-button"
+            disabled={dungeonMode === "moving"}
+            onClick={restartTestDungeon}
+          >
+            던전 처음부터 다시 시작
+          </button>
+          {import.meta.env.DEV && (
+            <small className="dungeon-debug">
+              current: {currentRoomId} · previous: {previousRoomId ?? "none"} ·
+              mode: {dungeonMode} · completed:{" "}
+              {Object.values(roomProgress)
+                .filter((progress) => progress.eventCompleted)
+                .map((progress) => progress.roomId)
+                .join(", ") || "none"}
+            </small>
+          )}
+        </section>
+      )}
     </main>
   );
 }
