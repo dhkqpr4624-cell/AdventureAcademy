@@ -6,6 +6,7 @@ import type {
 
 type MovementOptions = {
   reducedMotion: boolean;
+  mode?: "forward" | "backward";
   onComplete: () => void;
 };
 
@@ -19,6 +20,7 @@ type PreparedCameraSegment = {
 };
 
 const CAMERA_SPEED_UNITS_PER_SECOND = 10;
+const ARRIVAL_TURN_DURATION_MS = 420;
 
 function easeAtWholePathEnds(progress: number): number {
   const edge = 0.12;
@@ -140,6 +142,52 @@ export class DungeonCameraController {
       : Math.max(500, (totalLength / CAMERA_SPEED_UNITS_PER_SECOND) * 1000);
     const initialYaw = this.camera.rotation.y;
     const startedAt = performance.now();
+    const movementMode = options.mode ?? "forward";
+
+    const finishAtDestination = (now: number) => {
+      const finalPoint = path[path.length - 1];
+      const finalPosition = new THREE.Vector3(...finalPoint.position);
+      const finalYaw = finalPoint.lookAt
+        ? getYawFromDirection(
+            finalPosition,
+            new THREE.Vector3(...finalPoint.lookAt),
+          )
+        : finalPoint.rotationY ?? segments[segments.length - 1].yaw;
+      this.camera.position.copy(finalPosition);
+
+      if (movementMode !== "backward") {
+        this.camera.rotation.y = finalYaw;
+        this.frameId = null;
+        options.onComplete();
+        return;
+      }
+
+      const turnDuration = options.reducedMotion ? 80 : ARRIVAL_TURN_DURATION_MS;
+      const turnStartedAt = now;
+      const turnFromYaw = initialYaw;
+      const turnDelta = shortestAngleDelta(turnFromYaw, finalYaw);
+      const animateArrivalTurn = (turnNow: number) => {
+        if (sequenceId !== this.sequenceId) {
+          return;
+        }
+        const turnProgress = THREE.MathUtils.clamp(
+          (turnNow - turnStartedAt) / turnDuration,
+          0,
+          1,
+        );
+        const easedTurn = THREE.MathUtils.smoothstep(turnProgress, 0, 1);
+        this.camera.position.copy(finalPosition);
+        this.camera.rotation.y = turnFromYaw + turnDelta * easedTurn;
+        if (turnProgress >= 1) {
+          this.camera.rotation.y = finalYaw;
+          this.frameId = null;
+          options.onComplete();
+          return;
+        }
+        this.frameId = requestAnimationFrame(animateArrivalTurn);
+      };
+      this.frameId = requestAnimationFrame(animateArrivalTurn);
+    };
 
     const animate = (now: number) => {
       if (sequenceId !== this.sequenceId) {
@@ -157,26 +205,21 @@ export class DungeonCameraController {
       );
       this.camera.position.lerpVectors(segment.from, segment.to, localProgress);
 
-      const segmentIndex = segments.indexOf(segment);
-      const previousYaw =
-        segmentIndex === 0 ? initialYaw : segments[segmentIndex - 1].yaw;
-      const turnProgress = THREE.MathUtils.smoothstep(localProgress, 0, 0.32);
-      this.camera.rotation.y =
-        previousYaw + shortestAngleDelta(previousYaw, segment.yaw) * turnProgress;
+      if (movementMode === "backward") {
+        // Backtracking is intentional FPS-style movement: keep looking into the
+        // room being left while the camera follows the reverse position path.
+        this.camera.rotation.y = initialYaw;
+      } else {
+        const segmentIndex = segments.indexOf(segment);
+        const previousYaw =
+          segmentIndex === 0 ? initialYaw : segments[segmentIndex - 1].yaw;
+        const turnProgress = THREE.MathUtils.smoothstep(localProgress, 0, 0.32);
+        this.camera.rotation.y =
+          previousYaw + shortestAngleDelta(previousYaw, segment.yaw) * turnProgress;
+      }
 
       if (rawProgress >= 1) {
-        const finalPoint = path[path.length - 1];
-        const finalPosition = new THREE.Vector3(...finalPoint.position);
-        this.camera.position.copy(finalPosition);
-        const finalYaw = finalPoint.lookAt
-          ? getYawFromDirection(
-              finalPosition,
-              new THREE.Vector3(...finalPoint.lookAt),
-            )
-          : finalPoint.rotationY ?? segments[segments.length - 1].yaw;
-        this.camera.rotation.y = finalYaw;
-        this.frameId = null;
-        options.onComplete();
+        finishAtDestination(now);
         return;
       }
       this.frameId = requestAnimationFrame(animate);

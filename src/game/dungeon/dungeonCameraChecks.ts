@@ -42,10 +42,58 @@ function checkRoute(roomId: string, targetRoomId: string): void {
   }
 }
 
+function checkBackwardRoute(roomId: string, targetRoomId: string): void {
+  const route = getConnectionsForRoom(roomId).find(
+    (candidate) => candidate.targetRoomId === targetRoomId,
+  );
+  check(Boolean(route), `${roomId} -> ${targetRoomId} must exist`);
+  if (!route) {
+    return;
+  }
+  check(route.direction === "back", `${roomId} -> ${targetRoomId} must be back`);
+  const start = TEST_DUNGEON_MAP.rooms.find((room) => room.id === roomId);
+  const destination = TEST_DUNGEON_MAP.rooms.find(
+    (room) => room.id === targetRoomId,
+  );
+  check(Boolean(start && destination), "backward route rooms must exist");
+  if (!start || !destination) {
+    return;
+  }
+  const startPosition = new THREE.Vector3(...start.explorationCameraPose.position);
+  const firstPosition = new THREE.Vector3(...route.cameraPath[0].position);
+  const movement = firstPosition.sub(startPosition).normalize();
+  const startYaw = getYawFromDirection(
+    new THREE.Vector3(...start.explorationCameraPose.position),
+    new THREE.Vector3(...start.explorationCameraPose.lookAt),
+  );
+  check(
+    getCameraForwardFromYaw(startYaw).dot(movement) < -0.999,
+    `${roomId} -> ${targetRoomId} must begin by moving backward`,
+  );
+  const finalPoint = route.cameraPath[route.cameraPath.length - 1];
+  check(
+    finalPoint.position.every(
+      (coordinate, index) =>
+        Math.abs(coordinate - destination.explorationCameraPose.position[index]) <
+        Number.EPSILON,
+    ),
+    `${roomId} -> ${targetRoomId} must end at exploration position`,
+  );
+  check(
+    finalPoint.lookAt?.every(
+      (coordinate, index) =>
+        Math.abs(coordinate - destination.explorationCameraPose.lookAt[index]) <
+        Number.EPSILON,
+    ) === true,
+    `${roomId} -> ${targetRoomId} must carry the destination exploration lookAt`,
+  );
+}
+
 export function runDungeonCameraChecks(): void {
   checkRoute("room-empty-a", "room-combat-a");
   checkRoute("room-empty-b", "room-combat-b");
-  checkRoute("room-combat-a", "room-empty-a");
+  checkBackwardRoute("room-combat-a", "room-empty-a");
+  checkBackwardRoute("room-combat-b", "room-empty-b");
   for (const connection of TEST_DUNGEON_MAP.connections) {
     check(connection.cameraPath.length >= 4, `${connection.id} path is too short`);
   }

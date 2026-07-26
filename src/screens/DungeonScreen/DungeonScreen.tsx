@@ -1068,6 +1068,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     ).matches;
     controller.moveAlongPath(route.cameraPath, {
       reducedMotion,
+      mode: route.direction === "back" ? "backward" : "forward",
       onComplete: () => {
         if (!mountedRef.current || !movementProcessingRef.current) {
           return;
