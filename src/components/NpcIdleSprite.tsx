@@ -4,16 +4,12 @@ import { resolveNextBlinkDelay } from "../game/npc/npcIdleResolver";
 
 type NpcIdleSpriteProps = {
   npc: NpcDefinition;
-  disabled: boolean;
   selected: boolean;
-  onSelect: (npc: NpcDefinition) => void;
 };
 
 export function NpcIdleSprite({
   npc,
-  disabled,
   selected,
-  onSelect,
 }: NpcIdleSpriteProps) {
   const [frame, setFrame] = useState<number | null>(null);
   const blinkTimerRef = useRef<number | null>(null);
@@ -59,18 +55,17 @@ export function NpcIdleSprite({
   const backgroundSize = `${npc.placement.width * npc.idle.blinkFrameCount}px ${npc.placement.height}px`;
 
   return (
-    <button
-      type="button"
-      className={`base-camp-npc ${selected ? "is-selected" : ""}`}
+    <div
+      className={`base-camp-npc-art-container ${
+        selected ? "is-selected" : ""
+      }`}
       style={{
         left: npc.placement.x,
         top: npc.placement.y,
         width: npc.placement.width,
         height: npc.placement.height,
       }}
-      disabled={disabled}
-      onClick={() => onSelect(npc)}
-      aria-label={`${npc.displayName}, ${npc.role}와 대화하기`}
+      aria-hidden="true"
     >
       <span className="base-camp-npc-art" aria-hidden="true">
         {frame === null ? (
@@ -86,10 +81,6 @@ export function NpcIdleSprite({
           />
         )}
       </span>
-      <span className="base-camp-npc-label">
-        <strong>{npc.displayName}</strong>
-        <small>대화하기</small>
-      </span>
-    </button>
+    </div>
   );
 }

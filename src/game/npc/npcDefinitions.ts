@@ -5,6 +5,10 @@ import theoBlink from "../../assets/npcs/theo/theo_blink.png";
 import kaidenStanding from "../../assets/npcs/kaiden/kaiden_standing.png";
 import kaidenBlink from "../../assets/npcs/kaiden/kaiden_blink.png";
 import type { NpcDefinition } from "./npcTypes";
+import {
+  BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
+  getBaseCampNpcPlacement,
+} from "./baseCampNpcSlots";
 
 const commonIdle = {
   blinkFrameWidth: 380,
@@ -19,7 +23,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     id: "luna",
     displayName: "루나",
     role: "지휘관",
-    baseCampSpawnId: "lunaNpc",
+    baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna,
     idle: {
       ...commonIdle,
       standingImage: lunaStanding,
@@ -29,13 +33,13 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     portraits: { default: lunaStanding, happy: lunaStanding },
     dialogue: { defaultStorySequenceId: "npc-luna-default" },
     offeredQuestIds: [],
-    placement: { x: 430, y: 415, width: 190, height: 300 },
+    placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
   },
   {
     id: "theo",
     displayName: "테오",
     role: "보급 담당",
-    baseCampSpawnId: "theoNpc",
+    baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo,
     idle: {
       ...commonIdle,
       standingImage: theoStanding,
@@ -45,13 +49,13 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     portraits: { default: theoStanding },
     dialogue: { defaultStorySequenceId: "npc-theo-default" },
     offeredQuestIds: [],
-    placement: { x: 1040, y: 415, width: 190, height: 300 },
+    placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo),
   },
   {
     id: "kaiden",
     displayName: "카이든",
     role: "탐험가",
-    baseCampSpawnId: "kaidenNpc",
+    baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden,
     idle: {
       ...commonIdle,
       standingImage: kaidenStanding,
@@ -67,11 +71,10 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       questActiveStorySequenceId: "npc-kaiden-quest-active",
     },
     offeredQuestIds: ["quest-floor-1-memory-fragment"],
-    placement: { x: 1300, y: 405, width: 190, height: 300 },
+    placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden),
   },
 ];
 
 export const NPC_BY_ID = Object.fromEntries(
   NPC_DEFINITIONS.map((npc) => [npc.id, npc]),
 ) as Record<string, NpcDefinition>;
-

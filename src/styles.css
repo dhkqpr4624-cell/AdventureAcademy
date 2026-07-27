@@ -128,24 +128,12 @@ button:focus-visible {
   image-rendering: crisp-edges;
 }
 
-.background-layer {
-  z-index: 0;
-}
-
-.ground-layer {
-  z-index: 10;
-}
-
-.dungeon-entrance-layer {
-  z-index: 20;
-}
-
 .npc-layer {
-  z-index: 30;
   pointer-events: none;
 }
 
-.base-camp-npc {
+.base-camp-npc-art-container,
+.base-camp-npc-interaction {
   position: absolute;
   min-height: 0;
   padding: 0;
@@ -153,28 +141,37 @@ button:focus-visible {
   background: transparent;
   box-shadow: none;
   transform: none;
+  transform-origin: center bottom;
   pointer-events: auto;
 }
 
-.base-camp-npc:hover,
-.base-camp-npc:focus-visible,
-.base-camp-npc.is-selected {
-  transform: none;
-  filter: brightness(1.08);
+.base-camp-npc-art-container {
+  pointer-events: none;
 }
 
-.base-camp-npc:focus-visible {
-  outline: 4px solid #fff1a0;
-  outline-offset: 4px;
-}
-
-.base-camp-npc.is-selected {
+.base-camp-npc-art-container.is-selected {
   filter:
+    brightness(1.08)
     drop-shadow(0 0 3px #fff4b2)
     drop-shadow(0 0 8px rgba(255, 211, 78, 0.9));
 }
 
-.base-camp-npc:disabled {
+.base-camp-npc-interaction {
+  z-index: 1;
+}
+
+.base-camp-npc-interaction:hover,
+.base-camp-npc-interaction:focus-visible,
+.base-camp-npc-interaction.is-selected {
+  transform: none;
+}
+
+.base-camp-npc-interaction:focus-visible {
+  outline: 4px solid #fff1a0;
+  outline-offset: 4px;
+}
+
+.base-camp-npc-interaction:disabled {
   cursor: default;
   opacity: 1;
 }
@@ -223,9 +220,9 @@ button:focus-visible {
   pointer-events: none;
 }
 
-.base-camp-npc:hover .base-camp-npc-label,
-.base-camp-npc:focus-visible .base-camp-npc-label,
-.base-camp-npc.is-selected .base-camp-npc-label {
+.base-camp-npc-interaction:hover .base-camp-npc-label,
+.base-camp-npc-interaction:focus-visible .base-camp-npc-label,
+.base-camp-npc-interaction.is-selected .base-camp-npc-label {
   opacity: 1;
 }
 
@@ -233,12 +230,7 @@ button:focus-visible {
   color: #e6c873;
 }
 
-.foreground-layer {
-  z-index: 40;
-}
-
 .interaction-layer {
-  z-index: 50;
   pointer-events: none;
 }
 
@@ -252,7 +244,6 @@ button:focus-visible {
 }
 
 .highlight-layer {
-  z-index: 60;
   pointer-events: none;
 }
 
@@ -272,7 +263,6 @@ button:focus-visible {
   position: absolute;
   top: 72px;
   left: 12px;
-  z-index: 70;
   display: grid;
   gap: 2px;
   padding: 0.4rem 0.5rem;

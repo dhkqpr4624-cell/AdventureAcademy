@@ -7,6 +7,7 @@ import type {
 import { NPC_DEFINITIONS } from "../../game/npc/npcDefinitions";
 import type { NpcDefinition } from "../../game/npc/npcTypes";
 import { NpcIdleSprite } from "../../components/NpcIdleSprite";
+import { BASE_CAMP_LAYER } from "../../game/baseCamp/baseCampLayers";
 
 type BaseCampWorldProps = {
   map: BaseCampMapDefinition;
@@ -109,34 +110,75 @@ export function BaseCampWorld({
       style={layerStyle}
       data-testid="BaseCampWorld"
     >
-      <div className="base-camp-layer background-layer" aria-hidden="true">
+      <div
+        className="base-camp-layer background-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.background }}
+        aria-hidden="true"
+      >
         {renderLayerImage("background")}
       </div>
-      <div className="base-camp-layer ground-layer" aria-hidden="true">
-        {renderLayerImage("ground")}
-      </div>
-      <div className="base-camp-layer dungeon-entrance-layer" aria-hidden="true">
+      <div
+        className="base-camp-layer dungeon-entrance-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.structures }}
+        aria-hidden="true"
+      >
         {renderLayerImage("dungeonEntrance")}
       </div>
-      <div className="base-camp-layer npc-layer">
+      <div
+        className="base-camp-layer foreground-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.structures }}
+        aria-hidden="true"
+      >
+        {renderLayerImage("foreground")}
+      </div>
+      <div
+        className="base-camp-layer npc-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.npc }}
+      >
         {NPC_DEFINITIONS.map((npc) => (
           <NpcIdleSprite
             key={npc.id}
             npc={npc}
-            disabled={mode === "story" || interactionsDisabled}
             selected={selectedNpcId === npc.id}
-            onSelect={(selectedNpc) => onSelectNpc?.(selectedNpc)}
           />
         ))}
       </div>
-      <div className="base-camp-layer foreground-layer" aria-hidden="true">
-        {renderLayerImage("foreground")}
+      <div
+        className="base-camp-layer ground-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.ground }}
+        aria-hidden="true"
+      >
+        {renderLayerImage("ground")}
       </div>
       <div
         className={`base-camp-layer interaction-layer ${
           mode === "story" || interactionsDisabled ? "is-disabled" : ""
         }`}
+        style={{ zIndex: BASE_CAMP_LAYER.interactionOverlay }}
       >
+        {NPC_DEFINITIONS.map((npc) => (
+          <button
+            key={npc.id}
+            type="button"
+            className={`base-camp-npc-interaction ${
+              selectedNpcId === npc.id ? "is-selected" : ""
+            }`}
+            style={{
+              left: npc.placement.x,
+              top: npc.placement.y,
+              width: npc.placement.width,
+              height: npc.placement.height,
+            }}
+            disabled={mode === "story" || interactionsDisabled}
+            onClick={() => onSelectNpc?.(npc)}
+            aria-label={`${npc.displayName}, ${npc.role}와 대화하기`}
+          >
+            <span className="base-camp-npc-label">
+              <strong>{npc.displayName}</strong>
+              <small>대화하기</small>
+            </span>
+          </button>
+        ))}
         {map.interactionRegions.map((region) => (
           <button
             key={region.id}
@@ -169,7 +211,11 @@ export function BaseCampWorld({
           </button>
         ))}
       </div>
-      <div className="base-camp-layer highlight-layer" aria-hidden="true">
+      <div
+        className="base-camp-layer highlight-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.highlight }}
+        aria-hidden="true"
+      >
         {highlightedRegion && (
           <span
             className="base-camp-target-highlight"
@@ -188,7 +234,11 @@ export function BaseCampWorld({
         )}
       </div>
       {import.meta.env.DEV && (
-        <output className="base-camp-layer-debug" aria-live="polite">
+        <output
+          className="base-camp-layer-debug"
+          style={{ zIndex: BASE_CAMP_LAYER.debug }}
+          aria-live="polite"
+        >
           {LAYER_ORDER.map((layerName) => {
             const state = layerLoadStates[layerName];
             return (
