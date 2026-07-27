@@ -11,10 +11,14 @@ import {
   BaseCampStoryAdapter,
   type BaseCampStoryController,
 } from "./BaseCampStoryAdapter";
+import { PlayerStatusBar } from "../../components/PlayerStatusBar";
+import type { PlayerState } from "../player/playerState";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
   onNavigate: (screen: ScreenId) => void;
+  onComplete?: () => void;
+  playerStatus?: PlayerState;
 };
 
 const INITIAL_RENDER_STATE: StoryRenderState = {
@@ -75,7 +79,12 @@ function StoryAsset({
   );
 }
 
-export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
+export function StoryPlayer({
+  sequence,
+  onNavigate,
+  onComplete,
+  playerStatus,
+}: StoryPlayerProps) {
   const steps = useMemo(
     () => sequence.scenes.flatMap((scene) => scene.steps),
     [sequence],
@@ -146,7 +155,11 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
     if (!step) {
       if (!hasNavigatedRef.current) {
         hasNavigatedRef.current = true;
-        onNavigate(sequence.onCompleteScreen);
+        if (onComplete) {
+          onComplete();
+        } else {
+          onNavigate(sequence.onCompleteScreen);
+        }
       }
       return;
     }
@@ -215,7 +228,7 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
       });
 
     return () => abortController.abort();
-  }, [onNavigate, sequence.onCompleteScreen, stepIndex, steps]);
+  }, [onComplete, onNavigate, sequence.onCompleteScreen, stepIndex, steps]);
 
   const currentStep = steps[stepIndex];
   const canAdvance =
@@ -335,6 +348,11 @@ export function StoryPlayer({ sequence, onNavigate }: StoryPlayerProps) {
           >
             다음
           </button>
+          {playerStatus && (
+            <footer className="story-player-status">
+              <PlayerStatusBar {...playerStatus} />
+            </footer>
+          )}
         </section>
       )}
 

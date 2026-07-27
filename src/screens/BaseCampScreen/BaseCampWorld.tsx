@@ -4,6 +4,9 @@ import type {
   BaseCampMapDefinition,
   BaseCampMode,
 } from "../../types/baseCamp";
+import { NPC_DEFINITIONS } from "../../game/npc/npcDefinitions";
+import type { NpcDefinition } from "../../game/npc/npcTypes";
+import { NpcIdleSprite } from "../../components/NpcIdleSprite";
 
 type BaseCampWorldProps = {
   map: BaseCampMapDefinition;
@@ -11,6 +14,9 @@ type BaseCampWorldProps = {
   selectedRegionId: string | null;
   onSelectRegion: (region: BaseCampInteractionRegion) => void;
   highlightTargetId?: string | null;
+  selectedNpcId?: string | null;
+  onSelectNpc?: (npc: NpcDefinition) => void;
+  interactionsDisabled?: boolean;
 };
 
 type LayerName = keyof BaseCampMapDefinition["layers"];
@@ -34,6 +40,9 @@ export function BaseCampWorld({
   selectedRegionId,
   onSelectRegion,
   highlightTargetId = null,
+  selectedNpcId = null,
+  onSelectNpc,
+  interactionsDisabled = false,
 }: BaseCampWorldProps) {
   const layerStyle = {
     width: map.worldWidth,
@@ -109,13 +118,23 @@ export function BaseCampWorld({
       <div className="base-camp-layer dungeon-entrance-layer" aria-hidden="true">
         {renderLayerImage("dungeonEntrance")}
       </div>
-      <div className="base-camp-layer npc-layer" aria-hidden="true" />
+      <div className="base-camp-layer npc-layer">
+        {NPC_DEFINITIONS.map((npc) => (
+          <NpcIdleSprite
+            key={npc.id}
+            npc={npc}
+            disabled={mode === "story" || interactionsDisabled}
+            selected={selectedNpcId === npc.id}
+            onSelect={(selectedNpc) => onSelectNpc?.(selectedNpc)}
+          />
+        ))}
+      </div>
       <div className="base-camp-layer foreground-layer" aria-hidden="true">
         {renderLayerImage("foreground")}
       </div>
       <div
         className={`base-camp-layer interaction-layer ${
-          mode === "story" ? "is-disabled" : ""
+          mode === "story" || interactionsDisabled ? "is-disabled" : ""
         }`}
       >
         {map.interactionRegions.map((region) => (
@@ -131,7 +150,7 @@ export function BaseCampWorld({
               width: region.width,
               height: region.height,
             }}
-            disabled={mode === "story"}
+            disabled={mode === "story" || interactionsDisabled}
             onClick={() => onSelectRegion(region)}
             aria-label={`${region.label} 개발용 클릭 영역`}
           >

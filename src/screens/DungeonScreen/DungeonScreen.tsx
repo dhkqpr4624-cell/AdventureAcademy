@@ -84,9 +84,14 @@ import {
   WeaponAnimationController,
   type WeaponAttackType,
 } from "../../three/weapon/WeaponAnimationController";
+import { PlayerStatusBar } from "../../components/PlayerStatusBar";
+import type { PlayerState } from "../../game/player/playerState";
+import type { Dispatch, SetStateAction } from "react";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
+  playerState: PlayerState;
+  setPlayerState: Dispatch<SetStateAction<PlayerState>>;
 };
 
 type NormalCombatPhase =
@@ -186,7 +191,11 @@ function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
   }
 }
 
-export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
+export function DungeonScreen({
+  onNavigate,
+  playerState,
+  setPlayerState,
+}: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<CombatVisuals | null>(null);
   const mountedRef = useRef(true);
@@ -236,7 +245,16 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     "던전의 시작점이다.",
   );
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [playerHp, setPlayerHp] = useState(MAX_HP);
+  const playerHp = playerState.currentHp;
+  const setPlayerHp = (
+    next: number | ((current: number) => number),
+  ) => {
+    setPlayerState((current) => ({
+      ...current,
+      currentHp:
+        typeof next === "function" ? next(current.currentHp) : next,
+    }));
+  };
   const [actualEnemyAttackCount, setActualEnemyAttackCount] = useState(0);
   const [skippedEnemyAttackCount, setSkippedEnemyAttackCount] = useState(0);
   const [hasCriticalOccurred, setHasCriticalOccurred] = useState(false);
@@ -1319,7 +1337,6 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     "enemyEscaped",
   ].includes(phase);
   const buttonsLocked = animationInProgress || interactionLocked;
-  const hpPercent = Math.max(0, Math.min(100, (playerHp / MAX_HP) * 100));
   const currentRoom = getDungeonRoom(currentRoomId);
   const currentRoomProgress = roomProgress[currentRoomId];
   const treasureVisible = currentRoom.type === "treasure";
@@ -1340,31 +1357,12 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
             : trapTriggeredUrl
           : trapIdleUrl
         : null;
+  const playerStatusBar = <PlayerStatusBar {...playerState} />;
   const combatStatusBar = (
-    <div
-      className="combat-status-bar"
-      aria-label={`레벨 1, 플레이어 체력 ${playerHp} / ${MAX_HP}, 문제 ${Math.min(questionIndex + 1, 2)} / 2`}
-    >
-      <strong className="combat-status-level">LV.1</strong>
-      <div className="combat-status-hp">
-        <span>HP</span>
-        <div
-          className="player-hp-track"
-          role="progressbar"
-          aria-label="플레이어 HP"
-          aria-valuemin={0}
-          aria-valuemax={MAX_HP}
-          aria-valuenow={playerHp}
-        >
-          <div className="player-hp-fill" style={{ width: `${hpPercent}%` }} />
-        </div>
-        <strong>{playerHp} / {MAX_HP}</strong>
-      </div>
-      <div className="combat-status-question">
-        <span>QUESTION</span>
-        <strong>{Math.min(questionIndex + 1, 2)} / 2</strong>
-      </div>
-    </div>
+    <PlayerStatusBar
+      {...playerState}
+      questionLabel={`${Math.min(questionIndex + 1, 2)} / 2`}
+    />
   );
 
   return (
@@ -1419,7 +1417,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
           <CombatDialoguePanel
             mode="message"
             busy={eventInteractionLockRef.current}
-            statusBar={null}
+            statusBar={playerStatusBar}
           >
             <div className="combat-message-layout">
               <p className="combat-message" role="status">
@@ -1469,7 +1467,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         )}
 
       {activeRoomEvent?.phase === "result" && (
-        <CombatDialoguePanel mode="result" busy={false} statusBar={null}>
+        <CombatDialoguePanel mode="result" busy={false} statusBar={playerStatusBar}>
           <div className="combat-message-layout" role="status">
             <p className="eyebrow">
               {activeRoomEvent.kind === "treasure" ? "TREASURE RESULT" : "TRAP RESULT"}
@@ -1715,6 +1713,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
                 .join(", ") || "none"}
             </small>
           )}
+          <footer className="dungeon-movement-status">
+            {playerStatusBar}
+          </footer>
         </section>
       )}
     </main>

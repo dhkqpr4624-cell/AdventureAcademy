@@ -21,6 +21,7 @@ import {
   type BaseCampCameraDiagnostics,
   type BaseCampFocusDraft,
 } from "./BaseCampFocusDevTool";
+import type { NpcDefinition } from "../../game/npc/npcTypes";
 
 type CameraState = {
   focusX: number;
@@ -60,6 +61,9 @@ type BaseCampViewportProps = {
   onSelectRegion: (region: BaseCampInteractionRegion) => void;
   highlightTargetId?: string | null;
   onReady?: () => void;
+  selectedNpcId?: string | null;
+  onSelectNpc?: (npc: NpcDefinition) => void;
+  interactionsDisabled?: boolean;
 };
 
 const MIN_ZOOM = 1;
@@ -127,6 +131,9 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
   onSelectRegion,
   highlightTargetId = null,
   onReady,
+  selectedNpcId = null,
+  onSelectNpc,
+  interactionsDisabled = false,
 }, forwardedRef) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -434,6 +441,9 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           selectedRegionId={selectedRegionId}
           onSelectRegion={onSelectRegion}
           highlightTargetId={highlightTargetId}
+          selectedNpcId={selectedNpcId}
+          onSelectNpc={onSelectNpc}
+          interactionsDisabled={interactionsDisabled}
         />
         {import.meta.env.DEV && mode === "play" && devDraft && (
           <span

@@ -142,6 +142,95 @@ button:focus-visible {
 
 .npc-layer {
   z-index: 30;
+  pointer-events: none;
+}
+
+.base-camp-npc {
+  position: absolute;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  pointer-events: auto;
+}
+
+.base-camp-npc:hover,
+.base-camp-npc:focus-visible,
+.base-camp-npc.is-selected {
+  transform: none;
+  filter: brightness(1.08);
+}
+
+.base-camp-npc:focus-visible {
+  outline: 4px solid #fff1a0;
+  outline-offset: 4px;
+}
+
+.base-camp-npc.is-selected {
+  filter:
+    drop-shadow(0 0 3px #fff4b2)
+    drop-shadow(0 0 8px rgba(255, 211, 78, 0.9));
+}
+
+.base-camp-npc:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.base-camp-npc-art,
+.base-camp-npc-art img,
+.base-camp-npc-blink {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.base-camp-npc-art {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.base-camp-npc-art img {
+  object-fit: fill;
+}
+
+.base-camp-npc-blink {
+  background-repeat: no-repeat;
+  transform-origin: top left;
+}
+
+.base-camp-npc-label {
+  position: absolute;
+  bottom: -3.15rem;
+  left: 50%;
+  display: grid;
+  min-width: 7rem;
+  padding: 0.35rem 0.55rem;
+  border: 2px solid rgba(240, 210, 132, 0.75);
+  border-radius: 0.3rem;
+  color: #fff5d5;
+  background: rgba(17, 18, 21, 0.88);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.base-camp-npc:hover .base-camp-npc-label,
+.base-camp-npc:focus-visible .base-camp-npc-label,
+.base-camp-npc.is-selected .base-camp-npc-label {
+  opacity: 1;
+}
+
+.base-camp-npc-label small {
+  color: #e6c873;
 }
 
 .foreground-layer {
@@ -150,6 +239,16 @@ button:focus-visible {
 
 .interaction-layer {
   z-index: 50;
+  pointer-events: none;
+}
+
+.base-camp-interaction-region {
+  pointer-events: auto;
+}
+
+.base-camp-interaction-region.region-questNpc01 {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .highlight-layer {
@@ -728,6 +827,18 @@ button:focus-visible {
   color: #f4ead1;
   font-size: 0.74rem;
   font-weight: 800;
+}
+
+.player-status-bar:not(:has(.combat-status-question)) {
+  grid-template-columns: auto minmax(12rem, 1fr);
+}
+
+.dungeon-movement-status {
+  width: min(100%, 52rem);
+  margin-top: 0.75rem;
+  border: 1px solid rgba(233, 201, 120, 0.35);
+  border-radius: 0.35rem;
+  background: rgba(12, 14, 19, 0.92);
 }
 
 .combat-status-level {
@@ -1784,13 +1895,124 @@ button:focus-visible {
   z-index: 3;
   min-height: clamp(7rem, 20vh, 10.5rem);
   padding: clamp(1rem, 2.4vw, 1.55rem)
-    clamp(5.6rem, 12vw, 9rem) clamp(1rem, 2.4vw, 1.45rem)
+    clamp(5.6rem, 12vw, 9rem) clamp(4.1rem, 9vw, 4.8rem)
     clamp(1rem, 2.4vw, 1.65rem);
   border: 1px solid rgba(247, 220, 162, 0.56);
   border-radius: 0.85rem;
   background: rgba(13, 16, 22, 0.9);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(9px);
+}
+
+.story-player-status {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-top: 1px solid rgba(233, 201, 120, 0.35);
+  background: rgba(12, 14, 19, 0.97);
+}
+
+.base-camp-story-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+}
+
+.base-camp-story-overlay .story-background,
+.base-camp-story-overlay .story-background-shade {
+  display: none;
+}
+
+.current-quest-tracker {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 80;
+  display: grid;
+  width: min(17rem, 42vw);
+  gap: 0.2rem;
+  padding: 0.7rem 0.85rem;
+  border: 2px solid rgba(225, 191, 107, 0.65);
+  border-radius: 0.35rem;
+  color: #f5ead0;
+  background: rgba(15, 18, 22, 0.9);
+}
+
+.current-quest-tracker p {
+  margin: 0;
+}
+
+.current-quest-tracker small {
+  color: #ebcb70;
+}
+
+.base-camp-main-controls {
+  position: absolute;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 80;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.quest-detail-panel {
+  position: absolute;
+  z-index: 110;
+  right: max(10%, env(safe-area-inset-right));
+  bottom: max(2.2vh, env(safe-area-inset-bottom));
+  left: max(10%, env(safe-area-inset-left));
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  width: min(80%, 760px);
+  max-height: 72vh;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 2px solid #9a7d3e;
+  border-radius: 0.35rem;
+  color: #f4ead1;
+  background: linear-gradient(145deg, rgba(34, 31, 29, 0.98), rgba(10, 13, 18, 0.98));
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.62);
+}
+
+.quest-detail-body {
+  overflow-y: auto;
+  padding: 1.2rem;
+}
+
+.quest-detail-body h2 {
+  margin: 0.25rem 0 0.8rem;
+}
+
+.quest-detail-body dl {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.quest-detail-body dl div {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+}
+
+.quest-detail-body dt {
+  color: #e7c86f;
+  font-weight: 800;
+}
+
+.quest-detail-body dd {
+  margin: 0;
+}
+
+.quest-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(233, 201, 120, 0.35);
+}
+
+.quest-detail-panel footer {
+  border-top: 1px solid rgba(233, 201, 120, 0.35);
 }
 
 .story-dialogue-box.is-narration {

@@ -41,6 +41,27 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
       zoom: 1.35,
       offsetY: -30,
     },
+    lunaNpc: {
+      id: "lunaNpc",
+      x: 525,
+      y: 565,
+      zoom: 1.4,
+      offsetY: -35,
+    },
+    theoNpc: {
+      id: "theoNpc",
+      x: 1135,
+      y: 565,
+      zoom: 1.4,
+      offsetY: -35,
+    },
+    kaidenNpc: {
+      id: "kaidenNpc",
+      x: 1395,
+      y: 555,
+      zoom: 1.4,
+      offsetY: -35,
+    },
   },
   interactionRegions: [
     {
