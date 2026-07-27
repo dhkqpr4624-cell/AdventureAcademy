@@ -33,6 +33,14 @@ import { runDungeonEventFlowChecks } from "../../game/dungeon/dungeonEventFlowCh
 import { runDungeonRoomEventChecks } from "../../game/dungeon/dungeonRoomEventChecks";
 import { resolveDungeonRoomEvent } from "../../game/dungeon/dungeonRoomEventResolver";
 import {
+  DUNGEON_PLAYER_MAX_HP,
+  INITIAL_MEDIUM_POTION_QUANTITY,
+  INITIAL_SMALL_POTION_QUANTITY,
+  applyDungeonPlayerDamage,
+  applyDungeonPlayerHealing,
+} from "../../game/dungeon/dungeonPlayerState";
+import { runDungeonPlayerStateChecks } from "../../game/dungeon/dungeonPlayerStateChecks";
+import {
   getConnectionsForRoom,
   getDungeonRoom,
   TEST_DUNGEON_MAP,
@@ -124,10 +132,8 @@ type ActiveRoomEvent = {
   message?: string;
 };
 
-const MAX_HP = 50;
+const MAX_HP = DUNGEON_PLAYER_MAX_HP;
 const ENEMY_ATTACK = 7;
-const INITIAL_SMALL_POTION_QUANTITY = 2;
-const INITIAL_MEDIUM_POTION_QUANTITY = 1;
 const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_QUESTION_Y_OFFSET = 0.34;
 const MONSTER_PLANE_HEIGHT = 2.05;
@@ -271,6 +277,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       runDungeonCompletionChecks();
       runDungeonRoomEventChecks();
       runDungeonEventFlowChecks();
+      runDungeonPlayerStateChecks();
     }
     return () => {
       mountedRef.current = false;
@@ -522,7 +529,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         if (!mountedRef.current) {
           return;
         }
-        setPlayerHp((current) => Math.max(0, current - ENEMY_ATTACK));
+        setPlayerHp((current) =>
+          applyDungeonPlayerDamage(current, ENEMY_ATTACK),
+        );
         setActualEnemyAttackCount((current) => current + 1);
         setFloatingText(`-${ENEMY_ATTACK}`);
         setDamageFlash(true);
@@ -786,7 +795,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     if (phase !== "itemUse" || !result) {
       return;
     }
-    setPlayerHp(result.nextHp);
+    setPlayerHp((current) =>
+      applyDungeonPlayerHealing(current, result.healedAmount),
+    );
     setFloatingText(`+${result.healedAmount}`);
     setPhase("awaitHealResult");
     setCombatMessage(`HP가 ${result.healedAmount} 회복되었다.`);
@@ -926,7 +937,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     beginAnswerSequence();
   };
 
-  const initializeCombatState = () => {
+  const initializeCombatEncounterState = () => {
     answersRef.current = [];
     questionIndexRef.current = 0;
     pendingResultRef.current = null;
@@ -945,7 +956,6 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
       visualsRef.current.sword.root.visible = true;
     }
     setQuestionIndex(0);
-    setPlayerHp(MAX_HP);
     setActualEnemyAttackCount(0);
     setSkippedEnemyAttackCount(0);
     setHasCriticalOccurred(false);
@@ -953,8 +963,6 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setCriticalEffect(false);
     setForceCriticalNextAttack(false);
     setInteractionLocked(false);
-    setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
-    setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
     setSelectedPotion(null);
     setMustAttackNextTurn(false);
     setResolution(null);
@@ -994,7 +1002,7 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
         ) {
           return;
         }
-        initializeCombatState();
+        initializeCombatEncounterState();
         setDungeonMode("combat");
       },
     );
@@ -1148,7 +1156,9 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     const room = getDungeonRoom(event.roomId);
     const resolution = resolveDungeonRoomEvent(room, result.isCorrect);
     if (resolution.damage > 0) {
-      setPlayerHp((current) => Math.max(0, current - resolution.damage));
+      setPlayerHp((current) =>
+        applyDungeonPlayerDamage(current, resolution.damage),
+      );
       setFloatingText(`-${resolution.damage}`);
       setDamageFlash(true);
       window.setTimeout(() => {
@@ -1276,7 +1286,10 @@ export function DungeonScreen({ onNavigate }: DungeonScreenProps) {
     setCurrentRoomId(TEST_DUNGEON_MAP.startRoomId);
     setDungeonMode("exploration");
     setExplorationMessage("던전의 시작점이다.");
-    initializeCombatState();
+    initializeCombatEncounterState();
+    setPlayerHp(MAX_HP);
+    setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
+    setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
     const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
     visualsRef.current?.dungeonCamera.setPose(startRoom.explorationCameraPose);
     visualsRef.current?.monster.reset();
