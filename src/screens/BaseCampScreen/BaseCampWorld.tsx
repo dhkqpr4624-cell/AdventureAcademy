@@ -45,6 +45,7 @@ export function BaseCampWorld({
   onSelectNpc,
   interactionsDisabled = false,
 }: BaseCampWorldProps) {
+  const [highlightedNpcId, setHighlightedNpcId] = useState<string | null>(null);
   const layerStyle = {
     width: map.worldWidth,
     height: map.worldHeight,
@@ -140,6 +141,9 @@ export function BaseCampWorld({
             key={npc.id}
             npc={npc}
             selected={selectedNpcId === npc.id}
+            interactionHighlighted={
+              highlightedNpcId === npc.id || selectedNpcId === npc.id
+            }
           />
         ))}
       </div>
@@ -171,6 +175,18 @@ export function BaseCampWorld({
             }}
             disabled={mode === "story" || interactionsDisabled}
             onClick={() => onSelectNpc?.(npc)}
+            onPointerEnter={() => setHighlightedNpcId(npc.id)}
+            onPointerLeave={() =>
+              setHighlightedNpcId((current) =>
+                current === npc.id ? null : current
+              )
+            }
+            onFocus={() => setHighlightedNpcId(npc.id)}
+            onBlur={() =>
+              setHighlightedNpcId((current) =>
+                current === npc.id ? null : current
+              )
+            }
             aria-label={`${npc.displayName}, ${npc.role}와 대화하기`}
           >
             <span className="base-camp-npc-label">

@@ -5,11 +5,13 @@ import { resolveNextBlinkDelay } from "../game/npc/npcIdleResolver";
 type NpcIdleSpriteProps = {
   npc: NpcDefinition;
   selected: boolean;
+  interactionHighlighted: boolean;
 };
 
 export function NpcIdleSprite({
   npc,
   selected,
+  interactionHighlighted,
 }: NpcIdleSpriteProps) {
   const [frame, setFrame] = useState<number | null>(null);
   const blinkTimerRef = useRef<number | null>(null);
@@ -58,6 +60,8 @@ export function NpcIdleSprite({
     <div
       className={`base-camp-npc-art-container ${
         selected ? "is-selected" : ""
+      } ${
+        interactionHighlighted ? "is-interaction-highlighted" : ""
       }`}
       style={{
         left: npc.placement.x,

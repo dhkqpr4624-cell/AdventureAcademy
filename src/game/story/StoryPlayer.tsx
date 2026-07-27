@@ -13,12 +13,18 @@ import {
 } from "./BaseCampStoryAdapter";
 import { PlayerStatusBar } from "../../components/PlayerStatusBar";
 import type { PlayerState } from "../player/playerState";
+import {
+  DEFAULT_STORY_PRESENTATION_MODE,
+  shouldShowStoryPlayerStatus,
+  type StoryPresentationMode,
+} from "./storyPresentationTypes";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
   onNavigate: (screen: ScreenId) => void;
   onComplete?: () => void;
   playerStatus?: PlayerState;
+  presentationMode?: StoryPresentationMode;
 };
 
 const INITIAL_RENDER_STATE: StoryRenderState = {
@@ -84,6 +90,7 @@ export function StoryPlayer({
   onNavigate,
   onComplete,
   playerStatus,
+  presentationMode = DEFAULT_STORY_PRESENTATION_MODE,
 }: StoryPlayerProps) {
   const steps = useMemo(
     () => sequence.scenes.flatMap((scene) => scene.steps),
@@ -262,22 +269,33 @@ export function StoryPlayer({
       ? renderState.dialogue.activeActorId
       : undefined;
   const isNarration = renderState.dialogue?.kind === "narration";
+  const isBaseCampOverlay = presentationMode === "baseCampOverlay";
+  const showPlayerStatus = shouldShowStoryPlayerStatus(
+    presentationMode,
+    Boolean(playerStatus),
+  );
 
   return (
-    <main className="story-player" aria-label={sequence.title}>
-      <div
-        key={renderState.backgroundRevision}
-        className={`story-background story-transition-${renderState.backgroundTransition}`}
-      >
-        {background && (
-          <StoryAsset
-            asset={background}
-            alt={background.placeholder.label}
-            failedUrls={failedUrls}
-            onImageError={markImageFailed}
-          />
-        )}
-      </div>
+    <main
+      className={`story-player story-player-${presentationMode}`}
+      aria-label={sequence.title}
+      data-presentation-mode={presentationMode}
+    >
+      {!isBaseCampOverlay && (
+        <div
+          key={renderState.backgroundRevision}
+          className={`story-background story-transition-${renderState.backgroundTransition}`}
+        >
+          {background && (
+            <StoryAsset
+              asset={background}
+              alt={background.placeholder.label}
+              failedUrls={failedUrls}
+              onImageError={markImageFailed}
+            />
+          )}
+        </div>
+      )}
 
       {renderState.baseCampMapId && (
         <BaseCampStoryAdapter
@@ -289,7 +307,10 @@ export function StoryPlayer({
         />
       )}
 
-      <div className="story-background-shade" aria-hidden="true" />
+      <div
+        className="story-background-shade"
+        aria-hidden="true"
+      />
 
       <div className="story-portrait-layer" aria-live="polite">
         {Object.values(renderState.portraits).map((portrait) => {
@@ -348,7 +369,7 @@ export function StoryPlayer({
           >
             다음
           </button>
-          {playerStatus && (
+          {showPlayerStatus && playerStatus && (
             <footer className="story-player-status">
               <PlayerStatusBar {...playerStatus} />
             </footer>

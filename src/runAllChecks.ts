@@ -13,11 +13,13 @@ import { TEST_DUNGEON_MAP } from "./game/dungeon/testDungeonMap";
 import { runNpcChecks } from "./game/npc/npcChecks";
 import { runQuestChecks } from "./game/quest/questChecks";
 import { runQuestionGradingChecks } from "./game/question/questionGradingChecks";
+import { runStoryPresentationChecks } from "./game/story/storyPresentationChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
   ["quest checks", runQuestChecks],
   ["player status checks", runPlayerStatusChecks],
+  ["story presentation checks", runStoryPresentationChecks],
   ["dungeon map checks", runDungeonMapChecks],
   ["dungeon camera checks", runDungeonCameraChecks],
   ["dungeon question checks", () => runDungeonQuestionChecks(TEST_DUNGEON_MAP)],
@@ -35,4 +37,3 @@ for (const [label, run] of checks) {
   run();
   console.info(`${label}: PASS`);
 }
-

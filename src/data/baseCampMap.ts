@@ -1,7 +1,21 @@
 import type { BaseCampMapDefinition } from "../types/baseCamp";
+import {
+  BASE_CAMP_NPC_SLOT_IDS,
+  getBaseCampNpcFocusTarget,
+} from "../game/npc/baseCampNpcSlots";
 
 const baseCampAssetUrl = (fileName: string) =>
   `${import.meta.env.BASE_URL}assets/baseCamp/${fileName}`;
+
+const lunaNpcFocus = getBaseCampNpcFocusTarget(
+  BASE_CAMP_NPC_SLOT_IDS.lunaOriginal,
+);
+const theoNpcFocus = getBaseCampNpcFocusTarget(
+  BASE_CAMP_NPC_SLOT_IDS.theoOriginal,
+);
+const kaidenNpcFocus = getBaseCampNpcFocusTarget(
+  BASE_CAMP_NPC_SLOT_IDS.kaidenOriginal,
+);
 
 export const BASE_CAMP_MAP: BaseCampMapDefinition = {
   id: "academy-base-camp",
@@ -43,24 +57,18 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
     },
     lunaNpc: {
       id: "lunaNpc",
-      x: 525,
-      y: 565,
+      ...lunaNpcFocus,
       zoom: 1.4,
-      offsetY: -35,
     },
     theoNpc: {
       id: "theoNpc",
-      x: 1135,
-      y: 565,
+      ...theoNpcFocus,
       zoom: 1.4,
-      offsetY: -35,
     },
     kaidenNpc: {
       id: "kaidenNpc",
-      x: 1395,
-      y: 555,
+      ...kaidenNpcFocus,
       zoom: 1.4,
-      offsetY: -35,
     },
   },
   interactionRegions: [

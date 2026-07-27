@@ -155,7 +155,7 @@ export function BaseCampScreen({
             sequence={NPC_STORY_SEQUENCES[storySequenceId]}
             onNavigate={onNavigate}
             onComplete={finishNpcStory}
-            playerStatus={playerState}
+            presentationMode="baseCampOverlay"
           />
         </div>
       )}

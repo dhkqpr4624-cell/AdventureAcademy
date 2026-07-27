@@ -7,6 +7,8 @@ import {
   BASE_CAMP_NPC_DISPLAY_SCALE,
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
   BASE_CAMP_NPC_SLOTS,
+  BASE_CAMP_NPC_VERTICAL_SHIFT,
+  getBaseCampNpcFocusTarget,
   getBaseCampNpcPlacement,
   type BaseCampNpcSlotId,
 } from "./baseCampNpcSlots";
@@ -50,6 +52,28 @@ export function runNpcChecks() {
         npc.placement.y === expectedPlacement.y,
       `${npc.id} placement must preserve its slot foot anchor`,
     );
+    const slot = BASE_CAMP_NPC_SLOTS[npc.baseCampSpawnId as BaseCampNpcSlotId];
+    assert(
+      npc.placement.width === 114 && npc.placement.height === 180,
+      `${npc.id} final display size must be 114x180`,
+    );
+    assert(
+      npc.placement.x + npc.placement.width / 2 === slot.anchorX,
+      `${npc.id} horizontal foot anchor must not move`,
+    );
+    assert(
+      npc.placement.y + npc.placement.height ===
+        slot.originalAnchorY + BASE_CAMP_NPC_VERTICAL_SHIFT,
+      `${npc.id} foot anchor must move down by 90px`,
+    );
+    const focusTarget = getBaseCampNpcFocusTarget(
+      npc.baseCampSpawnId as BaseCampNpcSlotId,
+    );
+    assert(
+      focusTarget.x === slot.anchorX &&
+        focusTarget.y === npc.placement.y + npc.placement.height / 2,
+      `${npc.id} focus target must match the rendered center`,
+    );
     for (const sequenceId of Object.values(npc.dialogue)) {
       assert(
         !sequenceId || Boolean(NPC_STORY_SEQUENCES[sequenceId]),
@@ -65,8 +89,12 @@ export function runNpcChecks() {
   }
   assert(occupiedSlots.size === 3, "all three NPCs must use different slots");
   assert(
-    BASE_CAMP_NPC_DISPLAY_SCALE === 0.3,
-    "common NPC display scale must be 0.3",
+    BASE_CAMP_NPC_DISPLAY_SCALE === 0.6,
+    "common NPC display scale must be 0.6",
+  );
+  assert(
+    BASE_CAMP_NPC_VERTICAL_SHIFT === 90,
+    "common NPC vertical shift must be 90px",
   );
   assert(
     BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo === "lunaNpc",
