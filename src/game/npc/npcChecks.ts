@@ -7,7 +7,7 @@ import {
   BASE_CAMP_NPC_DISPLAY_SCALE,
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
   BASE_CAMP_NPC_SLOTS,
-  BASE_CAMP_NPC_VERTICAL_SHIFT,
+  BASE_CAMP_NPC_UPWARD_SHIFT,
   getBaseCampNpcFocusTarget,
   getBaseCampNpcPlacement,
   type BaseCampNpcSlotId,
@@ -63,8 +63,8 @@ export function runNpcChecks() {
     );
     assert(
       npc.placement.y + npc.placement.height ===
-        slot.originalAnchorY + BASE_CAMP_NPC_VERTICAL_SHIFT,
-      `${npc.id} foot anchor must move down by 90px`,
+        slot.previousAnchorY - BASE_CAMP_NPC_UPWARD_SHIFT,
+      `${npc.id} foot anchor must move up by 90px`,
     );
     const focusTarget = getBaseCampNpcFocusTarget(
       npc.baseCampSpawnId as BaseCampNpcSlotId,
@@ -93,8 +93,8 @@ export function runNpcChecks() {
     "common NPC display scale must be 0.6",
   );
   assert(
-    BASE_CAMP_NPC_VERTICAL_SHIFT === 90,
-    "common NPC vertical shift must be 90px",
+    BASE_CAMP_NPC_UPWARD_SHIFT === 90,
+    "common NPC upward shift must be 90px",
   );
   assert(
     BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo === "lunaNpc",
@@ -109,20 +109,28 @@ export function runNpcChecks() {
     "Luna must use the original Kaiden slot",
   );
   assert(
-    BASE_CAMP_LAYER.background < BASE_CAMP_LAYER.npc,
-    "NPC layer must be above background",
+    BASE_CAMP_LAYER.background < BASE_CAMP_LAYER.structures,
+    "structures must be above background",
   );
   assert(
-    BASE_CAMP_LAYER.structures < BASE_CAMP_LAYER.npc,
-    "NPC layer must be above camp structures",
+    BASE_CAMP_LAYER.structures < BASE_CAMP_LAYER.ground,
+    "ground must be above structures",
   );
   assert(
-    BASE_CAMP_LAYER.npc < BASE_CAMP_LAYER.ground,
-    "NPC layer must be below ground",
+    BASE_CAMP_LAYER.ground < BASE_CAMP_LAYER.foreground,
+    "foreground must be above ground",
   );
   assert(
-    BASE_CAMP_LAYER.ground < BASE_CAMP_LAYER.interactionOverlay,
-    "interaction overlay must be above ground and NPCs",
+    BASE_CAMP_LAYER.foreground < BASE_CAMP_LAYER.npcSprite,
+    "NPC layer must be above foreground and every BaseCamp image layer",
+  );
+  assert(
+    BASE_CAMP_LAYER.npcSprite < BASE_CAMP_LAYER.interactionOverlay,
+    "interaction overlay must be above NPC sprites",
+  );
+  assert(
+    BASE_CAMP_LAYER.interactionOverlay < BASE_CAMP_LAYER.highlight,
+    "highlight must be above interaction overlay",
   );
   assert(resolveNextBlinkDelay(0, 5000, 10000) === 5000, "random 0");
   assert(resolveNextBlinkDelay(1, 5000, 10000) === 10000, "random 1");

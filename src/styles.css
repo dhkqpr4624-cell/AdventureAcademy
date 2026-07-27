@@ -1938,6 +1938,38 @@ button:focus-visible {
   background: rgba(5, 8, 12, 0.12);
 }
 
+.story-player-baseCampOverlay .story-portrait {
+  padding: 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.story-player-baseCampOverlay .story-portrait > img,
+.story-player-baseCampOverlay .story-portrait > .story-asset-placeholder {
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 1) 58%,
+    rgba(0, 0, 0, 0.92) 68%,
+    rgba(0, 0, 0, 0.55) 82%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 1) 58%,
+    rgba(0, 0, 0, 0.92) 68%,
+    rgba(0, 0, 0, 0.55) 82%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
 .story-player-baseCampOverlay .story-dialogue-box {
   padding-bottom: clamp(1rem, 2.4vw, 1.55rem);
 }

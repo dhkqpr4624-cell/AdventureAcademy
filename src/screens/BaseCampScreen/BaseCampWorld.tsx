@@ -126,15 +126,22 @@ export function BaseCampWorld({
         {renderLayerImage("dungeonEntrance")}
       </div>
       <div
+        className="base-camp-layer ground-layer"
+        style={{ zIndex: BASE_CAMP_LAYER.ground }}
+        aria-hidden="true"
+      >
+        {renderLayerImage("ground")}
+      </div>
+      <div
         className="base-camp-layer foreground-layer"
-        style={{ zIndex: BASE_CAMP_LAYER.structures }}
+        style={{ zIndex: BASE_CAMP_LAYER.foreground }}
         aria-hidden="true"
       >
         {renderLayerImage("foreground")}
       </div>
       <div
         className="base-camp-layer npc-layer"
-        style={{ zIndex: BASE_CAMP_LAYER.npc }}
+        style={{ zIndex: BASE_CAMP_LAYER.npcSprite }}
       >
         {NPC_DEFINITIONS.map((npc) => (
           <NpcIdleSprite
@@ -146,13 +153,6 @@ export function BaseCampWorld({
             }
           />
         ))}
-      </div>
-      <div
-        className="base-camp-layer ground-layer"
-        style={{ zIndex: BASE_CAMP_LAYER.ground }}
-        aria-hidden="true"
-      >
-        {renderLayerImage("ground")}
       </div>
       <div
         className={`base-camp-layer interaction-layer ${

@@ -1,4 +1,5 @@
 import {
+  BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION,
   DEFAULT_STORY_PRESENTATION_MODE,
   shouldShowStoryPlayerStatus,
   type StoryPresentationMode,
@@ -32,5 +33,25 @@ export function runStoryPresentationChecks() {
   assert(
     !shouldShowStoryPlayerStatus("fullscreen", false),
     "status cannot render without player data",
+  );
+  assert(
+    !BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION.visibleBorder,
+    "BaseCamp overlay portraits must not show a frame border",
+  );
+  assert(
+    !BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION.opaqueBackground,
+    "BaseCamp overlay portrait backgrounds must stay transparent",
+  );
+  assert(
+    !BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION.boxShadow,
+    "BaseCamp overlay portraits must not show a frame shadow",
+  );
+  assert(
+    BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION.softEdgeMask,
+    "BaseCamp overlay portraits must use a soft-edge mask",
+  );
+  assert(
+    BASE_CAMP_OVERLAY_PORTRAIT_PRESENTATION.layoutDimensionsPreserved,
+    "BaseCamp overlay portrait layout dimensions must be preserved",
   );
 }

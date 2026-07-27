@@ -1,5 +1,5 @@
 export const BASE_CAMP_NPC_DISPLAY_SCALE = 0.6;
-export const BASE_CAMP_NPC_VERTICAL_SHIFT = 90;
+export const BASE_CAMP_NPC_UPWARD_SHIFT = 90;
 
 export const BASE_CAMP_NPC_SLOT_IDS = {
   lunaOriginal: "lunaNpc",
@@ -13,7 +13,7 @@ export type BaseCampNpcSlotId =
 export type BaseCampNpcSlot = {
   id: BaseCampNpcSlotId;
   anchorX: number;
-  originalAnchorY: number;
+  previousAnchorY: number;
   baseWidth: number;
   baseHeight: number;
   focusPointId: BaseCampNpcSlotId;
@@ -26,7 +26,7 @@ export const BASE_CAMP_NPC_SLOTS: Record<
   lunaNpc: {
     id: "lunaNpc",
     anchorX: 525,
-    originalAnchorY: 715,
+    previousAnchorY: 805,
     baseWidth: 190,
     baseHeight: 300,
     focusPointId: "lunaNpc",
@@ -34,7 +34,7 @@ export const BASE_CAMP_NPC_SLOTS: Record<
   theoNpc: {
     id: "theoNpc",
     anchorX: 1135,
-    originalAnchorY: 715,
+    previousAnchorY: 805,
     baseWidth: 190,
     baseHeight: 300,
     focusPointId: "theoNpc",
@@ -42,7 +42,7 @@ export const BASE_CAMP_NPC_SLOTS: Record<
   kaidenNpc: {
     id: "kaidenNpc",
     anchorX: 1395,
-    originalAnchorY: 705,
+    previousAnchorY: 795,
     baseWidth: 190,
     baseHeight: 300,
     focusPointId: "kaidenNpc",
@@ -59,11 +59,11 @@ export function getBaseCampNpcPlacement(slotId: BaseCampNpcSlotId) {
   const slot = BASE_CAMP_NPC_SLOTS[slotId];
   const width = slot.baseWidth * BASE_CAMP_NPC_DISPLAY_SCALE;
   const height = slot.baseHeight * BASE_CAMP_NPC_DISPLAY_SCALE;
-  const shiftedAnchorY = slot.originalAnchorY + BASE_CAMP_NPC_VERTICAL_SHIFT;
+  const anchorY = slot.previousAnchorY - BASE_CAMP_NPC_UPWARD_SHIFT;
 
   return {
     x: slot.anchorX - width / 2,
-    y: shiftedAnchorY - height,
+    y: anchorY - height,
     width,
     height,
   };
