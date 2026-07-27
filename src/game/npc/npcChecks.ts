@@ -64,7 +64,7 @@ export function runNpcChecks() {
     assert(
       npc.placement.y + npc.placement.height ===
         slot.previousAnchorY - BASE_CAMP_NPC_UPWARD_SHIFT,
-      `${npc.id} foot anchor must move up by 90px`,
+      `${npc.id} foot anchor must be 60px below the previous placement`,
     );
     const focusTarget = getBaseCampNpcFocusTarget(
       npc.baseCampSpawnId as BaseCampNpcSlotId,
@@ -93,8 +93,8 @@ export function runNpcChecks() {
     "common NPC display scale must be 0.6",
   );
   assert(
-    BASE_CAMP_NPC_UPWARD_SHIFT === 90,
-    "common NPC upward shift must be 90px",
+    BASE_CAMP_NPC_UPWARD_SHIFT === 30,
+    "common NPC upward shift must be 30px after moving NPCs down by 60px",
   );
   assert(
     BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo === "lunaNpc",
