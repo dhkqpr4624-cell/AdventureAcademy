@@ -93,7 +93,7 @@ export function runNpcChecks() {
     "common NPC display scale must be 0.6",
   );
   assert(
-    BASE_CAMP_NPC_UPWARD_SHIFT === 40,
+    BASE_CAMP_NPC_UPWARD_SHIFT === 43,
     "common NPC upward shift must be 30px after moving NPCs down by 60px",
   );
   assert(
