@@ -9,15 +9,15 @@ const CASES = [
   },
   {
     answers: [true, false] as const,
-    outcome: "hardVictory",
-    enemyAttackCount: 1,
-    enemyDefeated: true,
+    outcome: "enemyEscaped",
+    enemyAttackCount: 2,
+    enemyDefeated: false,
   },
   {
     answers: [false, true] as const,
-    outcome: "hardVictory",
-    enemyAttackCount: 1,
-    enemyDefeated: true,
+    outcome: "enemyEscaped",
+    enemyAttackCount: 2,
+    enemyDefeated: false,
   },
   {
     answers: [false, false] as const,

@@ -763,9 +763,7 @@ export function DungeonScreen({
     criticalStateRef.current = applyCriticalResult(
       criticalStateRef.current,
       criticalResult,
-      questionIndexRef.current < combatQuestionCount - 1 ||
-        (questionIndexRef.current === combatQuestionCount - 1 &&
-          [...answersRef.current, isCorrect].every((answer) => !answer)),
+      questionIndexRef.current < combatQuestionCount - 1,
     );
     setHasCriticalOccurred(criticalStateRef.current.hasCriticalOccurred);
     setEnemyStunned(criticalStateRef.current.enemyStunned);
@@ -826,11 +824,8 @@ export function DungeonScreen({
     };
     setEnemyStunned(false);
     const correctCount = answersRef.current.filter(Boolean).length;
-    if (correctCount >= 2) {
+    if (correctCount === combatQuestionCount) {
       await playVictory();
-    } else if (correctCount === 1) {
-      setPhase("awaitStagger");
-      setCombatMessage(`${activeMonsterName()}이 크게 비틀거린다.`);
     } else {
       setPhase("awaitEnemyTurn");
       setCombatMessage(`${activeMonsterName()}의 턴!`);
@@ -1461,14 +1456,12 @@ export function DungeonScreen({
     : null;
   const resultTitle =
     currentResolutionOutcome === "perfectVictory"
-      ? "완벽한 승리"
-      : currentResolutionOutcome === "normalVictory"
-        ? "일반 승리"
-      : currentResolutionOutcome === "hardVictory"
-        ? "힘겨운 승리"
-        : activeCombatKind === "elite"
-          ? "정예 몬스터가 도망쳤다"
-          : "전투 실패";
+      ? activeCombatKind === "elite"
+        ? "정예 몬스터를 쓰러뜨렸다!"
+        : "완벽한 승리"
+      : activeCombatKind === "elite"
+        ? "정예 몬스터가 도망쳤다."
+        : "몬스터가 도망쳤다.";
   const dialogueMode = dialogueModeForPhase(phase);
   const availableConnections = getConnectionsForRoom(currentRoomId).sort(
     (left, right) =>

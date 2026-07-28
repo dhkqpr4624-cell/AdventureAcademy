@@ -26,9 +26,9 @@ export function resolveNormalCombat(
 
   if (correctAnswerCount === 1) {
     return {
-      outcome: "hardVictory",
-      enemyAttackCount: 1,
-      enemyDefeated: true,
+      outcome: "enemyEscaped",
+      enemyAttackCount: 2,
+      enemyDefeated: false,
       correctAnswerCount,
     };
   }

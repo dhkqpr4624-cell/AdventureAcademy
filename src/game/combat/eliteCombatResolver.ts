@@ -29,15 +29,12 @@ export function resolveEliteCombat({
   }
 
   const correctAnswerCount = answers.filter((answer) => answer.isCorrect).length;
-  const suppressFinalEnemyTurn = correctAnswerCount >= 1;
+  const suppressFinalEnemyTurn =
+    correctAnswerCount === ELITE_COMBAT_QUESTION_COUNT;
   const result: EliteCombatResult =
-    correctAnswerCount === 3
+    correctAnswerCount === ELITE_COMBAT_QUESTION_COUNT
       ? "perfectVictory"
-      : correctAnswerCount === 2
-        ? "normalVictory"
-        : correctAnswerCount === 1
-          ? "hardVictory"
-          : "enemyEscaped";
+      : "enemyEscaped";
 
   return {
     result,

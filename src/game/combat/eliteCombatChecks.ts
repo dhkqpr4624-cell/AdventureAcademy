@@ -29,19 +29,19 @@ export function runEliteCombatChecks(): void {
   const hard = resolveEliteCombat(answers(false, true, false));
   const escaped = resolveEliteCombat(answers(false, false, false));
   check(perfect.result === "perfectVictory", "3 correct must be perfect");
-  check(normal.result === "normalVictory", "2 correct must be normal");
-  check(hard.result === "hardVictory", "1 correct must be hard");
+  check(normal.result === "enemyEscaped", "2 correct must escape");
+  check(hard.result === "enemyEscaped", "1 correct must escape");
   check(escaped.result === "enemyEscaped", "0 correct must escape");
   check(
-    perfect.suppressFinalEnemyTurn &&
-      normal.suppressFinalEnemyTurn &&
-      hard.suppressFinalEnemyTurn,
-    "one or more correct must suppress the final turn",
+    perfect.suppressFinalEnemyTurn,
+    "only three correct answers suppress the final turn",
   );
+  check(!normal.suppressFinalEnemyTurn, "two correct keeps the final turn");
+  check(!hard.suppressFinalEnemyTurn, "one correct keeps the final turn");
   check(!escaped.suppressFinalEnemyTurn, "zero correct keeps the final turn");
   check(perfect.plannedEnemyAttackCount === 2, "perfect plans two turns");
-  check(normal.plannedEnemyAttackCount === 2, "normal plans two turns");
-  check(hard.plannedEnemyAttackCount === 2, "hard plans two turns");
+  check(normal.plannedEnemyAttackCount === 3, "two correct plans three turns");
+  check(hard.plannedEnemyAttackCount === 3, "one correct plans three turns");
   check(escaped.plannedEnemyAttackCount === 3, "escape plans three turns");
 
   let criticalState: CriticalCombatState = {
@@ -77,7 +77,7 @@ export function runEliteCombatChecks(): void {
     "suppressed final turn must not create a lingering stun",
   );
   check(
-    resolveEliteCombat(answers(false, false, true)).result === "hardVictory",
+    resolveEliteCombat(answers(false, false, true)).result === "enemyEscaped",
     "final critical presentation cannot change the answer result",
   );
 
