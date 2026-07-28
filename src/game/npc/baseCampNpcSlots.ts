@@ -25,7 +25,7 @@ export const BASE_CAMP_NPC_SLOTS: Record<
 > = {
   lunaNpc: {
     id: "lunaNpc",
-    anchorX: 495,
+    anchorX: 465,
     previousAnchorY: 795,
     baseWidth: 190,
     baseHeight: 300,
@@ -33,7 +33,7 @@ export const BASE_CAMP_NPC_SLOTS: Record<
   },
   theoNpc: {
     id: "theoNpc",
-    anchorX: 605,
+    anchorX: 635,
     previousAnchorY: 795,
     baseWidth: 190,
     baseHeight: 300,
