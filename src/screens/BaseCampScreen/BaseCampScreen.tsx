@@ -194,7 +194,9 @@ export function BaseCampScreen({
         onSelectRegion={handleSelectRegion}
         selectedNpcId={selectedNpc?.id}
         onSelectNpc={(npc) => void handleSelectNpc(npc)}
-        highlightTargetId={selectedRegionId}
+        highlightTargetId={
+          selectedRegionId === "dungeonEntrance" ? null : selectedRegionId
+        }
         interactionsDisabled={interactionLocked}
         questState={questState}
       />

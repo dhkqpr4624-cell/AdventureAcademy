@@ -38,7 +38,6 @@ import {
   DUNGEON_PLAYER_MAX_HP,
   INITIAL_MEDIUM_POTION_QUANTITY,
   INITIAL_SMALL_POTION_QUANTITY,
-  applyDungeonPlayerDamage,
   applyDungeonPlayerHealing,
 } from "../../game/dungeon/dungeonPlayerState";
 import { runDungeonPlayerStateChecks } from "../../game/dungeon/dungeonPlayerStateChecks";
@@ -99,12 +98,17 @@ import {
 import { PlayerStatusBar } from "../../components/PlayerStatusBar";
 import type { PlayerState } from "../../game/player/playerState";
 import type { Dispatch, SetStateAction } from "react";
+import { resolvePlayerDamage } from "../../game/player/playerDamageResolver";
+import { DungeonExitButton } from "../../components/DungeonExitButton";
+import { DungeonExitConfirmDialog } from "../../components/DungeonExitConfirmDialog";
+import { PlayerDefeatedOverlay } from "../../components/PlayerDefeatedOverlay";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
   onDungeonEntered: () => void;
+  onDungeonAbandoned: () => void;
   onFloorCleared: () => void;
 };
 
@@ -144,6 +148,7 @@ type CombatVisuals = {
 };
 
 type DungeonMode = "exploration" | "moving" | "roomEvent" | "combat";
+type DungeonFailureState = "none" | "playerDefeated";
 type CombatKind = "normal" | "elite";
 type CombatResolution = NormalCombatResolution | EliteCombatResolution;
 type RoomEventKind = "treasure" | "trap";
@@ -214,6 +219,7 @@ export function DungeonScreen({
   playerState,
   setPlayerState,
   onDungeonEntered,
+  onDungeonAbandoned,
   onFloorCleared,
 }: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
@@ -243,6 +249,9 @@ export function DungeonScreen({
   const activeRoomEventRef = useRef<ActiveRoomEvent | null>(null);
   const eventInteractionLockRef = useRef(false);
   const eventResultProcessingRef = useRef(false);
+  const defeatProcessingRef = useRef(false);
+  const dungeonExitProcessingRef = useRef(false);
+  const playerHpRef = useRef(playerState.currentHp);
   const activeQuestionsRef = useRef(
     getDungeonQuestionSet("normal-garlic-a"),
   );
@@ -305,6 +314,10 @@ export function DungeonScreen({
   );
   const [activeRoomEvent, setActiveRoomEvent] =
     useState<ActiveRoomEvent | null>(null);
+  const [failureState, setFailureState] =
+    useState<DungeonFailureState>("none");
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+  const [runActionBusy, setRunActionBusy] = useState(false);
 
   const combatQuestionCount =
     activeCombatKind === "elite" ? ELITE_COMBAT_QUESTION_COUNT : 2;
@@ -337,6 +350,24 @@ export function DungeonScreen({
       : resolveNormalCombat(answersRef.current as [boolean, boolean]);
   const resolutionOutcome = (value: CombatResolution) =>
     "result" in value ? value.result : value.outcome;
+
+  playerHpRef.current = playerHp;
+
+  const enterDefeatedState = () => {
+    if (defeatProcessingRef.current) return;
+    defeatProcessingRef.current = true;
+    interactionLockRef.current = true;
+    setInteractionLocked(true);
+    setExitConfirmOpen(false);
+    setFailureState("playerDefeated");
+  };
+
+  const applyPlayerDamage = (damage: number) => {
+    const result = resolvePlayerDamage(playerHpRef.current, damage);
+    playerHpRef.current = result.nextHp;
+    setPlayerHp(result.nextHp);
+    return result;
+  };
 
   useEffect(() => {
     onDungeonEntered();
@@ -661,9 +692,10 @@ export function DungeonScreen({
         if (!mountedRef.current) {
           return;
         }
-        setPlayerHp((current) =>
-          applyDungeonPlayerDamage(current, attackDamage),
-        );
+        const damageResult = applyPlayerDamage(attackDamage);
+        if (damageResult.isDefeated) {
+          defeatProcessingRef.current = true;
+        }
         setActualEnemyAttackCount((current) => current + 1);
         setFloatingText(`-${attackDamage}`);
         setDamageFlash(true);
@@ -675,6 +707,11 @@ export function DungeonScreen({
         }, 240);
       });
       if (!mountedRef.current) {
+        return;
+      }
+      if (playerHpRef.current === 0) {
+        defeatProcessingRef.current = false;
+        enterDefeatedState();
         return;
       }
       setPhase("awaitDamageResult");
@@ -1306,9 +1343,7 @@ export function DungeonScreen({
     const room = getDungeonRoom(event.roomId);
     const resolution = resolveDungeonRoomEvent(room, result.isCorrect);
     if (resolution.damage > 0) {
-      setPlayerHp((current) =>
-        applyDungeonPlayerDamage(current, resolution.damage),
-      );
+      const damageResult = applyPlayerDamage(resolution.damage);
       setFloatingText(`-${resolution.damage}`);
       setDamageFlash(true);
       window.setTimeout(() => {
@@ -1317,6 +1352,10 @@ export function DungeonScreen({
           setDamageFlash(false);
         }
       }, 240);
+      if (damageResult.isDefeated) {
+        enterDefeatedState();
+        return;
+      }
     }
     const nextProgress = completeRoomEventWithResult(
       roomProgressRef.current,
@@ -1418,7 +1457,8 @@ export function DungeonScreen({
     });
   };
 
-  const restartTestDungeon = () => {
+  const restartTestDungeon = (restoreHp = true) => {
+    visualsRef.current?.dungeonCamera.cancel();
     movementProcessingRef.current = false;
     roomEventProcessingRef.current = false;
     activeCombatRoomIdRef.current = null;
@@ -1428,6 +1468,8 @@ export function DungeonScreen({
     eventInteractionLockRef.current = false;
     eventResultProcessingRef.current = false;
     dungeonCompletionProcessingRef.current = false;
+    defeatProcessingRef.current = false;
+    dungeonExitProcessingRef.current = false;
     const nextProgress = createInitialRoomProgress(TEST_DUNGEON_MAP);
     roomProgressRef.current = nextProgress;
     setRoomProgress(nextProgress);
@@ -1437,9 +1479,17 @@ export function DungeonScreen({
     setPreviousRoomId(null);
     setCurrentRoomId(TEST_DUNGEON_MAP.startRoomId);
     setDungeonMode("exploration");
+    setFailureState("none");
+    setExitConfirmOpen(false);
+    setRunActionBusy(false);
     setExplorationMessage("던전의 시작점이다.");
     initializeCombatEncounterState();
-    setPlayerHp(MAX_HP);
+    interactionLockRef.current = false;
+    setInteractionLocked(false);
+    if (restoreHp) {
+      playerHpRef.current = MAX_HP;
+      setPlayerHp(MAX_HP);
+    }
     setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
     setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
     const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
@@ -1449,6 +1499,45 @@ export function DungeonScreen({
       visualsRef.current.monsterRoot.visible = false;
       visualsRef.current.sword.root.visible = true;
     }
+  };
+
+  const retryAfterDefeat = () => {
+    if (dungeonExitProcessingRef.current) return;
+    dungeonExitProcessingRef.current = true;
+    setRunActionBusy(true);
+    restartTestDungeon(true);
+  };
+
+  const returnAfterDefeat = () => {
+    if (dungeonExitProcessingRef.current) return;
+    dungeonExitProcessingRef.current = true;
+    setRunActionBusy(true);
+    restartTestDungeon(true);
+    onDungeonAbandoned();
+    onNavigate("baseCamp");
+  };
+
+  const openExitConfirm = () => {
+    if (exitConfirmOpen || failureState !== "none" || dungeonExitProcessingRef.current) return;
+    interactionLockRef.current = true;
+    setInteractionLocked(true);
+    setExitConfirmOpen(true);
+  };
+
+  const closeExitConfirm = () => {
+    if (dungeonExitProcessingRef.current) return;
+    setExitConfirmOpen(false);
+    interactionLockRef.current = false;
+    setInteractionLocked(false);
+  };
+
+  const abandonDungeon = () => {
+    if (dungeonExitProcessingRef.current) return;
+    dungeonExitProcessingRef.current = true;
+    setRunActionBusy(true);
+    restartTestDungeon(false);
+    onDungeonAbandoned();
+    onNavigate("baseCamp");
   };
 
   const currentResolutionOutcome = resolution
@@ -1476,6 +1565,11 @@ export function DungeonScreen({
     "enemyEscaped",
   ].includes(phase);
   const buttonsLocked = animationInProgress || interactionLocked;
+  const exitDisabled =
+    dungeonMode === "moving" ||
+    animationInProgress ||
+    dungeonCompletionProcessingRef.current ||
+    exitConfirmOpen;
   const currentRoom = getDungeonRoom(currentRoomId);
   const currentRoomProgress = roomProgress[currentRoomId];
   const treasureVisible = currentRoom.type === "treasure";
@@ -1506,13 +1600,18 @@ export function DungeonScreen({
 
   return (
     <main
-      className={`game-screen dungeon-screen ${criticalEffect ? "is-critical-impact" : ""}`}
+      className={`game-screen dungeon-screen ${criticalEffect ? "is-critical-impact" : ""} ${
+        failureState !== "none" || exitConfirmOpen ? "has-blocking-modal" : ""
+      }`}
     >
       <div
         ref={sceneContainerRef}
         className="dungeon-scene"
         aria-label="고정 테스트 던전"
       />
+      {failureState === "none" && phase !== "result" && (
+        <DungeonExitButton disabled={exitDisabled} onClick={openExitConfirm} />
+      )}
       <div className={`combat-damage-flash ${damageFlash ? "is-active" : ""}`} />
       <div
         className={`combat-critical-accent ${criticalEffect ? "is-active" : ""}`}
@@ -1858,7 +1957,7 @@ export function DungeonScreen({
             type="button"
             className="dungeon-reset-button"
             disabled={dungeonMode === "moving"}
-            onClick={restartTestDungeon}
+                onClick={() => restartTestDungeon()}
           >
             던전 처음부터 다시 시작
           </button>
@@ -1876,6 +1975,20 @@ export function DungeonScreen({
             {playerStatusBar}
           </footer>
         </section>
+      )}
+      {exitConfirmOpen && failureState === "none" && (
+        <DungeonExitConfirmDialog
+          busy={runActionBusy}
+          onCancel={closeExitConfirm}
+          onConfirm={abandonDungeon}
+        />
+      )}
+      {failureState === "playerDefeated" && (
+        <PlayerDefeatedOverlay
+          busy={runActionBusy}
+          onRetry={retryAfterDefeat}
+          onReturnToBaseCamp={returnAfterDefeat}
+        />
       )}
     </main>
   );

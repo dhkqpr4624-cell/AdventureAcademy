@@ -36,13 +36,6 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
       y: 520,
       zoom: 1,
     },
-    shop: {
-      id: "shop",
-      x: 250,
-      y: 620,
-      zoom: 1.35,
-      offsetY: -30,
-    },
     dungeonEntrance: {
       id: "dungeonEntrance",
       x: 805,
@@ -74,16 +67,6 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
     },
   },
   interactionRegions: [
-    {
-      id: "shop",
-      label: "shop (임시 영역)",
-      x: 105,
-      y: 515,
-      width: 300,
-      height: 225,
-      markerX: 250,
-      markerY: 610,
-    },
     {
       id: "dungeonEntrance",
       label: "dungeonEntrance",

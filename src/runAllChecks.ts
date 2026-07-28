@@ -21,6 +21,9 @@ import { runAutoSaveChecks, runSaveBackupChecks, runSaveChecks, runSaveMigration
 import { runStoryChoiceChecks } from "./game/story/storyChoiceChecks";
 import { runEliteCombatChecks } from "./game/combat/eliteCombatChecks";
 import { runEliteRoomChecks } from "./game/dungeon/eliteRoomChecks";
+import { runPlayerDamageChecks } from "./game/player/playerDamageChecks";
+import { runDungeonRunExitChecks } from "./game/dungeon/dungeonRunExitChecks";
+import { runDungeonFailureChecks } from "./game/dungeon/dungeonFailureChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
@@ -43,6 +46,9 @@ const checks = [
   ["potion checks", runPotionChecks],
   ["elite combat checks", runEliteCombatChecks],
   ["elite room checks", runEliteRoomChecks],
+  ["player damage checks", runPlayerDamageChecks],
+  ["dungeon run exit checks", runDungeonRunExitChecks],
+  ["dungeon failure checks", runDungeonFailureChecks],
   ["save checks", runSaveChecks],
   ["save migration checks", runSaveMigrationChecks],
   ["save backup checks", runSaveBackupChecks],

@@ -174,7 +174,7 @@ export function BaseCampFocusDevTool({
       <div className="base-camp-focus-dev-buttons">
         <button type="button" disabled={!clickedWorld} onClick={() => clickedWorld && setDraft((current) => ({ ...current, x: Math.round(clickedWorld.x), y: Math.round(clickedWorld.y) }))}>클릭 좌표 반영</button>
         <button type="button" onClick={() => onTestMove(draft)}>테스트 이동</button>
-        {["campCenter", "shop", "dungeonEntrance", "questNpc01"].map((id) => (
+        {["campCenter", "dungeonEntrance", "questNpc01"].map((id) => (
           <button key={id} type="button" onClick={() => loadFocusPoint(id)}>{id} 불러오기</button>
         ))}
         <button type="button" onClick={copyJson}>JSON 복사</button>

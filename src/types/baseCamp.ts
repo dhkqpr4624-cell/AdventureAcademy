@@ -10,7 +10,7 @@ export type BaseCampFocusPoint = {
 };
 
 export type BaseCampInteractionRegion = {
-  id: "shop" | "dungeonEntrance" | "questNpc01";
+  id: "dungeonEntrance" | "questNpc01";
   label: string;
   x: number;
   y: number;

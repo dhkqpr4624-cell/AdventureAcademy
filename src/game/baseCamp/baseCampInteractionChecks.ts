@@ -12,6 +12,14 @@ export function runBaseCampInteractionChecks() {
 
   assert(Boolean(entranceRegion), "dungeon entrance interaction is missing");
   assert(
+    !BASE_CAMP_MAP.interactionRegions.some((region) => region.id === ("shop" as string)),
+    "development shop interaction must not be registered",
+  );
+  assert(
+    !("shop" in BASE_CAMP_MAP.focusPoints),
+    "development shop focus point must not be registered",
+  );
+  assert(
     Boolean(BASE_CAMP_MAP.layers.dungeonEntranceButton),
     "dungeon entrance button asset is missing",
   );

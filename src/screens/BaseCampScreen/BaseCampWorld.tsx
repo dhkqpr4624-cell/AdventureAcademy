@@ -282,7 +282,7 @@ export function BaseCampWorld({
             }}
           />
         )}
-        {selectedRegionId && (
+        {selectedRegionId && selectedRegionId !== "dungeonEntrance" && (
           <span className="base-camp-highlight-label">
             선택: {selectedRegionId}
           </span>
