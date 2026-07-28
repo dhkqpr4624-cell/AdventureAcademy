@@ -1,4 +1,5 @@
 import type { BaseCampMapDefinition } from "../types/baseCamp";
+import dungeonEntranceButton from "../assets/baseCamp/dungeonEntrance_button.png";
 import {
   BASE_CAMP_NPC_SLOT_IDS,
   getBaseCampNpcFocusTarget,
@@ -25,6 +26,7 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
     background: baseCampAssetUrl("background.png"),
     ground: baseCampAssetUrl("ground.png"),
     dungeonEntrance: baseCampAssetUrl("dungeonEntrance.png"),
+    dungeonEntranceButton,
     foreground: baseCampAssetUrl("foreground.png"),
   },
   focusPoints: {

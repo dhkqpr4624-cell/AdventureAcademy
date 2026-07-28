@@ -28,6 +28,7 @@ export type BaseCampMapDefinition = {
     background: string;
     ground: string;
     dungeonEntrance: string;
+    dungeonEntranceButton: string;
     foreground: string;
   };
   focusPoints: Record<string, BaseCampFocusPoint>;

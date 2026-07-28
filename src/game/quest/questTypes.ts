@@ -2,6 +2,7 @@ import type { NpcId } from "../npc/npcTypes";
 import type { FloorId } from "../floor/floorTypes";
 
 export type QuestStatus = "locked" | "available" | "active" | "completed";
+export type QuestMarkerStatus = QuestStatus | "readyToComplete";
 
 export type QuestDefinition = {
   id: string;

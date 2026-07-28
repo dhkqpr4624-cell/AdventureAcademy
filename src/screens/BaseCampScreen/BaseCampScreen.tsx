@@ -57,14 +57,41 @@ export function BaseCampScreen({
   const [storySequenceId, setStorySequenceId] = useState<string | null>(null);
   const [questDetail, setQuestDetail] = useState<QuestDefinition | null>(null);
   const [floorListOpen, setFloorListOpen] = useState(false);
+  const [cameraTransitioning, setCameraTransitioning] = useState(false);
   const activeQuest = QuestManager.getActiveQuest(questState);
-  const interactionLocked = Boolean(storySequenceId || questDetail || floorListOpen);
+  const interactionLocked = Boolean(
+    storySequenceId || questDetail || floorListOpen || cameraTransitioning,
+  );
+
+  const focusDungeonEntranceAndOpen = async (
+    region: BaseCampInteractionRegion,
+  ) => {
+    if (
+      interactionLockRef.current ||
+      interactionLocked ||
+      floorListOpen ||
+      region.id !== "dungeonEntrance"
+    ) {
+      return;
+    }
+    interactionLockRef.current = true;
+    setCameraTransitioning(true);
+    setSelectedRegionId(region.id);
+    setFocusPointId(region.id);
+    await viewportRef.current?.focus(region.id, 350);
+    setFloorListOpen(true);
+    setCameraTransitioning(false);
+    interactionLockRef.current = false;
+  };
 
   const handleSelectRegion = (region: BaseCampInteractionRegion) => {
     if (interactionLockRef.current || interactionLocked) return;
+    if (region.id === "dungeonEntrance") {
+      void focusDungeonEntranceAndOpen(region);
+      return;
+    }
     setSelectedRegionId(region.id);
     setFocusPointId(region.id);
-    if (region.id === "dungeonEntrance") setFloorListOpen(true);
   };
 
   const handleSelectNpc = async (npc: NpcDefinition) => {
@@ -72,14 +99,13 @@ export function BaseCampScreen({
     interactionLockRef.current = true;
     setSelectedNpc(npc);
     setSelectedRegionId(null);
-    setFocusPointId(npc.baseCampSpawnId);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
     const sequenceId = resolveNpcStorySequence(npc.id, questState);
     setStorySequenceId(sequenceId);
     interactionLockRef.current = false;
   };
 
-  const finishNpcStory = () => {
+  const finishNpcStory = async () => {
     const npc = selectedNpc;
     const finishedSequenceId = storySequenceId;
     setStorySequenceId(null);
@@ -94,9 +120,13 @@ export function BaseCampScreen({
     ) {
       setQuestDetail(quest);
     } else {
+      interactionLockRef.current = true;
+      setCameraTransitioning(true);
       setSelectedNpc(null);
       setFocusPointId("campCenter");
-      void viewportRef.current?.restore(450);
+      await viewportRef.current?.restore(450);
+      setCameraTransitioning(false);
+      interactionLockRef.current = false;
     }
   };
 
@@ -121,10 +151,10 @@ export function BaseCampScreen({
   };
 
   const openFloorList = () => {
-    if (interactionLockRef.current || interactionLocked) return;
-    setSelectedRegionId("dungeonEntrance");
-    setFocusPointId("dungeonEntrance");
-    setFloorListOpen(true);
+    const entrance = BASE_CAMP_MAP.interactionRegions.find(
+      (region) => region.id === "dungeonEntrance",
+    );
+    if (entrance) void focusDungeonEntranceAndOpen(entrance);
   };
 
   const closeFloorList = () => {
@@ -154,6 +184,7 @@ export function BaseCampScreen({
         onSelectNpc={(npc) => void handleSelectNpc(npc)}
         highlightTargetId={selectedRegionId}
         interactionsDisabled={interactionLocked}
+        questState={questState}
       />
 
       <aside className="current-quest-tracker" aria-live="polite">

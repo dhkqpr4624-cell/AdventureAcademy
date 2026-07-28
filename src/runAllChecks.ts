@@ -14,10 +14,16 @@ import { runNpcChecks } from "./game/npc/npcChecks";
 import { runQuestChecks } from "./game/quest/questChecks";
 import { runQuestionGradingChecks } from "./game/question/questionGradingChecks";
 import { runStoryPresentationChecks } from "./game/story/storyPresentationChecks";
+import { runFloorUnlockChecks } from "./game/floor/floorUnlockChecks";
+import { runQuestMarkerChecks } from "./game/quest/questMarkerChecks";
+import { runBaseCampInteractionChecks } from "./game/baseCamp/baseCampInteractionChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
   ["quest checks", runQuestChecks],
+  ["quest marker checks", runQuestMarkerChecks],
+  ["floor unlock checks", runFloorUnlockChecks],
+  ["base camp interaction checks", runBaseCampInteractionChecks],
   ["player status checks", runPlayerStatusChecks],
   ["story presentation checks", runStoryPresentationChecks],
   ["dungeon map checks", runDungeonMapChecks],

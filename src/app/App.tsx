@@ -26,6 +26,8 @@ import {
   INITIAL_STORY_ACTION_STATE,
   type StoryActionState,
 } from "../game/story/storyActionTypes";
+import { runQuestMarkerChecks } from "../game/quest/questMarkerChecks";
+import { runBaseCampInteractionChecks } from "../game/baseCamp/baseCampInteractionChecks";
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("title");
@@ -45,10 +47,14 @@ export function App() {
       runQuestChecks();
       runPlayerStatusChecks();
       runFloorUnlockChecks();
+      runQuestMarkerChecks();
+      runBaseCampInteractionChecks();
       console.info("npc checks: PASS");
       console.info("quest checks: PASS");
       console.info("player status checks: PASS");
       console.info("floor unlock checks: PASS");
+      console.info("quest marker checks: PASS");
+      console.info("base camp interaction checks: PASS");
     }
   }, []);
 

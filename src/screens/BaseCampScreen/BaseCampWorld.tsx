@@ -10,6 +10,10 @@ import { resolveNpcPresentation } from "../../game/npc/npcPresentationResolver";
 import { NpcIdleSprite } from "../../components/NpcIdleSprite";
 import { BASE_CAMP_LAYER } from "../../game/baseCamp/baseCampLayers";
 import { NpcNameTag } from "../../components/NpcNameTag";
+import { NpcQuestMarker } from "../../components/NpcQuestMarker";
+import { DungeonEntranceButton } from "../../components/DungeonEntranceButton";
+import type { QuestState } from "../../game/quest/questTypes";
+import { resolveNpcQuestMarker } from "../../game/quest/questMarkerResolver";
 
 type BaseCampWorldProps = {
   map: BaseCampMapDefinition;
@@ -20,6 +24,7 @@ type BaseCampWorldProps = {
   selectedNpcId?: string | null;
   onSelectNpc?: (npc: NpcDefinition) => void;
   interactionsDisabled?: boolean;
+  questState: QuestState;
 };
 
 type LayerName = keyof BaseCampMapDefinition["layers"];
@@ -34,6 +39,7 @@ const LAYER_ORDER: LayerName[] = [
   "background",
   "ground",
   "dungeonEntrance",
+  "dungeonEntranceButton",
   "foreground",
 ];
 
@@ -46,8 +52,11 @@ export function BaseCampWorld({
   selectedNpcId = null,
   onSelectNpc,
   interactionsDisabled = false,
+  questState,
 }: BaseCampWorldProps) {
   const [highlightedNpcId, setHighlightedNpcId] = useState<string | null>(null);
+  const [dungeonEntranceHighlighted, setDungeonEntranceHighlighted] =
+    useState(false);
   const layerStyle = {
     width: map.worldWidth,
     height: map.worldHeight,
@@ -128,6 +137,15 @@ export function BaseCampWorld({
         {renderLayerImage("dungeonEntrance")}
       </div>
       <div
+        className={`base-camp-layer dungeon-entrance-button-layer ${
+          dungeonEntranceHighlighted ? "is-highlighted" : ""
+        }`}
+        style={{ zIndex: BASE_CAMP_LAYER.dungeonEntranceButton }}
+        aria-hidden="true"
+      >
+        {renderLayerImage("dungeonEntranceButton")}
+      </div>
+      <div
         className="base-camp-layer ground-layer"
         style={{ zIndex: BASE_CAMP_LAYER.ground }}
         aria-hidden="true"
@@ -164,6 +182,7 @@ export function BaseCampWorld({
       >
         {NPC_DEFINITIONS.map((npc) => {
           const presentation = resolveNpcPresentation(npc.id);
+          const questMarker = resolveNpcQuestMarker(npc, questState);
           return (
             <button
               key={presentation.id}
@@ -197,10 +216,26 @@ export function BaseCampWorld({
                 displayName={presentation.displayName}
                 displayRole={presentation.baseCampDisplayRole}
               />
+              {questMarker !== "none" && (
+                <NpcQuestMarker
+                  displayName={presentation.displayName}
+                  marker={questMarker}
+                />
+              )}
             </button>
           );
         })}
-        {map.interactionRegions.map((region) => (
+        {map.interactionRegions.map((region) =>
+          region.id === "dungeonEntrance" ? (
+            <DungeonEntranceButton
+              key={region.id}
+              region={region}
+              disabled={mode === "story" || interactionsDisabled}
+              selected={selectedRegionId === region.id}
+              onClick={() => onSelectRegion(region)}
+              onHighlightChange={setDungeonEntranceHighlighted}
+            />
+          ) : (
           <button
             key={region.id}
             type="button"
@@ -217,20 +252,19 @@ export function BaseCampWorld({
             onClick={() => onSelectRegion(region)}
             aria-label={`${region.label} 개발용 클릭 영역`}
           >
-            {region.id !== "dungeonEntrance" && (
-              <span
-                className="base-camp-dev-marker"
-                style={{
-                  left: (region.markerX ?? region.x) - region.x,
-                  top: (region.markerY ?? region.y) - region.y,
-                }}
-              >
-                개발용
-                <small>{region.id}</small>
-              </span>
-            )}
+            <span
+              className="base-camp-dev-marker"
+              style={{
+                left: (region.markerX ?? region.x) - region.x,
+                top: (region.markerY ?? region.y) - region.y,
+              }}
+            >
+              개발용
+              <small>{region.id}</small>
+            </span>
           </button>
-        ))}
+          ),
+        )}
       </div>
       <div
         className="base-camp-layer highlight-layer"
