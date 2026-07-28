@@ -25,16 +25,16 @@ export const BASE_CAMP_NPC_SLOTS: Record<
 > = {
   lunaNpc: {
     id: "lunaNpc",
-    anchorX: 525,
-    previousAnchorY: 805,
+    anchorX: 495,
+    previousAnchorY: 795,
     baseWidth: 190,
     baseHeight: 300,
     focusPointId: "lunaNpc",
   },
   theoNpc: {
     id: "theoNpc",
-    anchorX: 1135,
-    previousAnchorY: 805,
+    anchorX: 605,
+    previousAnchorY: 795,
     baseWidth: 190,
     baseHeight: 300,
     focusPointId: "theoNpc",
