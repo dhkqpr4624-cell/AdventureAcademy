@@ -1,9 +1,12 @@
 import type {
-  DungeonCameraPathPoint,
   DungeonMapDefinition,
   DungeonRoomNode,
   TraversableDungeonConnection,
 } from "./dungeonTypes";
+import {
+  getConnectionsForRoomFromMap,
+  getDungeonRoomFromMap,
+} from "./dungeonRuntimeMap";
 
 const CAMERA_Y = 0.2;
 
@@ -228,61 +231,11 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
 };
 
 export function getDungeonRoom(roomId: string): DungeonRoomNode {
-  const room = TEST_DUNGEON_MAP.rooms.find((candidate) => candidate.id === roomId);
-  if (!room) {
-    throw new Error(`Unknown dungeon room: ${roomId}`);
-  }
-  return room;
-}
-
-function reversePath(
-  destination: DungeonRoomNode,
-  cameraPath: DungeonCameraPathPoint[],
-): DungeonCameraPathPoint[] {
-  const reversed = cameraPath.slice(0, -1).reverse().map((point) => ({
-    ...point,
-    kind:
-      point.kind === "roomExit"
-        ? "roomEntrance" as const
-        : point.kind === "roomEntrance"
-          ? "roomExit" as const
-          : point.kind,
-    rotationY: undefined,
-    lookAt: undefined,
-  }));
-  return [
-    ...reversed,
-    {
-      kind: "roomCenter",
-      position: destination.explorationCameraPose.position,
-      lookAt: destination.explorationCameraPose.lookAt,
-    },
-  ];
+  return getDungeonRoomFromMap(TEST_DUNGEON_MAP, roomId);
 }
 
 export function getConnectionsForRoom(
   roomId: string,
 ): TraversableDungeonConnection[] {
-  return TEST_DUNGEON_MAP.connections.flatMap((connection) => {
-    if (connection.fromRoomId === roomId) {
-      return [{
-        connection,
-        targetRoomId: connection.toRoomId,
-        direction: connection.directionFromSource,
-        cameraPath: connection.cameraPath,
-      }];
-    }
-    if (connection.toRoomId === roomId) {
-      return [{
-        connection,
-        targetRoomId: connection.fromRoomId,
-        direction: connection.directionFromTarget,
-        cameraPath: reversePath(
-          getDungeonRoom(connection.fromRoomId),
-          connection.cameraPath,
-        ),
-      }];
-    }
-    return [];
-  });
+  return getConnectionsForRoomFromMap(TEST_DUNGEON_MAP, roomId);
 }

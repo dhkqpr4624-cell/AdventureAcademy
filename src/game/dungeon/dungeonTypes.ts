@@ -4,7 +4,8 @@ export type DungeonRoomType =
   | "combat"
   | "elite"
   | "treasure"
-  | "trap";
+  | "trap"
+  | "quest";
 
 export type DungeonDirection = "forward" | "left" | "right" | "back";
 
@@ -76,6 +77,8 @@ export type DungeonRoomNode = {
   combatConfig?: DungeonCombatConfig;
   eliteConfig?: DungeonEliteConfig;
   eventConfig?: DungeonRoomEventConfig;
+  isRequired?: boolean;
+  isFinalQuestRoom?: boolean;
 };
 
 export type DungeonConnection = {

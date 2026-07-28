@@ -20,6 +20,11 @@ export function resolveRoomEntry(
       return { type: "explore", message: "던전의 시작점이다." };
     case "empty":
       return { type: "explore", message: "조용한 방이다." };
+    case "quest":
+      return {
+        type: "explore",
+        message: "이 층의 마지막 목표가 있는 방이다.",
+      };
     case "combat":
       return progress.eventCompleted
         ? {

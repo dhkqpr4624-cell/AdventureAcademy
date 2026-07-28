@@ -24,6 +24,9 @@ import { runEliteRoomChecks } from "./game/dungeon/eliteRoomChecks";
 import { runPlayerDamageChecks } from "./game/player/playerDamageChecks";
 import { runDungeonRunExitChecks } from "./game/dungeon/dungeonRunExitChecks";
 import { runDungeonFailureChecks } from "./game/dungeon/dungeonFailureChecks";
+import { runSeededRandomChecks } from "./game/dungeon/generation/seededRandomChecks";
+import { runDungeonGeneratorChecks } from "./game/dungeon/generation/dungeonGeneratorChecks";
+import { runDungeonValidatorChecks } from "./game/dungeon/generation/dungeonValidatorChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
@@ -49,6 +52,9 @@ const checks = [
   ["player damage checks", runPlayerDamageChecks],
   ["dungeon run exit checks", runDungeonRunExitChecks],
   ["dungeon failure checks", runDungeonFailureChecks],
+  ["seeded random checks", runSeededRandomChecks],
+  ["dungeon generator checks", runDungeonGeneratorChecks],
+  ["dungeon validator checks", runDungeonValidatorChecks],
   ["save checks", runSaveChecks],
   ["save migration checks", runSaveMigrationChecks],
   ["save backup checks", runSaveBackupChecks],

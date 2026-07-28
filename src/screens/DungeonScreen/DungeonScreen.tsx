@@ -43,10 +43,10 @@ import {
 import { runDungeonPlayerStateChecks } from "../../game/dungeon/dungeonPlayerStateChecks";
 import { runEliteRoomChecks } from "../../game/dungeon/eliteRoomChecks";
 import {
-  getConnectionsForRoom,
-  getDungeonRoom,
-  TEST_DUNGEON_MAP,
-} from "../../game/dungeon/testDungeonMap";
+  getConnectionsForRoomFromMap,
+  getDungeonRoomFromMap,
+} from "../../game/dungeon/dungeonRuntimeMap";
+import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
 import type {
   DungeonDirection,
   DungeonRoomNode,
@@ -222,6 +222,12 @@ export function DungeonScreen({
   onDungeonAbandoned,
   onFloorCleared,
 }: DungeonScreenProps) {
+  const [dungeonRun] = useState(() => createFloor1DungeonRun());
+  const dungeonMap = dungeonRun.map;
+  const getDungeonRoom = (roomId: string) =>
+    getDungeonRoomFromMap(dungeonMap, roomId);
+  const getConnectionsForRoom = (roomId: string) =>
+    getConnectionsForRoomFromMap(dungeonMap, roomId);
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<CombatVisuals | null>(null);
   const mountedRef = useRef(true);
@@ -256,13 +262,13 @@ export function DungeonScreen({
     getDungeonQuestionSet("normal-garlic-a"),
   );
   const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>(
-    createInitialRoomProgress(TEST_DUNGEON_MAP),
+    createInitialRoomProgress(dungeonMap),
   );
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
-    TEST_DUNGEON_MAP.startRoomId,
+    dungeonMap.startRoomId,
   );
   const [previousRoomId, setPreviousRoomId] = useState<string | null>(null);
   const [activeCombatRoomId, setActiveCombatRoomId] = useState<string | null>(
@@ -382,7 +388,7 @@ export function DungeonScreen({
       runEliteCombatChecks();
       runDungeonMapChecks();
       runDungeonCameraChecks();
-      runDungeonQuestionChecks(TEST_DUNGEON_MAP);
+      runDungeonQuestionChecks(dungeonMap);
       runDungeonCompletionChecks();
       runDungeonRoomEventChecks();
       runDungeonEventFlowChecks();
@@ -444,7 +450,7 @@ export function DungeonScreen({
     scene.background = new THREE.Color(0x090b10);
 
     const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 100);
-    const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
+    const startRoom = getDungeonRoom(dungeonMap.startRoomId);
     camera.position.set(...startRoom.explorationCameraPose.position);
     camera.lookAt(...startRoom.explorationCameraPose.lookAt);
     scene.add(camera);
@@ -479,7 +485,7 @@ export function DungeonScreen({
       materials.push(material);
     };
 
-    TEST_DUNGEON_MAP.rooms.forEach((roomNode, index) => {
+    dungeonMap.rooms.forEach((roomNode, index) => {
       const room = new THREE.Group();
       room.position.set(roomNode.position.x, roomNode.position.y, roomNode.position.z);
       const floorColor = index % 2 === 0 ? 0x2b2927 : 0x302d29;
@@ -491,7 +497,7 @@ export function DungeonScreen({
       addRoomPlane(room, 12, 6, 0x24262c, [5, 0, -2], [0, -Math.PI / 2, 0]);
       dungeonWorld.add(room);
     });
-    TEST_DUNGEON_MAP.connections.forEach((connection) => {
+    dungeonMap.connections.forEach((connection) => {
       const source = getDungeonRoom(connection.fromRoomId);
       const target = getDungeonRoom(connection.toRoomId);
       const dx = target.position.x - source.position.x;
@@ -1251,7 +1257,7 @@ export function DungeonScreen({
     }
     dungeonCompletionProcessingRef.current = true;
     const completion = resolveDungeonCompletion(
-      TEST_DUNGEON_MAP,
+      dungeonMap,
       roomProgressRef.current,
     );
     if (completion.canComplete) {
@@ -1470,14 +1476,14 @@ export function DungeonScreen({
     dungeonCompletionProcessingRef.current = false;
     defeatProcessingRef.current = false;
     dungeonExitProcessingRef.current = false;
-    const nextProgress = createInitialRoomProgress(TEST_DUNGEON_MAP);
+    const nextProgress = createInitialRoomProgress(dungeonMap);
     roomProgressRef.current = nextProgress;
     setRoomProgress(nextProgress);
     setActiveCombatRoomId(null);
     setActiveCombatKind("normal");
     setActiveRoomEvent(null);
     setPreviousRoomId(null);
-    setCurrentRoomId(TEST_DUNGEON_MAP.startRoomId);
+    setCurrentRoomId(dungeonMap.startRoomId);
     setDungeonMode("exploration");
     setFailureState("none");
     setExitConfirmOpen(false);
@@ -1492,7 +1498,7 @@ export function DungeonScreen({
     }
     setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
     setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
-    const startRoom = getDungeonRoom(TEST_DUNGEON_MAP.startRoomId);
+    const startRoom = getDungeonRoom(dungeonMap.startRoomId);
     visualsRef.current?.dungeonCamera.setPose(startRoom.explorationCameraPose);
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
