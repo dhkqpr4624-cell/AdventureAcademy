@@ -9,6 +9,7 @@ import type { NpcDefinition } from "../../game/npc/npcTypes";
 import { resolveNpcPresentation } from "../../game/npc/npcPresentationResolver";
 import { NpcIdleSprite } from "../../components/NpcIdleSprite";
 import { BASE_CAMP_LAYER } from "../../game/baseCamp/baseCampLayers";
+import { NpcNameTag } from "../../components/NpcNameTag";
 
 type BaseCampWorldProps = {
   map: BaseCampMapDefinition;
@@ -192,10 +193,10 @@ export function BaseCampWorld({
               }
               aria-label={`${presentation.displayName}, ${presentation.role}와 대화하기`}
             >
-              <span className="base-camp-npc-label">
-                <strong>{presentation.displayName}</strong>
-                <small>대화하기</small>
-              </span>
+              <NpcNameTag
+                displayName={presentation.displayName}
+                displayRole={presentation.baseCampDisplayRole}
+              />
             </button>
           );
         })}

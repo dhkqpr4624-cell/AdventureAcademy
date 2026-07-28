@@ -1,4 +1,5 @@
 import type { NpcId } from "../npc/npcTypes";
+import type { FloorId } from "../floor/floorTypes";
 
 export type QuestStatus = "locked" | "available" | "active" | "completed";
 
@@ -13,7 +14,7 @@ export type QuestDefinition = {
   acceptStorySequenceId?: string;
   activeStorySequenceId?: string;
   completeStorySequenceId?: string;
-  targetFloorId?: string;
+  targetFloorId?: FloorId;
   rewards: { description: string };
 };
 

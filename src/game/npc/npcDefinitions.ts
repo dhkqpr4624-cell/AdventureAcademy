@@ -23,6 +23,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     id: "luna",
     displayName: "루나",
     role: "지형 분석가",
+    baseCampDisplayRole: "지형 분석가",
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna,
     idle: {
       ...commonIdle,
@@ -39,6 +40,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     id: "theo",
     displayName: "테오",
     role: "보급 담당",
+    baseCampDisplayRole: "상점",
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo,
     idle: {
       ...commonIdle,
@@ -55,6 +57,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     id: "kaiden",
     displayName: "카이든",
     role: "지휘관",
+    baseCampDisplayRole: "지휘관",
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden,
     idle: {
       ...commonIdle,

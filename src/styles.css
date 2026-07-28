@@ -220,32 +220,33 @@ button:focus-visible {
   transform-origin: top left;
 }
 
-.base-camp-npc-label {
+.base-camp-npc-name-tag {
   position: absolute;
-  bottom: -3.15rem;
+  top: -3.65rem;
   left: 50%;
   display: grid;
   min-width: 7rem;
-  padding: 0.35rem 0.55rem;
+  gap: 0.08rem;
+  padding: 0.3rem 0.55rem;
   border: 2px solid rgba(240, 210, 132, 0.75);
   border-radius: 0.3rem;
   color: #fff5d5;
   background: rgba(17, 18, 21, 0.88);
-  font-size: 0.72rem;
   line-height: 1.25;
+  text-align: center;
   transform: translateX(-50%);
-  opacity: 0;
   pointer-events: none;
 }
 
-.base-camp-npc-interaction:hover .base-camp-npc-label,
-.base-camp-npc-interaction:focus-visible .base-camp-npc-label,
-.base-camp-npc-interaction.is-selected .base-camp-npc-label {
-  opacity: 1;
+.base-camp-npc-name-tag small {
+  color: #e6c873;
+  font-size: 0.64rem;
+  font-weight: 600;
 }
 
-.base-camp-npc-label small {
-  color: #e6c873;
+.base-camp-npc-name-tag strong {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
 }
 
 .interaction-layer {
@@ -2004,6 +2005,50 @@ button:focus-visible {
   z-index: 80;
   display: flex;
   gap: 0.5rem;
+}
+
+.floor-list-panel {
+  position: absolute;
+  z-index: 110;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(28rem, calc(100% - 2rem));
+  gap: 0.8rem;
+  padding: 1.2rem;
+  border: 2px solid rgba(225, 191, 107, 0.72);
+  border-radius: 0.45rem;
+  color: #f5ead0;
+  background: rgba(15, 18, 22, 0.96);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+}
+
+.floor-list-panel h2,
+.floor-list-panel p {
+  margin: 0;
+}
+
+.floor-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.floor-list > button {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.floor-list > button.is-locked {
+  color: #aaa69d;
+  border-color: #625f59;
+  background: #353535;
+  cursor: not-allowed;
+}
+
+.floor-list > button small {
+  color: inherit;
 }
 
 .quest-detail-panel {

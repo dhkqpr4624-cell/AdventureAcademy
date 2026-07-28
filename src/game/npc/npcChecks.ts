@@ -96,16 +96,19 @@ export function runNpcChecks() {
     luna: {
       displayName: "루나",
       role: "지형 분석가",
+      baseCampDisplayRole: "지형 분석가",
       defaultStorySequenceId: "npc-luna-default",
     },
     theo: {
       displayName: "테오",
       role: "보급 담당",
+      baseCampDisplayRole: "상점",
       defaultStorySequenceId: "npc-theo-default",
     },
     kaiden: {
       displayName: "카이든",
       role: "지휘관",
+      baseCampDisplayRole: "지휘관",
       defaultStorySequenceId: "npc-kaiden-default",
     },
   } as const satisfies Record<
@@ -113,6 +116,7 @@ export function runNpcChecks() {
     {
       displayName: string;
       role: string;
+      baseCampDisplayRole: string;
       defaultStorySequenceId: string;
     }
   >;
@@ -125,6 +129,10 @@ export function runNpcChecks() {
       `${npcId} display name mismatch`,
     );
     assert(presentation.role === expected.role, `${npcId} role mismatch`);
+    assert(
+      presentation.baseCampDisplayRole === expected.baseCampDisplayRole,
+      `${npcId} BaseCamp display role mismatch`,
+    );
     assert(
       presentation.dialogue.defaultStorySequenceId ===
         expected.defaultStorySequenceId,

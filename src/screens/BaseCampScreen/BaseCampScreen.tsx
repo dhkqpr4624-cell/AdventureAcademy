@@ -16,6 +16,12 @@ import { QuestManager } from "../../game/quest/QuestManager";
 import type { QuestDefinition, QuestState } from "../../game/quest/questTypes";
 import { StoryPlayer } from "../../game/story/StoryPlayer";
 import type { BaseCampInteractionRegion } from "../../types/baseCamp";
+import { FLOOR_DEFINITIONS } from "../../game/floor/floorDefinitions";
+import { FloorUnlockManager } from "../../game/floor/FloorUnlockManager";
+import { resolveQuestFloorUnlock } from "../../game/floor/FloorUnlockResolver";
+import type { FloorUnlockState } from "../../game/floor/floorTypes";
+import type { StoryActionState } from "../../game/story/storyActionTypes";
+import { SaveManager } from "../../save/SaveManager";
 import {
   BaseCampViewport,
   type BaseCampViewportController,
@@ -26,6 +32,10 @@ type BaseCampScreenProps = {
   playerState: PlayerState;
   questState: QuestState;
   setQuestState: Dispatch<SetStateAction<QuestState>>;
+  floorUnlockState: FloorUnlockState;
+  setFloorUnlockState: Dispatch<SetStateAction<FloorUnlockState>>;
+  storyActionState: StoryActionState;
+  setStoryActionState: Dispatch<SetStateAction<StoryActionState>>;
 };
 
 export function BaseCampScreen({
@@ -33,6 +43,10 @@ export function BaseCampScreen({
   playerState,
   questState,
   setQuestState,
+  floorUnlockState,
+  setFloorUnlockState,
+  storyActionState,
+  setStoryActionState,
 }: BaseCampScreenProps) {
   const viewportRef = useRef<BaseCampViewportController>(null);
   const interactionLockRef = useRef(false);
@@ -42,13 +56,15 @@ export function BaseCampScreen({
   const [selectedNpc, setSelectedNpc] = useState<NpcDefinition | null>(null);
   const [storySequenceId, setStorySequenceId] = useState<string | null>(null);
   const [questDetail, setQuestDetail] = useState<QuestDefinition | null>(null);
+  const [floorListOpen, setFloorListOpen] = useState(false);
   const activeQuest = QuestManager.getActiveQuest(questState);
-  const interactionLocked = Boolean(storySequenceId || questDetail);
+  const interactionLocked = Boolean(storySequenceId || questDetail || floorListOpen);
 
   const handleSelectRegion = (region: BaseCampInteractionRegion) => {
     if (interactionLockRef.current || interactionLocked) return;
     setSelectedRegionId(region.id);
     setFocusPointId(region.id);
+    if (region.id === "dungeonEntrance") setFloorListOpen(true);
   };
 
   const handleSelectNpc = async (npc: NpcDefinition) => {
@@ -90,10 +106,32 @@ export function BaseCampScreen({
     const result = QuestManager.acceptQuest(questState, questDetail.id);
     if (result.success) {
       setQuestState(result.nextState);
+      const progression = resolveQuestFloorUnlock({
+        questId: questDetail.id,
+        floorState: floorUnlockState,
+        actionState: storyActionState,
+        save: () => SaveManager.save(),
+      });
+      setFloorUnlockState(progression.nextFloorState);
+      setStoryActionState(progression.nextActionState);
       setQuestDetail(null);
       setStorySequenceId(questDetail.acceptStorySequenceId ?? null);
     }
     questAcceptProcessingRef.current = false;
+  };
+
+  const openFloorList = () => {
+    if (interactionLockRef.current || interactionLocked) return;
+    setSelectedRegionId("dungeonEntrance");
+    setFocusPointId("dungeonEntrance");
+    setFloorListOpen(true);
+  };
+
+  const closeFloorList = () => {
+    setFloorListOpen(false);
+    setSelectedRegionId(null);
+    setFocusPointId("campCenter");
+    void viewportRef.current?.restore(450);
   };
 
   const closeQuestDetail = () => {
@@ -135,7 +173,7 @@ export function BaseCampScreen({
         <button
           type="button"
           disabled={interactionLocked}
-          onClick={() => onNavigate("dungeon")}
+          onClick={openFloorList}
         >
           던전
         </button>
@@ -184,6 +222,38 @@ export function BaseCampScreen({
           <footer>
             <PlayerStatusBar {...playerState} />
           </footer>
+        </section>
+      )}
+
+      {floorListOpen && (
+        <section className="floor-list-panel" aria-labelledby="floor-list-title">
+          <p className="eyebrow">DUNGEON</p>
+          <h2 id="floor-list-title">층 선택</h2>
+          <div className="floor-list">
+            {FLOOR_DEFINITIONS.map((floor) => {
+              const unlocked = FloorUnlockManager.isUnlocked(
+                floorUnlockState,
+                floor.id,
+              );
+              return (
+                <button
+                  key={floor.id}
+                  type="button"
+                  className={unlocked ? "is-unlocked" : "is-locked"}
+                  disabled={!unlocked}
+                  onClick={() => unlocked && onNavigate("dungeon")}
+                >
+                  <strong>{unlocked ? floor.title : "???"}</strong>
+                  <small>
+                    {unlocked
+                      ? "입장 가능"
+                      : "새로운 의뢰를 받아야 입장할 수 있습니다."}
+                  </small>
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" onClick={closeFloorList}>닫기</button>
         </section>
       )}
     </main>

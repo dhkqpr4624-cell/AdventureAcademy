@@ -17,6 +17,15 @@ import type { QuestState } from "../game/quest/questTypes";
 import { runNpcChecks } from "../game/npc/npcChecks";
 import { runQuestChecks } from "../game/quest/questChecks";
 import { runPlayerStatusChecks } from "../components/playerStatusChecks";
+import {
+  INITIAL_FLOOR_UNLOCK_STATE,
+} from "../game/floor/floorDefinitions";
+import type { FloorUnlockState } from "../game/floor/floorTypes";
+import { runFloorUnlockChecks } from "../game/floor/floorUnlockChecks";
+import {
+  INITIAL_STORY_ACTION_STATE,
+  type StoryActionState,
+} from "../game/story/storyActionTypes";
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("title");
@@ -25,15 +34,21 @@ export function App() {
     useState<PlayerState>(INITIAL_PLAYER_STATE);
   const [questState, setQuestState] =
     useState<QuestState>(INITIAL_QUEST_STATE);
+  const [floorUnlockState, setFloorUnlockState] =
+    useState<FloorUnlockState>(INITIAL_FLOOR_UNLOCK_STATE);
+  const [storyActionState, setStoryActionState] =
+    useState<StoryActionState>(INITIAL_STORY_ACTION_STATE);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
       runNpcChecks();
       runQuestChecks();
       runPlayerStatusChecks();
+      runFloorUnlockChecks();
       console.info("npc checks: PASS");
       console.info("quest checks: PASS");
       console.info("player status checks: PASS");
+      console.info("floor unlock checks: PASS");
     }
   }, []);
 
@@ -47,6 +62,10 @@ export function App() {
           playerState={playerState}
           questState={questState}
           setQuestState={setQuestState}
+          floorUnlockState={floorUnlockState}
+          setFloorUnlockState={setFloorUnlockState}
+          storyActionState={storyActionState}
+          setStoryActionState={setStoryActionState}
         />
       );
     case "dungeon":

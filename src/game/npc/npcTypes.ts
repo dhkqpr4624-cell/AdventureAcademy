@@ -6,6 +6,7 @@ export type NpcDefinition = {
   id: NpcId;
   displayName: string;
   role: string;
+  baseCampDisplayRole: string;
   baseCampSpawnId: BaseCampNpcSlotId;
   idle: {
     standingImage: string;

@@ -8,6 +8,7 @@ export function resolveNpcPresentation(npcId: NpcId) {
     id: npc.id,
     displayName: npc.displayName,
     role: npc.role,
+    baseCampDisplayRole: npc.baseCampDisplayRole,
     portraits: npc.portraits,
     dialogue: npc.dialogue,
     offeredQuestIds: npc.offeredQuestIds,
