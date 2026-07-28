@@ -1,5 +1,5 @@
 export const BASE_CAMP_NPC_DISPLAY_SCALE = 0.6;
-export const BASE_CAMP_NPC_UPWARD_SHIFT = 30;
+export const BASE_CAMP_NPC_UPWARD_SHIFT = 40;
 
 export const BASE_CAMP_NPC_SLOT_IDS = {
   lunaOriginal: "lunaNpc",
