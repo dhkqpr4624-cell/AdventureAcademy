@@ -18,11 +18,16 @@ import {
   shouldShowStoryPlayerStatus,
   type StoryPresentationMode,
 } from "./storyPresentationTypes";
+import { StoryChoiceList } from "../../components/StoryChoiceList";
+import type { StoryChoiceOption } from "../../types/story";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
   onNavigate: (screen: ScreenId) => void;
   onComplete?: () => void;
+  onStoryStarted?: (storyId: string) => void;
+  onCheckpointReached?: (storyId: string, checkpointId: string) => void;
+  onStoryCompleted?: (storyId: string) => void;
   playerStatus?: PlayerState;
   presentationMode?: StoryPresentationMode;
 };
@@ -89,6 +94,9 @@ export function StoryPlayer({
   sequence,
   onNavigate,
   onComplete,
+  onStoryStarted,
+  onStoryCompleted,
+  onCheckpointReached,
   playerStatus,
   presentationMode = DEFAULT_STORY_PRESENTATION_MODE,
 }: StoryPlayerProps) {
@@ -106,6 +114,15 @@ export function StoryPlayer({
   const runnerRef = useRef(new StoryStepRunner());
   const baseCampControllerRef = useRef<BaseCampStoryController>(null);
   const baseCampReadyRef = useRef(false);
+  const startedRef = useRef(false);
+  const choiceLockedRef = useRef(false);
+
+  useEffect(() => {
+    if (!startedRef.current) {
+      startedRef.current = true;
+      onStoryStarted?.(sequence.id);
+    }
+  }, [onStoryStarted, sequence.id]);
 
   const waitForBaseCampController = (signal: AbortSignal) =>
     new Promise<BaseCampStoryController | null>((resolve) => {
@@ -162,6 +179,7 @@ export function StoryPlayer({
     if (!step) {
       if (!hasNavigatedRef.current) {
         hasNavigatedRef.current = true;
+        onStoryCompleted?.(sequence.id);
         if (onComplete) {
           onComplete();
         } else {
@@ -173,7 +191,7 @@ export function StoryPlayer({
 
     const abortController = new AbortController();
     const isClickStep =
-      step.type === "dialogue" || step.type === "narration";
+      step.type === "dialogue" || step.type === "narration" || step.type === "choice";
 
     clickLockRef.current = true;
     setIsTransitioning(true);
@@ -217,6 +235,7 @@ export function StoryPlayer({
             const controller = await waitForBaseCampController(signal);
             await controller?.restore(durationMs, signal);
           },
+          checkpoint: (checkpointId) => onCheckpointReached?.(sequence.id, checkpointId),
         },
         abortController.signal,
       )
@@ -235,12 +254,24 @@ export function StoryPlayer({
       });
 
     return () => abortController.abort();
-  }, [onComplete, onNavigate, sequence.onCompleteScreen, stepIndex, steps]);
+  }, [onCheckpointReached, onComplete, onNavigate, sequence.id, sequence.onCompleteScreen, stepIndex, steps]);
 
   const currentStep = steps[stepIndex];
   const canAdvance =
     !isTransitioning &&
     (currentStep?.type === "dialogue" || currentStep?.type === "narration");
+
+  const choose = (option: StoryChoiceOption) => {
+    if (choiceLockedRef.current || isTransitioning) return;
+    choiceLockedRef.current = true;
+    if (option.closeStory) {
+      setStepIndex(steps.length);
+      return;
+    }
+    const target = option.nextStepId ? steps.findIndex((step) => step.id === option.nextStepId) : stepIndex + 1;
+    setStepIndex(target >= 0 ? target : stepIndex + 1);
+    window.queueMicrotask(() => { choiceLockedRef.current = false; });
+  };
 
   const advance = () => {
     if (!canAdvance || clickLockRef.current) {
@@ -361,14 +392,16 @@ export function StoryPlayer({
             </p>
           )}
           <p className="story-dialogue-text">{renderState.dialogue.text}</p>
-          <button
+          {currentStep?.type === "choice" ? (
+            <StoryChoiceList options={currentStep.options} disabled={isTransitioning} onChoose={choose} />
+          ) : <button
             type="button"
             className="story-next-button"
             disabled={!canAdvance}
             onClick={advance}
           >
             다음
-          </button>
+          </button>}
           {showPlayerStatus && playerStatus && (
             <footer className="story-player-status">
               <PlayerStatusBar {...playerStatus} />

@@ -92,6 +92,8 @@ type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
+  onDungeonEntered: () => void;
+  onFloorCleared: () => void;
 };
 
 type NormalCombatPhase =
@@ -195,6 +197,8 @@ export function DungeonScreen({
   onNavigate,
   playerState,
   setPlayerState,
+  onDungeonEntered,
+  onFloorCleared,
 }: DungeonScreenProps) {
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<CombatVisuals | null>(null);
@@ -282,6 +286,10 @@ export function DungeonScreen({
   );
   const [activeRoomEvent, setActiveRoomEvent] =
     useState<ActiveRoomEvent | null>(null);
+
+  useEffect(() => {
+    onDungeonEntered();
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -1087,6 +1095,7 @@ export function DungeonScreen({
       roomProgressRef.current,
     );
     if (completion.canComplete) {
+      onFloorCleared();
       onNavigate("baseCamp");
       return;
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BaseCampScreen } from "../screens/BaseCampScreen/BaseCampScreen";
 import { DungeonScreen } from "../screens/DungeonScreen/DungeonScreen";
 import { StoryScreen } from "../screens/StoryScreen/StoryScreen";
@@ -6,93 +6,104 @@ import { TitleScreen } from "../screens/TitleScreen/TitleScreen";
 import { QuestionScreen } from "../screens/QuestionScreen/QuestionScreen";
 import type { QuestionResult } from "../types/question";
 import type { ScreenId } from "./routes";
-import {
-  INITIAL_PLAYER_STATE,
-  type PlayerState,
-} from "../game/player/playerState";
-import {
-  INITIAL_QUEST_STATE,
-} from "../game/quest/questDefinitions";
-import type { QuestState } from "../game/quest/questTypes";
 import { runNpcChecks } from "../game/npc/npcChecks";
 import { runQuestChecks } from "../game/quest/questChecks";
 import { runPlayerStatusChecks } from "../components/playerStatusChecks";
-import {
-  INITIAL_FLOOR_UNLOCK_STATE,
-} from "../game/floor/floorDefinitions";
-import type { FloorUnlockState } from "../game/floor/floorTypes";
 import { runFloorUnlockChecks } from "../game/floor/floorUnlockChecks";
-import {
-  INITIAL_STORY_ACTION_STATE,
-  type StoryActionState,
-} from "../game/story/storyActionTypes";
 import { runQuestMarkerChecks } from "../game/quest/questMarkerChecks";
 import { runBaseCampInteractionChecks } from "../game/baseCamp/baseCampInteractionChecks";
+import { SaveManagementPanel } from "../components/SaveManagementPanel";
+import { SaveManager } from "../save/SaveManager";
+import { AutoSaveCoordinator } from "../save/AutoSaveCoordinator";
+import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState, type GameSaveState } from "../save/saveStateAdapter";
+import type { SaveReason } from "../save/saveTypes";
 
 export function App() {
+  const loaded = useRef(SaveManager.load());
+  const initial = useRef(loaded.current.success ? applySaveDataToGameState(loaded.current.data) : createInitialGameSaveState());
   const [currentScreen, setCurrentScreen] = useState<ScreenId>("title");
   const [, setQuestionResults] = useState<QuestionResult[]>([]);
-  const [playerState, setPlayerState] =
-    useState<PlayerState>(INITIAL_PLAYER_STATE);
-  const [questState, setQuestState] =
-    useState<QuestState>(INITIAL_QUEST_STATE);
-  const [floorUnlockState, setFloorUnlockState] =
-    useState<FloorUnlockState>(INITIAL_FLOOR_UNLOCK_STATE);
-  const [storyActionState, setStoryActionState] =
-    useState<StoryActionState>(INITIAL_STORY_ACTION_STATE);
+  const [game, setGame] = useState<GameSaveState>(initial.current);
+  const gameRef = useRef(game);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(loaded.current.success && loaded.current.source !== "main" ? "메인 세이브가 손상되어 최근 백업을 복구했습니다." : "");
+  const startedAtRef = useRef(Date.now());
+  const coordinatorRef = useRef<AutoSaveCoordinator | null>(null);
+  gameRef.current = game;
+
+  const snapshot = useCallback(() => createSaveDataFromGameState({
+    ...gameRef.current,
+    playTimeSeconds: gameRef.current.playTimeSeconds + Math.floor((Date.now() - startedAtRef.current) / 1000),
+  }), []);
+  const requestSave = useCallback((reason: SaveReason, immediate = false) => {
+    if (immediate) coordinatorRef.current?.flush(reason);
+    else coordinatorRef.current?.requestSave(reason);
+  }, []);
+  const navigate = useCallback((screen: ScreenId) => {
+    setCurrentScreen(screen);
+    if (screen === "baseCamp") requestSave("baseCampEntered");
+  }, [requestSave]);
+  const hydrate = (data: ReturnType<typeof snapshot>) => {
+    setGame(applySaveDataToGameState(data)); gameRef.current = applySaveDataToGameState(data);
+    startedAtRef.current = Date.now(); setCurrentScreen("title");
+  };
+  const reset = () => {
+    const next = createInitialGameSaveState(); setGame(next); gameRef.current = next;
+    startedAtRef.current = Date.now(); setSettingsOpen(false); setCurrentScreen("title");
+  };
+
+  useEffect(() => {
+    coordinatorRef.current = new AutoSaveCoordinator(snapshot, (result) => {
+      if (!result.success) {
+        if (import.meta.env.DEV) console.warn("[Save] non-fatal save failure", result);
+        setSaveMessage((current) => current || "자동 저장에 실패했습니다. 게임은 계속 진행할 수 있습니다.");
+      }
+    });
+    const interval = window.setInterval(() => requestSave("interval"), 30_000);
+    const visibility = () => { if (document.visibilityState === "hidden") requestSave("visibilityHidden", true); };
+    const pagehide = () => requestSave("pageHide", true);
+    document.addEventListener("visibilitychange", visibility); window.addEventListener("pagehide", pagehide);
+    return () => {
+      window.clearInterval(interval); document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pagehide", pagehide); coordinatorRef.current?.dispose(); coordinatorRef.current = null;
+    };
+  }, [requestSave, snapshot]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      runNpcChecks();
-      runQuestChecks();
-      runPlayerStatusChecks();
-      runFloorUnlockChecks();
-      runQuestMarkerChecks();
-      runBaseCampInteractionChecks();
-      console.info("npc checks: PASS");
-      console.info("quest checks: PASS");
-      console.info("player status checks: PASS");
-      console.info("floor unlock checks: PASS");
-      console.info("quest marker checks: PASS");
-      console.info("base camp interaction checks: PASS");
+      runNpcChecks(); runQuestChecks(); runPlayerStatusChecks(); runFloorUnlockChecks(); runQuestMarkerChecks(); runBaseCampInteractionChecks();
+      console.info("npc checks: PASS\nquest checks: PASS\nplayer status checks: PASS\nfloor unlock checks: PASS\nquest marker checks: PASS\nbase camp interaction checks: PASS");
     }
   }, []);
 
-  switch (currentScreen) {
-    case "story":
-      return <StoryScreen onNavigate={setCurrentScreen} />;
-    case "baseCamp":
-      return (
-        <BaseCampScreen
-          onNavigate={setCurrentScreen}
-          playerState={playerState}
-          questState={questState}
-          setQuestState={setQuestState}
-          floorUnlockState={floorUnlockState}
-          setFloorUnlockState={setFloorUnlockState}
-          storyActionState={storyActionState}
-          setStoryActionState={setStoryActionState}
-        />
-      );
-    case "dungeon":
-      return (
-        <DungeonScreen
-          onNavigate={setCurrentScreen}
-          playerState={playerState}
-          setPlayerState={setPlayerState}
-        />
-      );
-    case "question":
-      return (
-        <QuestionScreen
-          onNavigate={setCurrentScreen}
-          onResult={(result) => {
-            setQuestionResults((current) => [...current, result]);
-          }}
-        />
-      );
-    case "title":
-    default:
-      return <TitleScreen onNavigate={setCurrentScreen} />;
-  }
+  const content = (() => {
+    switch (currentScreen) {
+      case "story": return <StoryScreen onNavigate={navigate} onStoryStarted={() => requestSave("storyStarted")} onStoryCompleted={(id) => {
+        setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] }));
+        requestSave("storyCompleted");
+        requestSave("introCompleted");
+      }} onStoryCheckpoint={(id, checkpoint) => { setGame((current) => ({ ...current, checkpointByStoryId: { ...current.checkpointByStoryId, [id]: checkpoint } })); requestSave("storyCheckpoint"); }} />;
+      case "baseCamp": return <BaseCampScreen
+        onNavigate={navigate} playerState={game.playerState}
+        questState={game.questState} setQuestState={(value) => setGame((current) => ({ ...current, questState: typeof value === "function" ? value(current.questState) : value }))}
+        floorUnlockState={game.floorUnlockState} setFloorUnlockState={(value) => setGame((current) => ({ ...current, floorUnlockState: typeof value === "function" ? value(current.floorUnlockState) : value }))}
+        storyActionState={game.storyActionState} setStoryActionState={(value) => setGame((current) => ({ ...current, storyActionState: typeof value === "function" ? value(current.storyActionState) : value }))}
+        onAutoSave={requestSave}
+        onStoryCompleted={(id) => { setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] })); requestSave("storyCompleted"); }}
+        onStoryCheckpoint={(id, checkpoint) => { setGame((current) => ({ ...current, checkpointByStoryId: { ...current.checkpointByStoryId, [id]: checkpoint } })); requestSave("storyCheckpoint"); }}
+      />;
+      case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
+        setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
+        onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
+        onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}
+      />;
+      case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
+      default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onNewGame={() => {
+        if (SaveManager.load().success && !window.confirm("기존 모험 기록이 있습니다.\n새로 시작하면 현재 기록이 초기화됩니다.\n\n새로 시작하시겠습니까?")) return;
+        SaveManager.clear(); const next = createInitialGameSaveState(); setGame(next); gameRef.current = next;
+        startedAtRef.current = Date.now(); setCurrentScreen("story");
+      }} />;
+    }
+  })();
+  return <>{content}{settingsOpen && <SaveManagementPanel currentData={snapshot} onImport={hydrate} onReset={reset} onClose={() => setSettingsOpen(false)} />}{saveMessage && <div className="save-toast" role="status" onClick={() => setSaveMessage("")}>{saveMessage}</div>}</>;
 }

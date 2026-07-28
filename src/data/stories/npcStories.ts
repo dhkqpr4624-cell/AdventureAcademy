@@ -91,3 +91,26 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     ["좋아. 기억 조각을 찾으면 바로 캠프로 돌아와 보고해."],
   ),
 };
+
+const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
+theo.scenes[0].steps.push(
+  {
+    id: "npc-theo-default-choice",
+    type: "choice",
+    prompt: "무엇을 하시겠습니까?",
+    advanceMode: "click",
+    options: [
+      { id: "buy-items", label: "아이템 사기", nextStepId: "npc-theo-shop-pending" },
+      { id: "end-dialogue", label: "대화 끝내기", closeStory: true },
+    ],
+  },
+  {
+    id: "npc-theo-shop-pending",
+    type: "dialogue",
+    speakerId: "theo",
+    speakerName: "테오",
+    activeActorId: "theo",
+    text: "상점은 아직 준비 중입니다.",
+    advanceMode: "click",
+  },
+);

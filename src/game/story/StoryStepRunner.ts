@@ -21,6 +21,7 @@ export type StoryStepContext = {
     durationMs: number,
     signal: AbortSignal,
   ) => Promise<void>;
+  checkpoint: (checkpointId: string) => void;
 };
 
 function waitFor(durationMs: number, signal: AbortSignal) {
@@ -138,6 +139,11 @@ export class StoryStepRunner {
           dialogue: { kind: "narration", text: step.text },
         }));
         break;
+      case "choice":
+        break;
+      case "checkpoint":
+        context.checkpoint(step.checkpointId);
+        return;
       case "fade":
         context.updateState((state) => ({
           ...state,

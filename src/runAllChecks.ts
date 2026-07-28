@@ -17,6 +17,8 @@ import { runStoryPresentationChecks } from "./game/story/storyPresentationChecks
 import { runFloorUnlockChecks } from "./game/floor/floorUnlockChecks";
 import { runQuestMarkerChecks } from "./game/quest/questMarkerChecks";
 import { runBaseCampInteractionChecks } from "./game/baseCamp/baseCampInteractionChecks";
+import { runAutoSaveChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
+import { runStoryChoiceChecks } from "./game/story/storyChoiceChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
@@ -37,6 +39,11 @@ const checks = [
   ["normal combat checks", runNormalCombatChecks],
   ["critical checks", runCriticalChecks],
   ["potion checks", runPotionChecks],
+  ["save checks", runSaveChecks],
+  ["save migration checks", runSaveMigrationChecks],
+  ["save backup checks", runSaveBackupChecks],
+  ["autosave checks", runAutoSaveChecks],
+  ["story choice checks", runStoryChoiceChecks],
 ] as const;
 
 for (const [label, run] of checks) {

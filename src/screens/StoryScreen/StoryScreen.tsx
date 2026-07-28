@@ -7,9 +7,12 @@ import type { StorySequence } from "../../types/story";
 
 type StoryScreenProps = {
   onNavigate: (screen: ScreenId) => void;
+  onStoryStarted: (storyId: string) => void;
+  onStoryCompleted: (storyId: string) => void;
+  onStoryCheckpoint?: (storyId: string, checkpointId: string) => void;
 };
 
-export function StoryScreen({ onNavigate }: StoryScreenProps) {
+export function StoryScreen({ onNavigate, onStoryStarted, onStoryCompleted, onStoryCheckpoint }: StoryScreenProps) {
   const [sequence, setSequence] = useState<StorySequence | null>(null);
 
   if (sequence) {
@@ -18,6 +21,9 @@ export function StoryScreen({ onNavigate }: StoryScreenProps) {
         key={sequence.id}
         sequence={sequence}
         onNavigate={onNavigate}
+        onStoryStarted={onStoryStarted}
+        onStoryCompleted={onStoryCompleted}
+        onCheckpointReached={onStoryCheckpoint}
       />
     );
   }

@@ -21,7 +21,7 @@ import { FloorUnlockManager } from "../../game/floor/FloorUnlockManager";
 import { resolveQuestFloorUnlock } from "../../game/floor/FloorUnlockResolver";
 import type { FloorUnlockState } from "../../game/floor/floorTypes";
 import type { StoryActionState } from "../../game/story/storyActionTypes";
-import { SaveManager } from "../../save/SaveManager";
+import type { SaveReason } from "../../save/saveTypes";
 import {
   BaseCampViewport,
   type BaseCampViewportController,
@@ -36,6 +36,9 @@ type BaseCampScreenProps = {
   setFloorUnlockState: Dispatch<SetStateAction<FloorUnlockState>>;
   storyActionState: StoryActionState;
   setStoryActionState: Dispatch<SetStateAction<StoryActionState>>;
+  onAutoSave: (reason: SaveReason) => void;
+  onStoryCompleted: (storyId: string) => void;
+  onStoryCheckpoint: (storyId: string, checkpointId: string) => void;
 };
 
 export function BaseCampScreen({
@@ -47,10 +50,14 @@ export function BaseCampScreen({
   setFloorUnlockState,
   storyActionState,
   setStoryActionState,
+  onAutoSave,
+  onStoryCompleted,
+  onStoryCheckpoint,
 }: BaseCampScreenProps) {
   const viewportRef = useRef<BaseCampViewportController>(null);
   const interactionLockRef = useRef(false);
   const questAcceptProcessingRef = useRef(false);
+  const dialogueCompletedRef = useRef(false);
   const [focusPointId, setFocusPointId] = useState("campCenter");
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [selectedNpc, setSelectedNpc] = useState<NpcDefinition | null>(null);
@@ -98,6 +105,7 @@ export function BaseCampScreen({
     if (interactionLockRef.current || interactionLocked) return;
     interactionLockRef.current = true;
     setSelectedNpc(npc);
+    dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
     const sequenceId = resolveNpcStorySequence(npc.id, questState);
@@ -106,9 +114,12 @@ export function BaseCampScreen({
   };
 
   const finishNpcStory = async () => {
+    if (dialogueCompletedRef.current) return;
+    dialogueCompletedRef.current = true;
     const npc = selectedNpc;
     const finishedSequenceId = storySequenceId;
     setStorySequenceId(null);
+    onAutoSave("npcDialogueCompleted");
     if (!npc) return;
     const quest = QUEST_DEFINITIONS.find(
       (candidate) => npc.offeredQuestIds.includes(candidate.id),
@@ -140,10 +151,11 @@ export function BaseCampScreen({
         questId: questDetail.id,
         floorState: floorUnlockState,
         actionState: storyActionState,
-        save: () => SaveManager.save(),
+        save: () => undefined,
       });
       setFloorUnlockState(progression.nextFloorState);
       setStoryActionState(progression.nextActionState);
+      onAutoSave("questAccepted");
       setQuestDetail(null);
       setStorySequenceId(questDetail.acceptStorySequenceId ?? null);
     }
@@ -224,6 +236,9 @@ export function BaseCampScreen({
             sequence={NPC_STORY_SEQUENCES[storySequenceId]}
             onNavigate={onNavigate}
             onComplete={finishNpcStory}
+            onStoryStarted={() => onAutoSave("storyStarted")}
+            onStoryCompleted={onStoryCompleted}
+            onCheckpointReached={onStoryCheckpoint}
             presentationMode="baseCampOverlay"
           />
         </div>

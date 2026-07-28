@@ -2,9 +2,12 @@ import type { ScreenId } from "../../app/routes";
 
 type TitleScreenProps = {
   onNavigate: (screen: ScreenId) => void;
+  onOpenSettings: () => void;
+  hasSave: boolean;
+  onNewGame: () => void;
 };
 
-export function TitleScreen({ onNavigate }: TitleScreenProps) {
+export function TitleScreen({ onNavigate, onOpenSettings, hasSave, onNewGame }: TitleScreenProps) {
   return (
     <main className="game-screen title-screen">
       <section className="screen-panel title-panel">
@@ -15,9 +18,11 @@ export function TitleScreen({ onNavigate }: TitleScreenProps) {
           지식의 문을 열고, 새로운 모험을 시작하세요.
         </p>
         <div className="button-group">
-          <button type="button" onClick={() => onNavigate("story")}>
+          <button type="button" onClick={onNewGame}>
             새로 시작하기
           </button>
+          <button type="button" disabled={!hasSave} onClick={() => onNavigate("baseCamp")}>이어하기</button>
+          <button type="button" onClick={onOpenSettings}>설정</button>
           <button type="button" onClick={() => onNavigate("baseCamp")}>
             베이스캠프 미리 보기
           </button>

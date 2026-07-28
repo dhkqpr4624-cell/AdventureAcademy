@@ -64,6 +64,19 @@ export type StoryStep =
     }
   | {
       id: string;
+      type: "choice";
+      prompt?: string;
+      options: StoryChoiceOption[];
+      advanceMode: "click";
+    }
+  | {
+      id: string;
+      type: "checkpoint";
+      checkpointId: string;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
       type: "wait";
       durationMs: number;
       advanceMode: "auto";
@@ -112,6 +125,13 @@ export type StoryStep =
       screen: ScreenId;
       advanceMode: "auto";
     };
+
+export type StoryChoiceOption = {
+  id: string;
+  label: string;
+  nextStepId?: string;
+  closeStory?: boolean;
+};
 
 export type StoryScene = {
   id: string;
