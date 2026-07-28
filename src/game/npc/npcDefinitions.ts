@@ -4,7 +4,7 @@ import theoStanding from "../../assets/npcs/theo/theo_standing.png";
 import theoBlink from "../../assets/npcs/theo/theo_blink.png";
 import kaidenStanding from "../../assets/npcs/kaiden/kaiden_standing.png";
 import kaidenBlink from "../../assets/npcs/kaiden/kaiden_blink.png";
-import type { NpcDefinition } from "./npcTypes";
+import type { NpcDefinition, NpcId } from "./npcTypes";
 import {
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
   getBaseCampNpcPlacement,
@@ -22,7 +22,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
   {
     id: "luna",
     displayName: "루나",
-    role: "지휘관",
+    role: "지형 분석가",
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna,
     idle: {
       ...commonIdle,
@@ -54,7 +54,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
   {
     id: "kaiden",
     displayName: "카이든",
-    role: "탐험가",
+    role: "지휘관",
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden,
     idle: {
       ...commonIdle,
@@ -77,4 +77,4 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
 
 export const NPC_BY_ID = Object.fromEntries(
   NPC_DEFINITIONS.map((npc) => [npc.id, npc]),
-) as Record<string, NpcDefinition>;
+) as Record<NpcId, NpcDefinition>;

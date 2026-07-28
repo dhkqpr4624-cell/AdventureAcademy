@@ -1,8 +1,12 @@
-import { NPC_DEFINITIONS } from "./npcDefinitions";
+import { NPC_BY_ID, NPC_DEFINITIONS } from "./npcDefinitions";
 import { resolveNextBlinkDelay } from "./npcIdleResolver";
 import { NPC_STORY_SEQUENCES } from "../../data/stories/npcStories";
 import { QUEST_DEFINITIONS } from "../quest/questDefinitions";
 import { BASE_CAMP_LAYER } from "../baseCamp/baseCampLayers";
+import { NPC_PORTRAIT_REGISTRY } from "./npcPortraitRegistry";
+import { resolveNpcPresentation } from "./npcPresentationResolver";
+import { resolveNpcStorySequence } from "./npcStoryResolver";
+import type { NpcId } from "./npcTypes";
 import {
   BASE_CAMP_NPC_DISPLAY_SCALE,
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
@@ -88,6 +92,103 @@ export function runNpcChecks() {
     }
   }
   assert(occupiedSlots.size === 3, "all three NPCs must use different slots");
+  const identityExpectations = {
+    luna: {
+      displayName: "루나",
+      role: "지형 분석가",
+      defaultStorySequenceId: "npc-luna-default",
+    },
+    theo: {
+      displayName: "테오",
+      role: "보급 담당",
+      defaultStorySequenceId: "npc-theo-default",
+    },
+    kaiden: {
+      displayName: "카이든",
+      role: "지휘관",
+      defaultStorySequenceId: "npc-kaiden-default",
+    },
+  } as const satisfies Record<
+    NpcId,
+    {
+      displayName: string;
+      role: string;
+      defaultStorySequenceId: string;
+    }
+  >;
+  for (const npcId of Object.keys(identityExpectations) as NpcId[]) {
+    const expected = identityExpectations[npcId];
+    const presentation = resolveNpcPresentation(npcId);
+    assert(presentation.id === npcId, `${npcId} presentation id mismatch`);
+    assert(
+      presentation.displayName === expected.displayName,
+      `${npcId} display name mismatch`,
+    );
+    assert(presentation.role === expected.role, `${npcId} role mismatch`);
+    assert(
+      presentation.dialogue.defaultStorySequenceId ===
+        expected.defaultStorySequenceId,
+      `${npcId} default story mismatch`,
+    );
+    assert(
+      NPC_PORTRAIT_REGISTRY[`${npcId}.default`] ===
+        NPC_BY_ID[npcId].portraits.default,
+      `${npcId} portrait registry must resolve by NPC id`,
+    );
+    assert(
+      resolveNpcStorySequence(npcId, {}) ===
+        expected.defaultStorySequenceId,
+      `${npcId} story resolver must resolve by NPC id`,
+    );
+    const story =
+      NPC_STORY_SEQUENCES[expected.defaultStorySequenceId];
+    assert(
+      story.actors[npcId]?.name === expected.displayName &&
+        story.actors[npcId]?.role === expected.role,
+      `${npcId} story actor metadata must come from its NPC definition`,
+    );
+  }
+  assert(
+    resolveNpcStorySequence("kaiden", {
+      "quest-floor-1-memory-fragment": "available",
+    }) === "npc-kaiden-quest-available",
+    "Kaiden must retain the available quest story",
+  );
+  assert(
+    resolveNpcStorySequence("luna", {
+      "quest-floor-1-memory-fragment": "available",
+    }) === "npc-luna-default" &&
+      resolveNpcStorySequence("theo", {
+        "quest-floor-1-memory-fragment": "available",
+      }) === "npc-theo-default",
+    "Kaiden's slot or quest status must not leak into Luna or Theo stories",
+  );
+  for (const quest of QUEST_DEFINITIONS) {
+    const giver = NPC_BY_ID[quest.giverNpcId];
+    assert(Boolean(giver), `${quest.id} has an invalid giverNpcId`);
+    assert(
+      giver.offeredQuestIds.includes(quest.id),
+      `${quest.id} must be offered by its giverNpcId`,
+    );
+  }
+  assert(
+    BASE_CAMP_NPC_SLOTS.lunaNpc.anchorX === 425 &&
+      BASE_CAMP_NPC_SLOTS.lunaNpc.previousAnchorY === 795 &&
+      BASE_CAMP_NPC_SLOTS.theoNpc.anchorX === 655 &&
+      BASE_CAMP_NPC_SLOTS.theoNpc.previousAnchorY === 795 &&
+      BASE_CAMP_NPC_SLOTS.kaidenNpc.anchorX === 1195 &&
+      BASE_CAMP_NPC_SLOTS.kaidenNpc.previousAnchorY === 795,
+    "protected BaseCamp slot coordinates changed",
+  );
+  assert(
+    getBaseCampNpcPlacement("lunaNpc").x === 368 &&
+      getBaseCampNpcPlacement("lunaNpc").y === 572 &&
+      getBaseCampNpcPlacement("theoNpc").x === 598 &&
+      getBaseCampNpcPlacement("theoNpc").y === 572 &&
+      getBaseCampNpcPlacement("kaidenNpc").x === 1138 &&
+      getBaseCampNpcPlacement("kaidenNpc").y === 572,
+    "protected BaseCamp placement coordinates changed",
+  );
   assert(
     BASE_CAMP_NPC_DISPLAY_SCALE === 0.6,
     "common NPC display scale must be 0.6",

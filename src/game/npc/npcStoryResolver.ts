@@ -1,10 +1,12 @@
-import type { NpcDefinition } from "./npcTypes";
 import type { QuestState } from "../quest/questTypes";
+import { resolveNpcPresentation } from "./npcPresentationResolver";
+import type { NpcId } from "./npcTypes";
 
 export function resolveNpcStorySequence(
-  npc: NpcDefinition,
+  npcId: NpcId,
   questStatuses: QuestState,
 ) {
+  const npc = resolveNpcPresentation(npcId);
   const offeredQuestId = npc.offeredQuestIds[0];
   const status = offeredQuestId ? questStatuses[offeredQuestId] : undefined;
   if (status === "available" && npc.dialogue.questAvailableStorySequenceId) {
@@ -18,4 +20,3 @@ export function resolveNpcStorySequence(
   }
   return npc.dialogue.defaultStorySequenceId;
 }
-

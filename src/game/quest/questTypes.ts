@@ -1,3 +1,5 @@
+import type { NpcId } from "../npc/npcTypes";
+
 export type QuestStatus = "locked" | "available" | "active" | "completed";
 
 export type QuestDefinition = {
@@ -6,7 +8,7 @@ export type QuestDefinition = {
   summary: string;
   description: string;
   objectiveText: string;
-  giverNpcId: string;
+  giverNpcId: NpcId;
   offerStorySequenceId: string;
   acceptStorySequenceId?: string;
   activeStorySequenceId?: string;
@@ -22,4 +24,3 @@ export type AcceptQuestResult = {
   nextState: QuestState;
   reason?: "questNotFound" | "questNotAvailable" | "alreadyActive";
 };
-

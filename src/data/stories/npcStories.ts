@@ -1,14 +1,15 @@
 import type { StorySequence, StoryStep } from "../../types/story";
-import { NPC_BY_ID } from "../../game/npc/npcDefinitions";
 import { NPC_PORTRAIT_REGISTRY } from "../../game/npc/npcPortraitRegistry";
+import { resolveNpcPresentation } from "../../game/npc/npcPresentationResolver";
+import type { NpcId } from "../../game/npc/npcTypes";
 
 function sequence(
   id: string,
-  npcId: string,
+  npcId: NpcId,
   portraitId: string,
   lines: string[],
 ): StorySequence {
-  const npc = NPC_BY_ID[npcId];
+  const npc = resolveNpcPresentation(npcId);
   const steps: StoryStep[] = [
     {
       id: `${id}-portrait`,

@@ -1,8 +1,12 @@
+import type { BaseCampNpcSlotId } from "./baseCampNpcSlots";
+
+export type NpcId = "luna" | "theo" | "kaiden";
+
 export type NpcDefinition = {
-  id: string;
+  id: NpcId;
   displayName: string;
   role: string;
-  baseCampSpawnId: string;
+  baseCampSpawnId: BaseCampNpcSlotId;
   idle: {
     standingImage: string;
     blinkSpriteSheet: string;
@@ -35,4 +39,3 @@ export type NpcDefinition = {
     height: number;
   };
 };
-

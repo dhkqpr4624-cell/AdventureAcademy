@@ -58,7 +58,7 @@ export function BaseCampScreen({
     setSelectedRegionId(null);
     setFocusPointId(npc.baseCampSpawnId);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
-    const sequenceId = resolveNpcStorySequence(npc, questState);
+    const sequenceId = resolveNpcStorySequence(npc.id, questState);
     setStorySequenceId(sequenceId);
     interactionLockRef.current = false;
   };

@@ -6,6 +6,7 @@ import type {
 } from "../../types/baseCamp";
 import { NPC_DEFINITIONS } from "../../game/npc/npcDefinitions";
 import type { NpcDefinition } from "../../game/npc/npcTypes";
+import { resolveNpcPresentation } from "../../game/npc/npcPresentationResolver";
 import { NpcIdleSprite } from "../../components/NpcIdleSprite";
 import { BASE_CAMP_LAYER } from "../../game/baseCamp/baseCampLayers";
 
@@ -160,41 +161,44 @@ export function BaseCampWorld({
         }`}
         style={{ zIndex: BASE_CAMP_LAYER.interactionOverlay }}
       >
-        {NPC_DEFINITIONS.map((npc) => (
-          <button
-            key={npc.id}
-            type="button"
-            className={`base-camp-npc-interaction ${
-              selectedNpcId === npc.id ? "is-selected" : ""
-            }`}
-            style={{
-              left: npc.placement.x,
-              top: npc.placement.y,
-              width: npc.placement.width,
-              height: npc.placement.height,
-            }}
-            disabled={mode === "story" || interactionsDisabled}
-            onClick={() => onSelectNpc?.(npc)}
-            onPointerEnter={() => setHighlightedNpcId(npc.id)}
-            onPointerLeave={() =>
-              setHighlightedNpcId((current) =>
-                current === npc.id ? null : current
-              )
-            }
-            onFocus={() => setHighlightedNpcId(npc.id)}
-            onBlur={() =>
-              setHighlightedNpcId((current) =>
-                current === npc.id ? null : current
-              )
-            }
-            aria-label={`${npc.displayName}, ${npc.role}와 대화하기`}
-          >
-            <span className="base-camp-npc-label">
-              <strong>{npc.displayName}</strong>
-              <small>대화하기</small>
-            </span>
-          </button>
-        ))}
+        {NPC_DEFINITIONS.map((npc) => {
+          const presentation = resolveNpcPresentation(npc.id);
+          return (
+            <button
+              key={presentation.id}
+              type="button"
+              className={`base-camp-npc-interaction ${
+                selectedNpcId === npc.id ? "is-selected" : ""
+              }`}
+              style={{
+                left: npc.placement.x,
+                top: npc.placement.y,
+                width: npc.placement.width,
+                height: npc.placement.height,
+              }}
+              disabled={mode === "story" || interactionsDisabled}
+              onClick={() => onSelectNpc?.(npc)}
+              onPointerEnter={() => setHighlightedNpcId(npc.id)}
+              onPointerLeave={() =>
+                setHighlightedNpcId((current) =>
+                  current === npc.id ? null : current
+                )
+              }
+              onFocus={() => setHighlightedNpcId(npc.id)}
+              onBlur={() =>
+                setHighlightedNpcId((current) =>
+                  current === npc.id ? null : current
+                )
+              }
+              aria-label={`${presentation.displayName}, ${presentation.role}와 대화하기`}
+            >
+              <span className="base-camp-npc-label">
+                <strong>{presentation.displayName}</strong>
+                <small>대화하기</small>
+              </span>
+            </button>
+          );
+        })}
         {map.interactionRegions.map((region) => (
           <button
             key={region.id}
