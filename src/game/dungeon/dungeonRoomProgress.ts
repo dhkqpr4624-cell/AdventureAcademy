@@ -1,4 +1,5 @@
 import type { NormalCombatResolution } from "../combat/normalCombatResolver";
+import type { EliteCombatResult } from "../combat/eliteCombatResolver";
 import type {
   DungeonMapDefinition,
   DungeonRoomProgress,
@@ -12,6 +13,17 @@ export function createInitialRoomProgress(
       room.id,
       { roomId: room.id, eventCompleted: false },
     ]),
+  );
+}
+
+export function shouldCompleteEliteRoom(
+  result: EliteCombatResult,
+): boolean {
+  return (
+    result === "perfectVictory" ||
+    result === "normalVictory" ||
+    result === "hardVictory" ||
+    result === "enemyEscaped"
   );
 }
 

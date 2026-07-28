@@ -15,7 +15,7 @@ export function runDungeonCompletionChecks(): void {
     "an untouched dungeon cannot complete",
   );
   const combatRoomIds = TEST_DUNGEON_MAP.rooms
-    .filter((room) => room.type === "combat")
+    .filter((room) => room.type === "combat" || room.type === "elite")
     .map((room) => room.id);
   const oneCompleted = completeRoomEvent(initial, combatRoomIds[0]);
   check(
@@ -25,7 +25,7 @@ export function runDungeonCompletionChecks(): void {
   const allCompleted = combatRoomIds.reduce(completeRoomEvent, initial);
   check(
     resolveDungeonCompletion(TEST_DUNGEON_MAP, allCompleted).canComplete,
-    "all combat rooms must allow completion",
+    "all normal and elite combat rooms must allow completion",
   );
   check(
     !resolveDungeonCompletion(

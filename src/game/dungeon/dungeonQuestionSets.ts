@@ -7,6 +7,7 @@ export const DUNGEON_QUESTION_SETS: Readonly<Record<string, readonly Question[]>
   "normal-garlic-b": [TEST_QUESTIONS[2], TEST_QUESTIONS[3]],
   "treasure-test-a": [TEST_QUESTIONS[4]],
   "trap-test-a": [TEST_QUESTIONS[5]],
+  "floor1-elite-a": [TEST_QUESTIONS[6], TEST_QUESTIONS[7], TEST_QUESTIONS[8]],
 };
 
 export function getDungeonQuestionSet(
@@ -32,6 +33,18 @@ export function runDungeonQuestionChecks(map: DungeonMapDefinition): void {
       throw new Error(`[dungeonQuestionChecks] ${room.id} needs combatConfig`);
     }
     const questions = getDungeonQuestionSet(room.combatConfig.questionSetId);
+    for (const question of questions) {
+      if (usedQuestionIds.has(question.id)) {
+        throw new Error(`[dungeonQuestionChecks] duplicate question: ${question.id}`);
+      }
+      usedQuestionIds.add(question.id);
+    }
+  }
+  for (const room of map.rooms.filter((candidate) => candidate.type === "elite")) {
+    if (!room.eliteConfig) {
+      throw new Error(`[dungeonQuestionChecks] ${room.id} needs eliteConfig`);
+    }
+    const questions = getDungeonQuestionSet(room.eliteConfig.questionSetId, 3);
     for (const question of questions) {
       if (usedQuestionIds.has(question.id)) {
         throw new Error(`[dungeonQuestionChecks] duplicate question: ${question.id}`);

@@ -1,4 +1,10 @@
-export type DungeonRoomType = "start" | "empty" | "combat" | "treasure" | "trap";
+export type DungeonRoomType =
+  | "start"
+  | "empty"
+  | "combat"
+  | "elite"
+  | "treasure"
+  | "trap";
 
 export type DungeonDirection = "forward" | "left" | "right" | "back";
 
@@ -34,6 +40,14 @@ export type DungeonCombatConfig = {
   combatCameraPose: DungeonCameraPose;
 };
 
+export type DungeonEliteConfig = {
+  monsterId: string;
+  questionSetId: string;
+  attackDamage: 8;
+  monsterPosition: DungeonVector3;
+  combatCameraPose: DungeonCameraPose;
+};
+
 export type DungeonTreasureEventConfig = {
   treasureId: string;
   questionSetId: string;
@@ -60,6 +74,7 @@ export type DungeonRoomNode = {
   facing: DungeonFacing;
   explorationCameraPose: DungeonCameraPose;
   combatConfig?: DungeonCombatConfig;
+  eliteConfig?: DungeonEliteConfig;
   eventConfig?: DungeonRoomEventConfig;
 };
 

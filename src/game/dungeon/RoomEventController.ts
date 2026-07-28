@@ -6,6 +6,7 @@ import type {
 export type RoomEntryAction =
   | { type: "explore"; message: string }
   | { type: "startCombat" }
+  | { type: "startEliteCombat" }
   | { type: "skipCompletedCombat"; message: string }
   | { type: "showTreasure"; message: string }
   | { type: "startTrap"; message: string };
@@ -26,6 +27,13 @@ export function resolveRoomEntry(
             message: "이미 이벤트가 끝난 방이다.",
           }
         : { type: "startCombat" };
+    case "elite":
+      return progress.eventCompleted
+        ? {
+            type: "skipCompletedCombat",
+            message: "이미 이벤트가 끝난 정예방이다.",
+          }
+        : { type: "startEliteCombat" };
     case "treasure":
       return {
         type: "showTreasure",

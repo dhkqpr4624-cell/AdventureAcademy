@@ -13,7 +13,7 @@ export function resolveDungeonCompletion(
   roomProgress: Record<string, DungeonRoomProgress>,
 ): DungeonCompletionCheck {
   const remainingCombatRoomIds = map.rooms
-    .filter((room) => room.type === "combat")
+    .filter((room) => room.type === "combat" || room.type === "elite")
     .filter((room) => roomProgress[room.id]?.eventCompleted !== true)
     .map((room) => room.id);
   return {

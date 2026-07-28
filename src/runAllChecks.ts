@@ -19,6 +19,8 @@ import { runQuestMarkerChecks } from "./game/quest/questMarkerChecks";
 import { runBaseCampInteractionChecks } from "./game/baseCamp/baseCampInteractionChecks";
 import { runAutoSaveChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
 import { runStoryChoiceChecks } from "./game/story/storyChoiceChecks";
+import { runEliteCombatChecks } from "./game/combat/eliteCombatChecks";
+import { runEliteRoomChecks } from "./game/dungeon/eliteRoomChecks";
 
 const checks = [
   ["npc checks", runNpcChecks],
@@ -39,6 +41,8 @@ const checks = [
   ["normal combat checks", runNormalCombatChecks],
   ["critical checks", runCriticalChecks],
   ["potion checks", runPotionChecks],
+  ["elite combat checks", runEliteCombatChecks],
+  ["elite room checks", runEliteRoomChecks],
   ["save checks", runSaveChecks],
   ["save migration checks", runSaveMigrationChecks],
   ["save backup checks", runSaveBackupChecks],

@@ -107,6 +107,26 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
         damage: 10,
       },
     },
+    {
+      id: "room-elite",
+      type: "elite",
+      position: { x: 0, y: 0, z: -48 },
+      facing: "north",
+      explorationCameraPose: {
+        position: [0, 0.2, -44.2],
+        lookAt: [0, -0.15, -52],
+      },
+      eliteConfig: {
+        monsterId: "floor1-elite",
+        questionSetId: "floor1-elite-a",
+        attackDamage: 8,
+        monsterPosition: [0, 0.02, -49.2],
+        combatCameraPose: {
+          position: [0, 0.2, -44.2],
+          lookAt: [0, 0.02, -49.2],
+        },
+      },
+    },
   ],
   connections: [
     {
@@ -189,6 +209,19 @@ export const TEST_DUNGEON_MAP: DungeonMapDefinition = {
         { kind: "corridor", position: [-6, CAMERA_Y, -32] },
         { kind: "roomEntrance", position: [-11, CAMERA_Y, -32] },
         { kind: "roomCenter", position: [-12.2, CAMERA_Y, -32] },
+      ],
+    },
+    {
+      id: "connection-empty-b-elite",
+      fromRoomId: "room-empty-b",
+      toRoomId: "room-elite",
+      directionFromSource: "forward",
+      directionFromTarget: "back",
+      cameraPath: [
+        { kind: "roomExit", position: [0, CAMERA_Y, -36] },
+        { kind: "corridor", position: [0, CAMERA_Y, -40] },
+        { kind: "roomEntrance", position: [0, CAMERA_Y, -43] },
+        { kind: "roomCenter", position: [0, CAMERA_Y, -44.2] },
       ],
     },
   ],

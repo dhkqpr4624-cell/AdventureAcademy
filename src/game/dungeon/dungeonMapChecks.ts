@@ -36,6 +36,10 @@ export function runDungeonMapChecks(): void {
     TEST_DUNGEON_MAP.rooms.filter((room) => room.type === "combat").length >= 2,
     "at least two combat rooms are required",
   );
+  const eliteRooms = TEST_DUNGEON_MAP.rooms.filter((room) => room.type === "elite");
+  check(eliteRooms.length === 1, "test map needs exactly one elite room");
+  check(Boolean(eliteRooms[0].eliteConfig), "elite room needs eliteConfig");
+  check(eliteRooms[0].eliteConfig?.attackDamage === 8, "elite attack must be 8");
   const treasureRooms = TEST_DUNGEON_MAP.rooms.filter(
     (room) => room.type === "treasure",
   );
@@ -134,6 +138,18 @@ export function runDungeonMapChecks(): void {
   );
   const reset = createInitialRoomProgress(TEST_DUNGEON_MAP);
   check(!reset[combatRoom.id].eventCompleted, "reset must restore combat event");
+  const eliteRoom = eliteRooms[0];
+  check(
+    resolveRoomEntry(eliteRoom, initial[eliteRoom.id]).type === "startEliteCombat",
+    "incomplete elite room must start elite combat",
+  );
+  const completedElite = completeRoomEvent(initial, eliteRoom.id);
+  check(
+    resolveRoomEntry(eliteRoom, completedElite[eliteRoom.id]).type ===
+      "skipCompletedCombat",
+    "completed elite room must skip combat",
+  );
+  check(!reset[eliteRoom.id].eventCompleted, "reset must restore elite event");
   const treasureRoom = treasureRooms[0];
   check(
     resolveRoomEntry(treasureRoom, initial[treasureRoom.id]).type ===
