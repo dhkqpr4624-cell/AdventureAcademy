@@ -959,8 +959,12 @@ button:focus-visible {
   font-weight: 800;
 }
 
+.combat-status-bar.player-status-bar {
+  grid-template-columns: minmax(12rem, 1fr) auto;
+}
+
 .player-status-bar:not(:has(.combat-status-question)) {
-  grid-template-columns: auto minmax(12rem, 1fr);
+  grid-template-columns: minmax(12rem, 1fr);
 }
 
 .dungeon-movement-status {
