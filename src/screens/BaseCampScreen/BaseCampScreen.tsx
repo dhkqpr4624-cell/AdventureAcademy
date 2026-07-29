@@ -241,7 +241,8 @@ export function BaseCampScreen({
 
       {!storySequenceId && (
         <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
-          인벤토리
+          <img src={`${import.meta.env.BASE_URL}assets/ui/inventory.png`} alt="" aria-hidden="true" draggable={false} />
+          <span className="visually-hidden">인벤토리</span>
         </button>
       )}
 

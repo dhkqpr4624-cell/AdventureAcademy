@@ -15,17 +15,17 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
   "weapon-basic-sword": {
     id: "weapon-basic-sword", name: "기본 목검", type: "weaponSkin",
     rarity: "common", description: "아카데미에서 지급한 기본 목검이다.",
-    icon: "🗡️", stackable: false,
+    icon: `${import.meta.env.BASE_URL}assets/items/basic-sword.png`, stackable: false,
   },
   "potion-small": {
     id: "potion-small", name: "소형 회복 포션", type: "consumable",
     rarity: "common", description: "던전 전투 중 HP를 20 회복한다.",
-    icon: "🧪", stackable: true,
+    icon: `${import.meta.env.BASE_URL}assets/items/potion-small.png`, stackable: true,
   },
   "potion-medium": {
     id: "potion-medium", name: "중형 회복 포션", type: "consumable",
     rarity: "uncommon", description: "던전 전투 중 HP를 35 회복한다.",
-    icon: "⚗️", stackable: true,
+    icon: `${import.meta.env.BASE_URL}assets/items/potion-medium.png`, stackable: true,
   },
 };
 
