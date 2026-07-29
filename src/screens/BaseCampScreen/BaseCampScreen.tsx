@@ -205,7 +205,6 @@ export function BaseCampScreen({
       setStoryActionState(progression.nextActionState);
       onAutoSave("questAccepted");
       setQuestDetail(null);
-      dialogueCompletedRef.current = false;
       setStorySequenceId(questDetail.acceptStorySequenceId ?? null);
     }
     questAcceptProcessingRef.current = false;
@@ -265,7 +264,8 @@ export function BaseCampScreen({
 
       {!storySequenceId && (
         <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
-          인벤토리
+          <img src={`${import.meta.env.BASE_URL}assets/ui/inventory.png`} alt="" aria-hidden="true" draggable={false} />
+          <span className="visually-hidden">인벤토리</span>
         </button>
       )}
 
@@ -367,21 +367,7 @@ export function BaseCampScreen({
           <button type="button" onClick={closeFloorList}>닫기</button>
         </section>
       )}
-      {inventoryOpen && <InventoryPopup
-        inventory={inventoryState}
-        gold={playerState.gold}
-        onClose={() => setInventoryOpen(false)}
-        onEquipmentChange={(slot, itemId) => {
-          setInventoryState((current) => ({
-            ...current,
-            equippedItemIds: {
-              ...current.equippedItemIds,
-              [slot]: itemId,
-            },
-          }));
-          onAutoSave("equipmentChanged");
-        }}
-      />}
+      {inventoryOpen && <InventoryPopup inventory={inventoryState} gold={playerState.gold} onClose={() => setInventoryOpen(false)} />}
       {shopOpen && <ShopPopup inventory={inventoryState} gold={playerState.gold} message={shopMessage} onBuy={buyItem} onClose={() => {
         setShopOpen(false);
         setFocusPointId("campCenter");

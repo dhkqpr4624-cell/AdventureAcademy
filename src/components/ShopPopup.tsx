@@ -1,6 +1,7 @@
 import { getItemDefinition } from "../game/inventory/itemDefinitions";
 import { getItemQuantity, type InventoryState } from "../game/inventory/inventoryState";
 import { SHOP_PRODUCTS } from "../game/inventory/shopResolver";
+import { ItemIcon } from "./ItemIcon";
 
 export function ShopPopup({
   inventory, gold, message, onBuy, onClose,
@@ -11,7 +12,7 @@ export function ShopPopup({
   return (
     <div className="pixel-popup-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="pixel-rpg-popup shop-popup" role="dialog" aria-modal="true" aria-labelledby="shop-title" onMouseDown={(event) => event.stopPropagation()}>
-        <header><p className="eyebrow">THEO'S SHOP</p><h2 id="shop-title">보급품 상점</h2><button type="button" onClick={onClose} aria-label="상점 닫기">×</button></header>
+        <header><p className="eyebrow">THEO'S SHOP</p><h2 id="shop-title">보급품 상점</h2><button className="pixel-popup-close-button" type="button" onClick={onClose} aria-label="상점 닫기">×</button></header>
         <div className="shop-products">
           {SHOP_PRODUCTS.map((product) => {
             const item = getItemDefinition(product.itemId)!;
@@ -19,7 +20,7 @@ export function ShopPopup({
             const capped = quantity >= product.maxQuantity;
             return (
               <article key={product.itemId}>
-                <span className="item-icon" aria-hidden="true">{item.icon}</span>
+                <span className="item-icon"><ItemIcon item={item} /></span>
                 <div><strong>{item.name}</strong><p>{item.description}</p><small>보유 {quantity} / 최대 {product.maxQuantity}</small></div>
                 <button type="button" disabled={capped || gold < product.price} onClick={() => onBuy(product.itemId)}>{product.price} G</button>
               </article>

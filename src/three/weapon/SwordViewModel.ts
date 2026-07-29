@@ -56,20 +56,6 @@ export const BASIC_SWORD_DEFINITION: SwordDefinition = {
   ],
 };
 
-export const GOJOSEON_BRONZE_SWORD_DEFINITION: SwordDefinition = {
-  ...BASIC_SWORD_DEFINITION,
-  id: "gojoseon-bronze-sword",
-  textureUrl: `${import.meta.env.BASE_URL}assets/swords/bipa-bronze-sword.png`,
-};
-
-export function getSwordDefinitionForEquippedItem(
-  equippedItemId: string | null | undefined,
-): SwordDefinition {
-  return equippedItemId === "weapon-gojoseon-bronze-dagger"
-    ? GOJOSEON_BRONZE_SWORD_DEFINITION
-    : BASIC_SWORD_DEFINITION;
-}
-
 export class SwordViewModel {
   readonly root = new THREE.Group();
   readonly pivot = new THREE.Group();

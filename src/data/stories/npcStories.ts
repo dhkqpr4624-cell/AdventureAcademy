@@ -96,7 +96,7 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     "npc-kaiden-quest-accepted",
     "kaiden",
     "serious",
-    ["좋아. 기억 조각을 찾으면 바로 캠프로 돌아와 보고해."],
+    ["좋다.\n던전을 조사한 후\n바로 보고하도록."],
   ),
 };
 
