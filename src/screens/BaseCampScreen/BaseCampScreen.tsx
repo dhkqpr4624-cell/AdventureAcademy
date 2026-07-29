@@ -28,7 +28,7 @@ import {
 } from "./BaseCampViewport";
 import { InventoryPopup } from "../../components/InventoryPopup";
 import { ShopPopup } from "../../components/ShopPopup";
-import { calculatePlayerMaxHp, changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
+import { changeItemQuantity, getItemQuantity, recalculatePlayerMaxHp, type InventoryState } from "../../game/inventory/inventoryState";
 import { purchaseShopItem } from "../../game/inventory/shopResolver";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
@@ -383,21 +383,22 @@ export function BaseCampScreen({
         gold={playerState.gold}
         onClose={() => setInventoryOpen(false)}
         onEquipmentChange={(slot, itemId) => {
-          setInventoryState((current) => {
-            const next = {
-              ...current,
-              equippedItemIds: {
-                ...current.equippedItemIds,
-                [slot]: itemId,
-              },
-            };
-            setPlayerState((player) => ({
-              ...player,
-              maxHp: calculatePlayerMaxHp(next),
-              currentHp: Math.min(player.currentHp, calculatePlayerMaxHp(next)),
-            }));
-            return next;
-          });
+          const previousInventory = inventoryState;
+          const nextInventory = {
+            ...previousInventory,
+            equippedItemIds: {
+              ...previousInventory.equippedItemIds,
+              [slot]: itemId,
+            },
+          };
+          setInventoryState(nextInventory);
+          setPlayerState((player) =>
+            recalculatePlayerMaxHp(
+              player,
+              previousInventory,
+              nextInventory,
+            ),
+          );
           onAutoSave("equipmentChanged");
         }}
       />}

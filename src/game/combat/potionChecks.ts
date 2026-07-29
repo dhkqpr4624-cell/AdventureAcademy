@@ -60,4 +60,17 @@ export function runPotionChecks(): void {
       fullHp.remainingQuantity === 1,
     "최대 HP에서는 물약을 소비하면 안 됩니다.",
   );
+
+  const armorMaxHp = resolvePotionUse({
+    currentHp: 40,
+    maxHp: 55,
+    potionKind: "smallPotion",
+    quantity: 1,
+  });
+  assert(
+    armorMaxHp.success &&
+      armorMaxHp.nextHp === 55 &&
+      armorMaxHp.healedAmount === 15,
+    "방어구 장착 후 물약은 증가한 최대 HP를 사용해야 합니다.",
+  );
 }

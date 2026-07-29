@@ -1,4 +1,5 @@
 import { BASE_PLAYER_MAX_HP } from "../balance/floorBalance";
+import type { PlayerState } from "../player/playerState";
 import { getItemDefinition } from "./itemDefinitions";
 
 export type EquipmentSlot = "weaponSkin" | "armor";
@@ -27,6 +28,24 @@ export function calculateEquippedMaxHpBonus(state: InventoryState): number {
 
 export function calculatePlayerMaxHp(state: InventoryState): number {
   return BASE_PLAYER_MAX_HP + calculateEquippedMaxHpBonus(state);
+}
+
+export function recalculatePlayerMaxHp(
+  player: PlayerState,
+  previousInventory: InventoryState,
+  nextInventory: InventoryState,
+): PlayerState {
+  const previousMaxHp = calculatePlayerMaxHp(previousInventory);
+  const nextMaxHp = calculatePlayerMaxHp(nextInventory);
+  const wasAtFullHp = player.currentHp >= previousMaxHp;
+
+  return {
+    ...player,
+    maxHp: nextMaxHp,
+    currentHp: wasAtFullHp
+      ? nextMaxHp
+      : Math.min(player.currentHp, nextMaxHp),
+  };
 }
 
 export function getItemQuantity(state: InventoryState, itemId: string) {

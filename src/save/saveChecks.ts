@@ -1,7 +1,7 @@
 import { INITIAL_PLAYER_STATE } from "../game/player/playerState";
 import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import { migrateSaveData } from "./SaveMigration";
-import { createInitialGameSaveState, createSaveDataFromGameState } from "./saveStateAdapter";
+import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState } from "./saveStateAdapter";
 import { validateCurrentSave } from "./saveSchema";
 import { planBackupRotation } from "./SaveManager";
 import { AutoSaveCoordinator } from "./AutoSaveCoordinator";
@@ -28,6 +28,13 @@ export function runSaveChecks() {
   check(validated?.inventory.items["potion-small"] === 3, "inventory round trip");
   check(validated?.inventory.equippedItemIds.armor === "armor-gwanggaeto", "armor round trip");
   check(validated?.player.maxHp === 55, "armor max HP round trip");
+  const loaded = validated ? applySaveDataToGameState(validated) : null;
+  check(
+    loaded?.inventoryState.equippedItemIds.armor === "armor-gwanggaeto" &&
+      loaded.playerState.currentHp === 31 &&
+      loaded.playerState.maxHp === 55,
+    "load derives max HP from equipped armor",
+  );
   check(validated?.quests.activeQuestId === "quest-floor-1-memory-fragment", "active quest");
   check(validated?.floors.unlockedFloorIds.includes("floor-1"), "floor unlock");
   check(validated?.story.executedActionIds.length === 1, "action id");
