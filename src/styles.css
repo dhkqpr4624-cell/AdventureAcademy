@@ -1173,7 +1173,23 @@ button:focus-visible {
   margin: 0 auto 3px;
 }
 
+.player-name-body { display: grid; gap: 12px; padding: 24px; }
+.player-name-body input { padding: 14px; border: 3px solid #765330; background: #fff4d4; color: #2b1c10; font: 700 18px inherit; }
+.player-name-body small { text-align: right; }
+.quest-reward-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 20px; }
+.quest-reward-grid article { display: grid; justify-items: center; gap: 8px; padding: 16px; border: 3px solid #765330; background: #f3e4bc; text-align: center; }
+.quest-reward-grid article.is-locked { filter: grayscale(1); opacity: .7; }
+.reward-icon { display: grid; place-items: center; width: 58px; height: 58px; border: 2px solid #765330; background: #d3b679; }
+.reward-icon .item-icon-image { width: 50px; height: 50px; }
+.reward-condition-failed { color: #b51f19 !important; font-weight: 900; }
+.quest-reward-actions { display: flex; justify-content: center; gap: 12px; padding: 16px 20px 20px; }
+.quest-reward-actions button { min-width: 120px; padding: 11px 16px; border: 3px solid #382514; background: #76502d; color: #fff0cf; }
+.quest-reward-actions button:disabled { filter: grayscale(1); opacity: .55; }
+.quest-story-overlay { position: fixed; inset: 0; z-index: 140; background: #000; }
+.quest-story-overlay .story-player { min-height: 100%; }
+
 @media (max-width: 600px) {
+  .quest-reward-grid { grid-template-columns: 1fr; }
   .pixel-rpg-popup { max-height: 92vh; }
   .shop-products article { grid-template-columns: 46px 1fr; }
   .shop-products article button { grid-column: 2; }

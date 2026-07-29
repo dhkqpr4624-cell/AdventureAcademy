@@ -17,6 +17,16 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     rarity: "common", description: "아카데미에서 지급한 기본 목검이다.",
     icon: `${import.meta.env.BASE_URL}assets/items/basic-sword.png`, stackable: false,
   },
+  "weapon-gojoseon-bronze-dagger": {
+    id: "weapon-gojoseon-bronze-dagger", name: "고조선 비파형 동검", type: "weaponSkin",
+    rarity: "rare", description: "고조선의 비파형 동검을 본뜬 희귀 무기 스킨이다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/bipa-bronze-sword.png`, stackable: false,
+  },
+  "quest-memory-fragment": {
+    id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
+    rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",
+    icon: "🪨", stackable: false,
+  },
   "potion-small": {
     id: "potion-small", name: "소형 회복 포션", type: "consumable",
     rarity: "common", description: "던전 전투 중 HP를 20 회복한다.",

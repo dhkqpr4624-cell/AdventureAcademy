@@ -13,11 +13,11 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     acceptStorySequenceId: "npc-kaiden-quest-accepted",
     activeStorySequenceId: "npc-kaiden-quest-active",
     targetFloorId: "floor-1",
-    rewards: { description: "추후 지급" },
+    completeStorySequenceId: "npc-kaiden-quest-complete",
+    rewards: { description: "5 Gold · 고조선 비파형 동검 스킨(희귀)" },
   },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(
   QUEST_DEFINITIONS.map((quest) => [quest.id, "available"]),
 );
-

@@ -1,12 +1,13 @@
 import type { QuestStatus } from "../game/quest/questTypes";
 import type { InventoryState } from "../game/inventory/inventoryState";
 
-export const CURRENT_SAVE_VERSION = 3 as const;
+export const CURRENT_SAVE_VERSION = 4 as const;
 
 export type SaveReason =
   | "introCompleted" | "baseCampEntered" | "storyStarted"
   | "storyCheckpoint" | "storyCompleted" | "npcDialogueCompleted"
   | "questAccepted" | "floorUnlocked" | "dungeonEntered" | "floorCleared"
+  | "questCompleted"
   | "itemAcquired" | "equipmentChanged"
   | "shopUsed"
   | "interval" | "visibilityHidden" | "pageHide" | "manual" | "imported";
@@ -40,7 +41,17 @@ export type SaveDataV3 = Omit<SaveDataV2, "version" | "inventory"> & {
   inventory: InventoryState;
 };
 
-export type CurrentSaveData = SaveDataV3;
+export type SaveDataV4 = Omit<SaveDataV3, "version" | "player"> & {
+  version: 4;
+  player: SaveDataV3["player"] & { name: string };
+  questProgress: {
+    floorBestCorrect: Record<string, number>;
+    firstObjectiveEventSeen: Record<string, boolean>;
+    rewardClaimed: Record<string, boolean>;
+  };
+};
+
+export type CurrentSaveData = SaveDataV4;
 export type SaveSource = "main" | "backup-1" | "backup-2" | "backup-3";
 export type SaveResult =
   | { success: true; savedAt: string; skipped?: boolean }

@@ -1,0 +1,20 @@
+import { runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
+import { changeItemQuantity, getItemQuantity } from "./game/inventory/inventoryState";
+import { createInitialGameSaveState, createSaveDataFromGameState } from "./save/saveStateAdapter";
+import { validateCurrentSave } from "./save/saveSchema";
+
+runSaveChecks();
+runSaveMigrationChecks();
+const state = createInitialGameSaveState();
+state.playerState.name = "아라";
+state.floorBestCorrect["floor-1"] = 7;
+state.firstObjectiveEventSeen["floor-1"] = true;
+state.rewardClaimed["quest-floor-1-memory-fragment"] = true;
+state.inventoryState = changeItemQuantity(state.inventoryState, "quest-memory-fragment", 1);
+const restored = validateCurrentSave(JSON.parse(JSON.stringify(createSaveDataFromGameState(state))));
+if (!restored || restored.player.name !== "아라") throw new Error("player name round trip");
+if (restored.questProgress.floorBestCorrect["floor-1"] !== 7) throw new Error("best correct round trip");
+if (!restored.questProgress.firstObjectiveEventSeen["floor-1"]) throw new Error("objective event round trip");
+if (!restored.questProgress.rewardClaimed["quest-floor-1-memory-fragment"]) throw new Error("reward claim round trip");
+if (getItemQuantity(restored.inventory, "quest-memory-fragment") !== 1) throw new Error("quest inventory round trip");
+console.info("phase quest/save checks: PASS");
