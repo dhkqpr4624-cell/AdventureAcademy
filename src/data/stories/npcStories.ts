@@ -74,17 +74,9 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     "kaiden",
     "serious",
     [
-      "포탈에 빠져 이 던전에 갇힌 이상,\n이 던전을 클리어해서 나가는 방법밖에는 없다.",
-      "루나의 조사에 따르면,\n던전 근처에서 뒤틀린 기억의 조각이 발견되었다고 한다.",
-      "분명 던전 1층 안에,\n이 조각과 딱 맞는 조각이 1개 더 있을 것으로 보인다.",
-      "{{playerName}},\n던전 1층으로 내려가서\n뒤틀린 기억의 조각을 찾아 오도록.",
+      "던전 1층에서 뒤틀린 기억의 흔적을 발견했다.",
+      "흩어진 기억 조각을 회수해 단서를 확인해야 한다. 네가 맡아 줘.",
     ],
-  ),
-  "npc-kaiden-quest-complete": sequence(
-    "npc-kaiden-quest-complete",
-    "kaiden",
-    "serious",
-    ["기억의 조각을 가져왔군. 바로 확인해 보겠다."],
   ),
   "npc-kaiden-quest-active": sequence(
     "npc-kaiden-quest-active",

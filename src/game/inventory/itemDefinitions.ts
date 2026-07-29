@@ -15,27 +15,17 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
   "weapon-basic-sword": {
     id: "weapon-basic-sword", name: "기본 목검", type: "weaponSkin",
     rarity: "common", description: "아카데미에서 지급한 기본 목검이다.",
-    icon: "🗡️", stackable: false,
-  },
-  "weapon-gojoseon-bronze-dagger": {
-    id: "weapon-gojoseon-bronze-dagger", name: "고조선 비파형 동검 스킨", type: "weaponSkin",
-    rarity: "rare", description: "고조선의 비파형 동검을 본뜬 희귀 무기 스킨이다.",
-    icon: "🗡️", stackable: false,
-  },
-  "quest-memory-fragment": {
-    id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
-    rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",
-    icon: "🪨", stackable: false,
+    icon: `${import.meta.env.BASE_URL}assets/items/basic-sword.png`, stackable: false,
   },
   "potion-small": {
     id: "potion-small", name: "소형 회복 포션", type: "consumable",
     rarity: "common", description: "던전 전투 중 HP를 20 회복한다.",
-    icon: "🧪", stackable: true,
+    icon: `${import.meta.env.BASE_URL}assets/items/potion-small.png`, stackable: true,
   },
   "potion-medium": {
     id: "potion-medium", name: "중형 회복 포션", type: "consumable",
     rarity: "uncommon", description: "던전 전투 중 HP를 35 회복한다.",
-    icon: "⚗️", stackable: true,
+    icon: `${import.meta.env.BASE_URL}assets/items/potion-medium.png`, stackable: true,
   },
 };
 

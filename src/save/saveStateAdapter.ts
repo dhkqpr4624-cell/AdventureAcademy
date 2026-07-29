@@ -13,9 +13,6 @@ export type GameSaveState = {
   completedStoryIds: string[]; checkpointByStoryId: Record<string, string>;
   currentFloorId: string | null; clearedFloorIds: string[];
   inventoryState: InventoryState;
-  floorBestCorrect: Record<string, number>;
-  firstObjectiveEventSeen: Record<string, boolean>;
-  rewardClaimed: Record<string, boolean>;
 };
 export const createInitialGameSaveState = (): GameSaveState => ({
   playerState: { ...INITIAL_PLAYER_STATE }, questState: { ...INITIAL_QUEST_STATE },
@@ -23,7 +20,6 @@ export const createInitialGameSaveState = (): GameSaveState => ({
   storyActionState: { ...INITIAL_STORY_ACTION_STATE, executedActionIds: [] },
   playTimeSeconds: 0, completedStoryIds: [], checkpointByStoryId: {},
   currentFloorId: null, clearedFloorIds: [],
-  floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {},
   inventoryState: {
     items: { ...INITIAL_INVENTORY_STATE.items },
     equippedItemIds: { ...INITIAL_INVENTORY_STATE.equippedItemIds },
@@ -33,7 +29,7 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
   const activeQuestId = Object.entries(state.questState).find(([, value]) => value === "active")?.[0] ?? null;
   return {
     version: CURRENT_SAVE_VERSION, savedAt: new Date().toISOString(),
-    playTimeSeconds: state.playTimeSeconds, player: { ...state.playerState, name: state.playerState.name ?? "" },
+    playTimeSeconds: state.playTimeSeconds, player: { ...state.playerState },
     quests: { statuses: { ...state.questState }, activeQuestId },
     floors: { unlockedFloorIds: [...state.floorUnlockState.unlockedFloorIds] },
     story: { completedStoryIds: [...state.completedStoryIds], checkpointByStoryId: { ...state.checkpointByStoryId }, executedActionIds: [...state.storyActionState.executedActionIds] },
@@ -41,11 +37,6 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
     inventory: {
       items: { ...state.inventoryState.items },
       equippedItemIds: { ...state.inventoryState.equippedItemIds },
-    },
-    questProgress: {
-      floorBestCorrect: { ...state.floorBestCorrect },
-      firstObjectiveEventSeen: { ...state.firstObjectiveEventSeen },
-      rewardClaimed: { ...state.rewardClaimed },
     },
   };
 }
@@ -61,8 +52,5 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
       items: { ...data.inventory.items },
       equippedItemIds: { ...data.inventory.equippedItemIds },
     },
-    floorBestCorrect: { ...data.questProgress.floorBestCorrect },
-    firstObjectiveEventSeen: { ...data.questProgress.firstObjectiveEventSeen },
-    rewardClaimed: { ...data.questProgress.rewardClaimed },
   };
 }

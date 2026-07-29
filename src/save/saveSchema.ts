@@ -18,15 +18,12 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
   const player = value.player;
   if (!Number.isFinite(player.currentHp) || !Number.isFinite(player.maxHp) ||
       !Number.isFinite(player.gold) || (player.gold as number) < 0 ||
-      typeof player.name !== "string" ||
       (player.maxHp as number) <= 0 ||
       (player.currentHp as number) < 0 || (player.currentHp as number) > (player.maxHp as number)) return null;
   if (!isObject(value.quests.statuses) || !strings(value.floors.unlockedFloorIds) ||
       !strings(value.story.completedStoryIds) || !isObject(value.story.checkpointByStoryId) ||
       !strings(value.story.executedActionIds) || !strings(value.dungeon.clearedFloorIds)) return null;
-  if (!isObject(value.inventory.items) || !isObject(value.inventory.equippedItemIds) ||
-      !isObject(value.questProgress) || !isObject(value.questProgress.floorBestCorrect) ||
-      !isObject(value.questProgress.firstObjectiveEventSeen) || !isObject(value.questProgress.rewardClaimed)) return null;
+  if (!isObject(value.inventory.items) || !isObject(value.inventory.equippedItemIds)) return null;
   const items: Record<string, number> = {};
   for (const [itemId, quantity] of Object.entries(value.inventory.items)) {
     if (!ITEM_DEFINITION_REGISTRY[itemId] || !Number.isFinite(quantity) || (quantity as number) < 0) return null;
@@ -56,7 +53,6 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     savedAt: value.savedAt,
     playTimeSeconds: Math.max(0, Math.floor(value.playTimeSeconds as number)),
     player: {
-      name: (player.name as string).trim().slice(0, 12),
       currentHp: player.currentHp as number,
       maxHp: player.maxHp as number,
       gold: Math.floor(player.gold as number),
@@ -73,10 +69,5 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       clearedFloorIds: unique(value.dungeon.clearedFloorIds as string[]),
     },
     inventory: { items, equippedItemIds },
-    questProgress: {
-      floorBestCorrect: Object.fromEntries(Object.entries(value.questProgress.floorBestCorrect).filter(([, count]) => Number.isFinite(count) && (count as number) >= 0).map(([id, count]) => [id, Math.floor(count as number)])),
-      firstObjectiveEventSeen: Object.fromEntries(Object.entries(value.questProgress.firstObjectiveEventSeen).filter(([, seen]) => typeof seen === "boolean")) as Record<string, boolean>,
-      rewardClaimed: Object.fromEntries(Object.entries(value.questProgress.rewardClaimed).filter(([, claimed]) => typeof claimed === "boolean")) as Record<string, boolean>,
-    },
   };
 }

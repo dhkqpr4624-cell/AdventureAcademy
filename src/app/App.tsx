@@ -17,7 +17,6 @@ import { SaveManager } from "../save/SaveManager";
 import { AutoSaveCoordinator } from "../save/AutoSaveCoordinator";
 import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState, type GameSaveState } from "../save/saveStateAdapter";
 import type { SaveReason } from "../save/saveTypes";
-import { PlayerNamePopup } from "../components/PlayerNamePopup";
 
 export function App() {
   const loaded = useRef(SaveManager.load());
@@ -27,7 +26,6 @@ export function App() {
   const [game, setGame] = useState<GameSaveState>(initial.current);
   const gameRef = useRef(game);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [namePopupOpen, setNamePopupOpen] = useState(false);
   const [saveMessage, setSaveMessage] = useState(loaded.current.success && loaded.current.source !== "main" ? "메인 세이브가 손상되어 최근 백업을 복구했습니다." : "");
   const startedAtRef = useRef(Date.now());
   const coordinatorRef = useRef<AutoSaveCoordinator | null>(null);
@@ -96,9 +94,6 @@ export function App() {
         onAutoSave={requestSave}
         onStoryCompleted={(id) => { setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] })); requestSave("storyCompleted"); }}
         onStoryCheckpoint={(id, checkpoint) => { setGame((current) => ({ ...current, checkpointByStoryId: { ...current.checkpointByStoryId, [id]: checkpoint } })); requestSave("storyCheckpoint"); }}
-        floorBestCorrect={game.floorBestCorrect}
-        rewardClaimed={game.rewardClaimed}
-        setRewardClaimed={(questId) => setGame((current) => ({ ...current, rewardClaimed: { ...current.rewardClaimed, [questId]: true } }))}
       />;
       case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
@@ -108,33 +103,15 @@ export function App() {
         onGoldAwarded={() => requestSave("itemAcquired")}
         onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
         onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null }))}
-        firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen["floor-1"])}
-        onObjectiveAcquired={(correctCount) => {
-          setGame((current) => ({
-            ...current,
-            currentFloorId: null,
-            clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])],
-            firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, "floor-1": true },
-            floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) },
-          }));
-          requestSave("itemAcquired");
-        }}
-        onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) } }))}
-        floorQuestStarted={game.questState["quest-floor-1-memory-fragment"] !== "available"}
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
       default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onNewGame={() => {
         if (SaveManager.load().success && !window.confirm("기존 모험 기록이 있습니다.\n새로 시작하면 현재 기록이 초기화됩니다.\n\n새로 시작하시겠습니까?")) return;
         SaveManager.clear(); const next = createInitialGameSaveState(); setGame(next); gameRef.current = next;
-        startedAtRef.current = Date.now(); setNamePopupOpen(true);
+        startedAtRef.current = Date.now(); setCurrentScreen("story");
       }} />;
     }
   })();
-  return <>{content}{namePopupOpen && <PlayerNamePopup onCancel={() => setNamePopupOpen(false)} onConfirm={(name) => {
-    const nextPlayer = { ...gameRef.current.playerState, name };
-    setGame((current) => ({ ...current, playerState: nextPlayer }));
-    gameRef.current = { ...gameRef.current, playerState: nextPlayer };
-    setNamePopupOpen(false); setCurrentScreen("story"); requestSave("manual", true);
-  }} />}{settingsOpen && <SaveManagementPanel currentData={snapshot} onImport={hydrate} onReset={reset} onClose={() => setSettingsOpen(false)} />}{saveMessage && <div className="save-toast" role="status" onClick={() => setSaveMessage("")}>{saveMessage}</div>}</>;
+  return <>{content}{settingsOpen && <SaveManagementPanel currentData={snapshot} onImport={hydrate} onReset={reset} onClose={() => setSettingsOpen(false)} />}{saveMessage && <div className="save-toast" role="status" onClick={() => setSaveMessage("")}>{saveMessage}</div>}</>;
 }
