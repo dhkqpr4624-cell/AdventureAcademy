@@ -2,7 +2,10 @@ import type {
   DungeonRoomNode,
   TraversableDungeonConnection,
 } from "../dungeonTypes";
-import { labelDungeonNavigationRoutes } from "./dungeonNavigationLabelResolver";
+import {
+  labelDungeonNavigationRoutes,
+  navigationLabelFromWorldDirection,
+} from "./dungeonNavigationLabelResolver";
 
 function check(value: boolean, message: string) {
   if (!value) throw new Error(`[dungeon navigation label check] ${message}`);
@@ -43,13 +46,28 @@ export function runDungeonNavigationLabelChecks(): void {
   const labeled = labelDungeonNavigationRoutes({
     currentRoom: rooms[0],
     routes,
-    previousRoomId: "south",
     getRoom: (id) => rooms.find((candidate) => candidate.id === id)!,
   });
   check(labeled.find((route) => route.targetRoomId === "north")?.direction === "forward", "north is forward");
   check(labeled.find((route) => route.targetRoomId === "west")?.direction === "left", "west is left");
   check(labeled.find((route) => route.targetRoomId === "east")?.direction === "right", "east is right");
-  check(labeled.find((route) => route.targetRoomId === "south")?.direction === "back", "previous room alone is back");
+  check(labeled.find((route) => route.targetRoomId === "south")?.direction === "back", "south is back");
   check(labeled.filter((route) => route.direction === "back").length === 1, "at most one back route");
   check(new Set(labeled.map((route) => route.direction)).size === labeled.length, "labels are unique");
+  check(navigationLabelFromWorldDirection("north") === "forward", "north mapping");
+  check(navigationLabelFromWorldDirection("west") === "left", "west mapping");
+  check(navigationLabelFromWorldDirection("east") === "right", "east mapping");
+  check(navigationLabelFromWorldDirection("south") === "back", "south mapping");
+
+  const revisited = labelDungeonNavigationRoutes({
+    currentRoom: rooms[0],
+    routes,
+    getRoom: (id) => rooms.find((candidate) => candidate.id === id)!,
+  });
+  check(
+    revisited.every(
+      (route, index) => route.direction === labeled[index].direction,
+    ),
+    "visit history cannot change labels",
+  );
 }

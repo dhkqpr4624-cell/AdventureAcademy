@@ -50,7 +50,6 @@ export function labelRoutesRelativeToFacing(input: {
   currentRoom: DungeonRoomNode;
   routes: TraversableDungeonConnection[];
   currentFacing: DungeonFacing;
-  previousRoomId: string | null;
   getRoom: (roomId: string) => DungeonRoomNode;
 }): TraversableDungeonConnection[] {
   return input.routes.map((route) => {
@@ -61,13 +60,10 @@ export function labelRoutesRelativeToFacing(input: {
     return {
       ...route,
       worldDirection,
-      direction:
-        route.targetRoomId === input.previousRoomId
-          ? "back"
-          : resolveRelativeDirection({
-              currentFacing: input.currentFacing,
-              connectionWorldDirection: worldDirection,
-            }),
+      direction: resolveRelativeDirection({
+        currentFacing: input.currentFacing,
+        connectionWorldDirection: worldDirection,
+      }),
     };
   });
 }

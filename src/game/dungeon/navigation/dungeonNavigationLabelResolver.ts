@@ -3,40 +3,35 @@ import type {
   RelativeDungeonDirection,
   TraversableDungeonConnection,
 } from "../dungeonTypes";
-import {
-  resolveRelativeDirection,
-  worldDirectionBetween,
-} from "./relativeDirectionResolver";
-import { DUNGEON_CANONICAL_FACING } from "./dungeonNavigationPathBuilder";
+import { worldDirectionBetween } from "./relativeDirectionResolver";
+
+export function navigationLabelFromWorldDirection(
+  worldDirection: NonNullable<TraversableDungeonConnection["worldDirection"]>,
+): RelativeDungeonDirection {
+  switch (worldDirection) {
+    case "north":
+      return "forward";
+    case "west":
+      return "left";
+    case "east":
+      return "right";
+    case "south":
+      return "back";
+  }
+}
 
 export function labelDungeonNavigationRoutes(input: {
   currentRoom: DungeonRoomNode;
   routes: TraversableDungeonConnection[];
-  previousRoomId: string | null;
   getRoom: (roomId: string) => DungeonRoomNode;
 }): TraversableDungeonConnection[] {
-  const labeled = input.routes.flatMap((route) => {
+  const labeled = input.routes.map((route) => {
     const worldDirection = worldDirectionBetween(
       input.currentRoom,
       input.getRoom(route.targetRoomId),
     );
-    const isBackRoute = route.targetRoomId === input.previousRoomId;
-    if (
-      !isBackRoute &&
-      resolveRelativeDirection({
-        currentFacing: DUNGEON_CANONICAL_FACING,
-        connectionWorldDirection: worldDirection,
-      }) === "back"
-    ) {
-      return [];
-    }
-    const direction: RelativeDungeonDirection = isBackRoute
-      ? "back"
-      : resolveRelativeDirection({
-          currentFacing: DUNGEON_CANONICAL_FACING,
-          connectionWorldDirection: worldDirection,
-        });
-    return [{ ...route, direction, worldDirection }];
+    const direction = navigationLabelFromWorldDirection(worldDirection);
+    return { ...route, direction, worldDirection };
   });
 
   const labels = new Set<RelativeDungeonDirection>();

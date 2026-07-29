@@ -112,6 +112,11 @@ import { assembleDungeonVisuals } from "../../three/dungeon/visuals/DungeonVisua
 import { FLOOR1_STANDARD_ROOM } from "../../three/dungeon/visuals/roomVisualTemplates";
 import { FLOOR1_STANDARD_CORRIDOR } from "../../three/dungeon/visuals/corridorTemplates";
 import type { DungeonVisualAssembly } from "../../three/dungeon/visuals/dungeonVisualTypes";
+import {
+  DUNGEON_EVENT_VISUAL_PLACEMENT,
+  applyDungeonEventVisualVerticalOffset,
+} from "../../game/dungeon/dungeonEventVisualPlacement";
+import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitButtonResolver";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -449,7 +454,9 @@ export function DungeonScreen({
     if (!monsterPosition) {
       return;
     }
-    monsterPositionTargetRef.current = new THREE.Vector3(...monsterPosition);
+    monsterPositionTargetRef.current = new THREE.Vector3(
+      ...applyDungeonEventVisualVerticalOffset(monsterPosition),
+    );
     if (phase === "question" || phase === "review") {
       monsterPositionTargetRef.current.y += MONSTER_QUESTION_Y_OFFSET;
     }
@@ -1506,12 +1513,10 @@ export function DungeonScreen({
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const targetRoom = getDungeonRoom(route.targetRoomId);
-    const isBackRoute = route.targetRoomId === previousRoomId;
     const steps = buildDungeonNavigationPath({
       sourceRoom: getDungeonRoom(sourceRoomId),
       targetRoom,
       route,
-      isBackRoute,
     });
     controller.moveAlongSteps(steps, {
       reducedMotion,
@@ -1632,7 +1637,6 @@ export function DungeonScreen({
   const availableConnections = labelDungeonNavigationRoutes({
     currentRoom: getDungeonRoom(currentRoomId),
     routes: getConnectionsForRoom(currentRoomId),
-    previousRoomId,
     getRoom: getDungeonRoom,
   }).sort(
     (left, right) =>
@@ -1647,11 +1651,16 @@ export function DungeonScreen({
     "enemyEscaped",
   ].includes(phase);
   const buttonsLocked = animationInProgress || interactionLocked;
-  const exitDisabled =
-    dungeonMode === "moving" ||
-    animationInProgress ||
-    dungeonCompletionProcessingRef.current ||
-    exitConfirmOpen;
+  const exitButtonState = resolveDungeonExitButtonState({
+    failureState,
+    isScreenTransitioning: runActionBusy && !exitConfirmOpen,
+    isFloorClearTransitioning: dungeonCompletionProcessingRef.current && runActionBusy,
+    exitConfirmOpen,
+    isCameraMoving: dungeonMode === "moving",
+    isEnemyAttackAnimating: animationInProgress,
+    isAtomicResultProcessing:
+      eventResultProcessingRef.current || roomEventProcessingRef.current,
+  });
   const currentRoom = getDungeonRoom(currentRoomId);
   const currentRoomProgress = roomProgress[currentRoomId];
   const treasureVisible = currentRoom.type === "treasure";
@@ -1691,8 +1700,11 @@ export function DungeonScreen({
         className="dungeon-scene"
         aria-label="고정 테스트 던전"
       />
-      {failureState === "none" && phase !== "result" && (
-        <DungeonExitButton disabled={exitDisabled} onClick={openExitConfirm} />
+      {exitButtonState.visible && (
+        <DungeonExitButton
+          disabled={exitButtonState.disabled}
+          onClick={openExitConfirm}
+        />
       )}
       <div className={`combat-damage-flash ${damageFlash ? "is-active" : ""}`} />
       <div
@@ -1720,7 +1732,13 @@ export function DungeonScreen({
       )}
 
       {roomEventImage && (
-        <div className="dungeon-room-event-image" aria-hidden="true">
+        <div
+          className="dungeon-room-event-image"
+          aria-hidden="true"
+          style={{
+            transform: `translateY(${DUNGEON_EVENT_VISUAL_PLACEMENT.overlayTranslateYPercent}%)`,
+          }}
+        >
           <img
             src={roomEventImage}
             alt=""

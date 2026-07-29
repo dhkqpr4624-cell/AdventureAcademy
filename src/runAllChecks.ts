@@ -34,11 +34,17 @@ import { runDungeonNavigationPathChecks } from "./game/dungeon/navigation/dungeo
 import { runDungeonNavigationLabelChecks } from "./game/dungeon/navigation/dungeonNavigationLabelChecks";
 import { runDungeonWallVisibilityChecks } from "./three/dungeon/visuals/dungeonWallVisibilityChecks";
 import { runDungeonVisualFocusChecks } from "./three/dungeon/visuals/dungeonVisualFocusChecks";
+import { runDungeonEventVisualPlacementChecks } from "./game/dungeon/dungeonEventVisualPlacementChecks";
+import { runDungeonExitButtonChecks } from "./game/dungeon/dungeonExitButtonChecks";
+import { runWorldDirectionNavigationChecks } from "./game/dungeon/navigation/worldDirectionNavigationChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
   ["dungeon navigation path checks", runDungeonNavigationPathChecks],
   ["dungeon navigation label checks", runDungeonNavigationLabelChecks],
+  ["world direction navigation checks", runWorldDirectionNavigationChecks],
+  ["dungeon event visual placement checks", runDungeonEventVisualPlacementChecks],
+  ["dungeon exit button checks", runDungeonExitButtonChecks],
   ["dungeon visual checks", runDungeonVisualChecks],
   ["corridor assembly checks", runCorridorAssemblyChecks],
   ["dungeon wall visibility checks", runDungeonWallVisibilityChecks],

@@ -29,7 +29,6 @@ export function runDungeonNavigationPathChecks(): void {
       sourceRoom: source,
       targetRoom: target,
       route,
-      isBackRoute: false,
     });
     check(steps[0].type === "rotate", `${targetId}: rotates at junction`);
     check(
@@ -53,7 +52,6 @@ export function runDungeonNavigationPathChecks(): void {
     sourceRoom: source,
     targetRoom: north,
     route: {} as TraversableDungeonConnection,
-    isBackRoute: false,
   });
   check(straight.length === 1 && straight[0].type === "move", "forward is straight");
 
@@ -61,7 +59,6 @@ export function runDungeonNavigationPathChecks(): void {
     sourceRoom: north,
     targetRoom: source,
     route: {} as TraversableDungeonConnection,
-    isBackRoute: true,
   });
   check(
     !(backward[0].type === "rotate" && Math.abs(backward[0].yaw) === Math.PI),

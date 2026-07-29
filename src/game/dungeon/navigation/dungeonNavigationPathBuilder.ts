@@ -26,35 +26,16 @@ export function buildDungeonNavigationPath(input: {
   sourceRoom: DungeonRoomNode;
   targetRoom: DungeonRoomNode;
   route: TraversableDungeonConnection;
-  isBackRoute: boolean;
 }): DungeonCameraPathStep[] {
   const direction = worldDirectionBetween(input.sourceRoom, input.targetRoom);
   const destination = center(input.targetRoom);
 
-  if (input.isBackRoute) {
-    const oppositeDirection = (
-      { north: "south", east: "west", south: "north", west: "east" } as const
-    )[direction];
-    const reverseFacingYaw = YAW_BY_DIRECTION[oppositeDirection];
-    // Backtracking never begins with an about-face. Side connections use the
-    // necessary quarter turn and reverse through that corridor; a north route
-    // stays canonical instead of performing a forbidden 180 degree turn.
-    const needsQuarterTurn =
-      Math.abs(reverseFacingYaw - DUNGEON_CANONICAL_YAW) <= Math.PI / 2 + 1e-9 &&
-      reverseFacingYaw !== DUNGEON_CANONICAL_YAW;
-    return [
-      ...(needsQuarterTurn
-        ? [{ type: "rotate" as const, yaw: reverseFacingYaw }]
-        : []),
-      {
-        type: "move",
-        position: destination,
-        movementMode: "backward",
-      },
-      ...(needsQuarterTurn
-        ? [{ type: "rotate" as const, yaw: DUNGEON_CANONICAL_YAW }]
-        : []),
-    ];
+  if (direction === "south") {
+    return [{
+      type: "move",
+      position: destination,
+      movementMode: "backward",
+    }];
   }
 
   if (direction === "north") {

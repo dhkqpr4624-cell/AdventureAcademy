@@ -113,8 +113,7 @@ export type DungeonValidationErrorCode =
   | "invalidMonsterReference"
   | "invalidEventConfig"
   | "duplicateNavigationDirection"
-  | "multipleBackRoutes"
-  | "unsupportedRearConnection";
+  | "duplicateWorldDirectionAtRoom";
 
 export type DungeonValidationError = {
   code: DungeonValidationErrorCode;

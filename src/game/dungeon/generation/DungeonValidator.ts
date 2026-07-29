@@ -102,9 +102,7 @@ export function validateDungeon({
     });
     if (new Set(directions).size !== directions.length) {
       add("duplicateNavigationDirection", { roomId: room.id });
-    }
-    if (directions.filter((direction) => direction === "south").length > 1) {
-      add("multipleBackRoutes", { roomId: room.id });
+      add("duplicateWorldDirectionAtRoom", { roomId: room.id });
     }
   }
 
