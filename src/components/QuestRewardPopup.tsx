@@ -1,5 +1,4 @@
 import { getItemDefinition } from "../game/inventory/itemDefinitions";
-import { ItemIcon } from "./ItemIcon";
 
 export function QuestRewardPopup({ bestCorrect, claimed, onClaim, onCancel }: {
   bestCorrect: number;
@@ -17,7 +16,7 @@ export function QuestRewardPopup({ bestCorrect, claimed, onClaim, onCancel }: {
         <div className="quest-reward-grid">
           <article><p className="eyebrow">기본 보상</p><span className="reward-icon">G</span><strong>5 Gold</strong><small>퀘스트 완료 기본 보상</small></article>
           <article className={rareUnlocked ? "is-unlocked" : "is-locked"}>
-            <p className="eyebrow">희귀 보상</p><span className="reward-icon"><ItemIcon item={skin} /></span><strong>{skin.name}</strong>
+            <p className="eyebrow">희귀 보상</p><span className="reward-icon" aria-hidden="true">{skin.icon}</span><strong>{skin.name}</strong>
             <small className={rareUnlocked ? "" : "reward-condition-failed"}>정답 {bestCorrect} / {required}</small>
           </article>
         </div>

@@ -1,65 +1,55 @@
+import { useMemo } from "react";
 import { StoryPlayer } from "../game/story/StoryPlayer";
 import type { StorySequence } from "../types/story";
 
-function createMemoryFragmentSequence(imageUrl: string): StorySequence {
-  return {
+export function MemoryFragmentEvent({ imageUrl, onComplete }: { imageUrl: string; onComplete: () => void }) {
+  const sequence = useMemo<StorySequence>(() => ({
     id: "floor-1-memory-fragment-found",
     title: "뒤틀린 기억의 조각 발견",
     replayable: false,
     skippable: false,
     onCompleteScreen: "baseCamp",
-    backgrounds: {
-      fragment: {
-        imageUrl,
-        placeholder: {
-          label: "뒤틀린 기억의 조각",
-          gradient: "linear-gradient(#050505, #000000)",
-        },
-      },
-    },
+    backgrounds: {},
     actors: {},
     scenes: [{
-      id: "floor-1-memory-fragment-found-scene",
+      id: "memory-fragment-found-scene",
       steps: [
         {
-          id: "memory-fragment-background",
-          type: "setBackground",
-          backgroundId: "fragment",
-          transition: "fade",
-          durationMs: 900,
-        },
-        {
-          id: "memory-fragment-line-1",
+          id: "memory-fragment-found-line-1",
           type: "narration",
           text: "뒤틀린 기억의 조각을 찾았다.",
           advanceMode: "click",
         },
         {
-          id: "memory-fragment-line-2",
+          id: "memory-fragment-found-line-2",
           type: "narration",
           text: "카이든 대장이 가지고 있는 조각과\n딱 맞을 것 같다.",
           advanceMode: "click",
         },
         {
-          id: "memory-fragment-line-3",
+          id: "memory-fragment-found-line-3",
           type: "narration",
           text: "베이스 캠프로 돌아가서\n카이든에게 보고하자.",
           advanceMode: "click",
         },
       ],
     }],
-  };
-}
+  }), []);
 
-export function MemoryFragmentEvent({ imageUrl, onComplete }: { imageUrl: string; onComplete: () => void }) {
   return (
-    <div className="quest-story-overlay">
-      <StoryPlayer
-        sequence={createMemoryFragmentSequence(imageUrl)}
-        onNavigate={() => undefined}
-        onComplete={onComplete}
-      />
-    </div>
+    <>
+      <div className="dungeon-room-event-image">
+        <img className="is-revealing" src={imageUrl} alt="던전에서 발견한 뒤틀린 기억의 조각" />
+      </div>
+      <div className="base-camp-story-overlay">
+        <StoryPlayer
+          sequence={sequence}
+          onNavigate={() => undefined}
+          onComplete={onComplete}
+          presentationMode="baseCampOverlay"
+        />
+      </div>
+    </>
   );
 }
 
