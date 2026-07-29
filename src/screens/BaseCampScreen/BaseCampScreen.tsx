@@ -28,8 +28,12 @@ import {
 } from "./BaseCampViewport";
 import { InventoryPopup } from "../../components/InventoryPopup";
 import { ShopPopup } from "../../components/ShopPopup";
-import type { InventoryState } from "../../game/inventory/inventoryState";
+import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { purchaseShopItem } from "../../game/inventory/shopResolver";
+import { QuestRewardPopup } from "../../components/QuestRewardPopup";
+import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
+import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
+import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -46,6 +50,9 @@ type BaseCampScreenProps = {
   onAutoSave: (reason: SaveReason) => void;
   onStoryCompleted: (storyId: string) => void;
   onStoryCheckpoint: (storyId: string, checkpointId: string) => void;
+  floorBestCorrect: Record<string, number>;
+  rewardClaimed: Record<string, boolean>;
+  setRewardClaimed: (questId: string) => void;
 };
 
 export function BaseCampScreen({
@@ -63,6 +70,9 @@ export function BaseCampScreen({
   onAutoSave,
   onStoryCompleted,
   onStoryCheckpoint,
+  floorBestCorrect,
+  rewardClaimed,
+  setRewardClaimed,
 }: BaseCampScreenProps) {
   const viewportRef = useRef<BaseCampViewportController>(null);
   const interactionLockRef = useRef(false);
@@ -78,6 +88,13 @@ export function BaseCampScreen({
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [shopMessage, setShopMessage] = useState("");
+  const [memoryCompletionOpen, setMemoryCompletionOpen] = useState(false);
+  const [rewardOpen, setRewardOpen] = useState(false);
+  const memoryQuestId = "quest-floor-1-memory-fragment";
+  const hasMemoryFragment = getItemQuantity(inventoryState, "quest-memory-fragment") > 0;
+  const markerQuestState = hasMemoryFragment && questState[memoryQuestId] === "active"
+    ? ({ ...questState, [memoryQuestId]: "readyToComplete" } as unknown as QuestState)
+    : questState;
   const activeQuest = QuestManager.getActiveQuest(questState);
   const interactionLocked = Boolean(
     storySequenceId || questDetail || floorListOpen || inventoryOpen || shopOpen || cameraTransitioning,
@@ -133,7 +150,9 @@ export function BaseCampScreen({
     dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
-    const sequenceId = resolveNpcStorySequence(npc.id, questState);
+    const sequenceId = npc.id === "kaiden" && hasMemoryFragment && questState[memoryQuestId] === "active"
+      ? "npc-kaiden-quest-complete"
+      : resolveNpcStorySequence(npc.id, questState);
     setStorySequenceId(sequenceId);
     interactionLockRef.current = false;
   };
@@ -146,6 +165,10 @@ export function BaseCampScreen({
     setStorySequenceId(null);
     onAutoSave("npcDialogueCompleted");
     if (!npc) return;
+    if (finishedSequenceId === "npc-kaiden-quest-complete") {
+      setMemoryCompletionOpen(true);
+      return;
+    }
     const quest = QUEST_DEFINITIONS.find(
       (candidate) => npc.offeredQuestIds.includes(candidate.id),
     );
@@ -223,7 +246,7 @@ export function BaseCampScreen({
           selectedRegionId === "dungeonEntrance" ? null : selectedRegionId
         }
         interactionsDisabled={interactionLocked}
-        questState={questState}
+        questState={markerQuestState}
       />
 
       <aside className="current-quest-tracker" aria-live="polite">
@@ -241,8 +264,7 @@ export function BaseCampScreen({
 
       {!storySequenceId && (
         <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
-          <img src={`${import.meta.env.BASE_URL}assets/ui/inventory.png`} alt="" aria-hidden="true" draggable={false} />
-          <span className="visually-hidden">인벤토리</span>
+          인벤토리
         </button>
       )}
 
@@ -267,7 +289,7 @@ export function BaseCampScreen({
         <div className="base-camp-story-overlay">
           <StoryPlayer
             key={storySequenceId}
-            sequence={NPC_STORY_SEQUENCES[storySequenceId]}
+            sequence={JSON.parse(JSON.stringify(NPC_STORY_SEQUENCES[storySequenceId]).replaceAll("{{playerName}}", playerState.name || "플레이어"))}
             onNavigate={onNavigate}
             onComplete={finishNpcStory}
             onStoryStarted={() => onAutoSave("storyStarted")}
@@ -350,6 +372,29 @@ export function BaseCampScreen({
         setFocusPointId("campCenter");
         void viewportRef.current?.restore(450);
       }} />}
+      {memoryCompletionOpen && <MemoryCompletionStory beforeUrl={memoryBeforeUrl} afterUrl={memoryAfterUrl} onComplete={() => {
+        setMemoryCompletionOpen(false);
+        setRewardOpen(true);
+      }} />}
+      {rewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-1"] ?? 0}
+        claimed={Boolean(rewardClaimed[memoryQuestId])}
+        onCancel={() => setRewardOpen(false)}
+        onClaim={() => {
+          if (rewardClaimed[memoryQuestId]) return;
+          const rareUnlocked = (floorBestCorrect["floor-1"] ?? 0) >= 6;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          setInventoryState((current) => {
+            let next = changeItemQuantity(current, "quest-memory-fragment", -1);
+            if (rareUnlocked) next = changeItemQuantity(next, "weapon-gojoseon-bronze-dagger", 1);
+            return next;
+          });
+          setQuestState((current) => ({ ...current, [memoryQuestId]: "completed" }));
+          setRewardClaimed(memoryQuestId);
+          onAutoSave("questCompleted");
+          setRewardOpen(false);
+        }}
+      />}
     </main>
   );
 }

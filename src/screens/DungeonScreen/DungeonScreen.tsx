@@ -99,8 +99,6 @@ import {
   type WeaponAttackType,
 } from "../../three/weapon/WeaponAnimationController";
 import { PlayerStatusBar } from "../../components/PlayerStatusBar";
-import { ItemIcon } from "../../components/ItemIcon";
-import { getItemDefinition } from "../../game/inventory/itemDefinitions";
 import type { PlayerState } from "../../game/player/playerState";
 import type { Dispatch, SetStateAction } from "react";
 import { resolvePlayerDamage } from "../../game/player/playerDamageResolver";
@@ -120,6 +118,8 @@ import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitBut
 import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
+import { DungeonReturnPrompt, MemoryFragmentEvent } from "../../components/MemoryFragmentEvent";
+import memoryFoundUrl from "../../assets/quest/memory-fragment-found.png";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -132,6 +132,10 @@ type DungeonScreenProps = {
   inventoryState: InventoryState;
   setInventoryState: Dispatch<SetStateAction<InventoryState>>;
   onInventoryChanged: () => void;
+  firstObjectiveEventSeen: boolean;
+  onObjectiveAcquired: (correctCount: number) => void;
+  onBestCorrect: (correctCount: number) => void;
+  floorQuestStarted: boolean;
 };
 
 type NormalCombatPhase =
@@ -247,6 +251,10 @@ export function DungeonScreen({
   inventoryState,
   setInventoryState,
   onInventoryChanged,
+  firstObjectiveEventSeen,
+  onObjectiveAcquired,
+  onBestCorrect,
+  floorQuestStarted,
 }: DungeonScreenProps) {
   const [dungeonRun] = useState(() => createFloor1DungeonRun());
   const dungeonMap = dungeonRun.map;
@@ -269,6 +277,7 @@ export function DungeonScreen({
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const weaponResultRef = useRef<WeaponAttackType | null>(null);
   const answersRef = useRef<boolean[]>([]);
+  const runCorrectCountRef = useRef(0);
   const questionIndexRef = useRef(0);
   const monsterPositionTargetRef = useRef(new THREE.Vector3(0, 0.05, -5));
   const criticalStateRef = useRef<CriticalCombatState>(INITIAL_CRITICAL_STATE);
@@ -356,6 +365,7 @@ export function DungeonScreen({
     useState<DungeonFailureState>("none");
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [runActionBusy, setRunActionBusy] = useState(false);
+  const [objectiveEvent, setObjectiveEvent] = useState<"first" | "retry" | null>(null);
 
   const combatQuestionCount =
     activeCombatKind === "elite" ? ELITE_COMBAT_QUESTION_COUNT : 2;
@@ -864,13 +874,13 @@ export function DungeonScreen({
       visualsRef.current.sword.root.visible = true;
     }
     setPhase("awaitPlayerAttack");
-    setCombatMessage(`${DEFAULT_PLAYER_NAME}의 공격!`);
+    setCombatMessage(`${playerState.name || DEFAULT_PLAYER_NAME}의 공격!`);
     setFloatingText(null);
   };
 
   const playPlayerAttack = async (isCorrect: boolean) => {
     setPhase("playerAttack");
-    setCombatMessage(`${DEFAULT_PLAYER_NAME}가 검을 휘두른다!`);
+    setCombatMessage(`${playerState.name || DEFAULT_PLAYER_NAME}가 검을 휘두른다!`);
     const randomValue =
       isCorrect && forceCriticalNextAttackRef.current ? 0 : Math.random();
     const criticalResult = resolveCritical(
@@ -1052,7 +1062,7 @@ export function DungeonScreen({
     setMustAttackNextTurn(true);
     setPhase("itemUse");
     setCombatMessage(
-      `${DEFAULT_PLAYER_NAME}는 ${potionName(kind)}을 사용했다.`,
+      `${playerState.name || DEFAULT_PLAYER_NAME}는 ${potionName(kind)}을 사용했다.`,
     );
   };
 
@@ -1495,6 +1505,10 @@ export function DungeonScreen({
     roomEventProcessingRef.current = true;
     setDungeonMode("roomEvent");
     try {
+      if (floorQuestStarted && (roomId === dungeonRun.generatedDungeon?.finalQuestRoomId || getDungeonRoom(roomId).type === "quest")) {
+        setObjectiveEvent(firstObjectiveEventSeen ? "retry" : "first");
+        return;
+      }
       const room = getDungeonRoom(roomId);
       const action = resolveRoomEntry(room, roomProgressRef.current[roomId]);
       if (action.type === "startCombat" || action.type === "startEliteCombat") {
@@ -1825,6 +1839,7 @@ export function DungeonScreen({
               questions={activeQuestions}
               onNavigate={onNavigate}
               onReviewChange={(result) => {
+                if (!pendingRoomEventResultRef.current && result.isCorrect) runCorrectCountRef.current += 1;
                 pendingRoomEventResultRef.current = result;
                 const current = activeRoomEventRef.current;
                 if (current) {
@@ -1951,7 +1966,6 @@ export function DungeonScreen({
                     disabled={quantity <= 0 || playerHp >= MAX_HP}
                     onClick={() => selectPotion(kind)}
                   >
-                    <ItemIcon item={getItemDefinition(kind === "smallPotion" ? "potion-small" : "potion-medium")!} />
                     <strong>{potionName(kind)}</strong>
                     <span>HP +{getPotionHealAmount(kind)}</span>
                     <small>보유 {quantity}개</small>
@@ -2006,6 +2020,7 @@ export function DungeonScreen({
             onNavigate={onNavigate}
             onReviewChange={(result) => {
               if (!pendingResultRef.current) {
+                if (result.isCorrect) runCorrectCountRef.current += 1;
                 pendingResultRef.current = result;
                 setPhase("review");
               }
@@ -2129,6 +2144,20 @@ export function DungeonScreen({
           onReturnToBaseCamp={returnAfterDefeat}
         />
       )}
+      {objectiveEvent === "first" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
+        setInventoryState((current) => changeItemQuantity(current, "quest-memory-fragment", 1));
+        onObjectiveAcquired(runCorrectCountRef.current);
+        onInventoryChanged();
+        onNavigate("baseCamp");
+      }} />}
+      {objectiveEvent === "retry" && <DungeonReturnPrompt onCancel={() => {
+        setObjectiveEvent(null);
+        setDungeonMode("exploration");
+      }} onConfirm={() => {
+        onBestCorrect(runCorrectCountRef.current);
+        onFloorCleared();
+        onNavigate("baseCamp");
+      }} />}
     </main>
   );
 }

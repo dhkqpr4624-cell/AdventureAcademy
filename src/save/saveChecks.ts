@@ -20,7 +20,7 @@ export function runSaveChecks() {
   state.storyActionState.executedActionIds = ["quest:quest-floor-1-memory-fragment:unlock:floor-1"];
   const save = createSaveDataFromGameState(state);
   const validated = validateCurrentSave(JSON.parse(JSON.stringify(save)));
-  check(validated?.version === 3, "current version");
+  check(validated?.version === 4, "current version");
   check(validated?.player.currentHp === 31, "HP round trip");
   check(validated?.player.gold === 19, "gold round trip");
   check(validated?.inventory.items["potion-small"] === 3, "inventory round trip");
@@ -31,7 +31,7 @@ export function runSaveChecks() {
 
 export function runSaveMigrationChecks() {
   const migrated = migrateSaveData({ playerLevel: 2, hp: 17, activeQuestId: "quest-floor-1-memory-fragment", unlockedFloors: ["floor-1"] });
-  check(migrated.success && migrated.data.version === 3 && migrated.data.player.gold === 0, "v0 migration");
+  check(migrated.success && migrated.data.version === 4 && migrated.data.player.gold === 0, "v0 migration");
   const v1 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
   v1.version = 1;
   v1.player = { level: 3, currentHp: 28, maxHp: 50 };
