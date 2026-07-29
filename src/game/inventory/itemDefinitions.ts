@@ -9,6 +9,7 @@ export type ItemDefinition = {
   description: string;
   icon: string;
   stackable: boolean;
+  defense?: number;
 };
 
 export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
@@ -21,6 +22,12 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     id: "weapon-gojoseon-bronze-dagger", name: "고조선 비파형 동검", type: "weaponSkin",
     rarity: "rare", description: "고조선의 비파형 동검을 본뜬 희귀 무기 스킨이다.",
     icon: `${import.meta.env.BASE_URL}assets/items/bipa-bronze-sword.png`, stackable: false,
+  },
+  "armor-gwanggaeto": {
+    id: "armor-gwanggaeto", name: "광개토대왕의 갑옷", type: "armor",
+    rarity: "rare", description: "고구려의 위대한 정복 군주를 상징하는 갑옷.",
+    icon: `${import.meta.env.BASE_URL}assets/items/gwanggaeto-armor.png`,
+    stackable: false, defense: 2,
   },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",

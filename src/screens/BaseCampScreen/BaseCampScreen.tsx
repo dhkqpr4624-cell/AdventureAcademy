@@ -28,12 +28,13 @@ import {
 } from "./BaseCampViewport";
 import { InventoryPopup } from "../../components/InventoryPopup";
 import { ShopPopup } from "../../components/ShopPopup";
-import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
+import { calculateEquippedDefense, changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { purchaseShopItem } from "../../game/inventory/shopResolver";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
 import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
+import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -287,6 +288,14 @@ export function BaseCampScreen({
         </button>
       </nav>
 
+      <Phase21ArmorDebug
+        inventory={inventoryState}
+        onGrant={(nextInventory) => {
+          setInventoryState(nextInventory);
+          onAutoSave("itemAcquired");
+        }}
+      />
+
       {storySequenceId && NPC_STORY_SEQUENCES[storySequenceId] && (
         <div className="base-camp-story-overlay">
           <StoryPlayer
@@ -373,13 +382,20 @@ export function BaseCampScreen({
         gold={playerState.gold}
         onClose={() => setInventoryOpen(false)}
         onEquipmentChange={(slot, itemId) => {
-          setInventoryState((current) => ({
-            ...current,
-            equippedItemIds: {
-              ...current.equippedItemIds,
-              [slot]: itemId,
-            },
-          }));
+          setInventoryState((current) => {
+            const next = {
+              ...current,
+              equippedItemIds: {
+                ...current.equippedItemIds,
+                [slot]: itemId,
+              },
+            };
+            setPlayerState((player) => ({
+              ...player,
+              defense: calculateEquippedDefense(next),
+            }));
+            return next;
+          });
           onAutoSave("equipmentChanged");
         }}
       />}

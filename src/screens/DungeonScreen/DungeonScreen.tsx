@@ -412,8 +412,8 @@ export function DungeonScreen({
     setFailureState("playerDefeated");
   };
 
-  const applyPlayerDamage = (damage: number) => {
-    const result = resolvePlayerDamage(playerHpRef.current, damage);
+  const applyPlayerDamage = (damage: number, defense = 0) => {
+    const result = resolvePlayerDamage(playerHpRef.current, damage, defense);
     playerHpRef.current = result.nextHp;
     setPlayerHp(result.nextHp);
     return result;
@@ -782,12 +782,12 @@ export function DungeonScreen({
         if (!mountedRef.current) {
           return;
         }
-        const damageResult = applyPlayerDamage(attackDamage);
+        const damageResult = applyPlayerDamage(attackDamage, playerState.defense);
         if (damageResult.isDefeated) {
           defeatProcessingRef.current = true;
         }
         setActualEnemyAttackCount((current) => current + 1);
-        setFloatingText(`-${attackDamage}`);
+        setFloatingText(`-${Math.max(1, attackDamage - playerState.defense)}`);
         setDamageFlash(true);
         window.setTimeout(() => {
           if (mountedRef.current) {

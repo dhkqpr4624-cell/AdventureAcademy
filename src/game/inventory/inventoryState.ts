@@ -1,6 +1,10 @@
+import { getItemDefinition } from "./itemDefinitions";
+
+export type EquipmentSlot = "weaponSkin" | "armor";
+
 export type InventoryState = {
   items: Record<string, number>;
-  equippedItemIds: Record<string, string | null>;
+  equippedItemIds: Record<EquipmentSlot, string | null>;
 };
 
 export const INITIAL_INVENTORY_STATE: InventoryState = {
@@ -9,8 +13,14 @@ export const INITIAL_INVENTORY_STATE: InventoryState = {
     "potion-small": 2,
     "potion-medium": 1,
   },
-  equippedItemIds: { weaponSkin: "weapon-basic-sword" },
+  equippedItemIds: { weaponSkin: "weapon-basic-sword", armor: null },
 };
+
+export function calculateEquippedDefense(state: InventoryState): number {
+  const armorId = state.equippedItemIds.armor;
+  const armor = armorId ? getItemDefinition(armorId) : null;
+  return armor?.type === "armor" ? Math.max(0, armor.defense ?? 0) : 0;
+}
 
 export function getItemQuantity(state: InventoryState, itemId: string) {
   return Math.max(0, Math.floor(state.items[itemId] ?? 0));

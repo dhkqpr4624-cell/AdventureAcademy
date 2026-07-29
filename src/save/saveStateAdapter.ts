@@ -5,7 +5,7 @@ import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import type { QuestState } from "../game/quest/questTypes";
 import { INITIAL_STORY_ACTION_STATE, type StoryActionState } from "../game/story/storyActionTypes";
 import { CURRENT_SAVE_VERSION, type CurrentSaveData } from "./saveTypes";
-import { INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
+import { calculateEquippedDefense, INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
 
 export type GameSaveState = {
   playerState: PlayerState; questState: QuestState; floorUnlockState: FloorUnlockState;
@@ -33,7 +33,11 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
   const activeQuestId = Object.entries(state.questState).find(([, value]) => value === "active")?.[0] ?? null;
   return {
     version: CURRENT_SAVE_VERSION, savedAt: new Date().toISOString(),
-    playTimeSeconds: state.playTimeSeconds, player: { ...state.playerState, name: state.playerState.name ?? "" },
+    playTimeSeconds: state.playTimeSeconds, player: {
+      ...state.playerState,
+      name: state.playerState.name ?? "",
+      defense: calculateEquippedDefense(state.inventoryState),
+    },
     quests: { statuses: { ...state.questState }, activeQuestId },
     floors: { unlockedFloorIds: [...state.floorUnlockState.unlockedFloorIds] },
     story: { completedStoryIds: [...state.completedStoryIds], checkpointByStoryId: { ...state.checkpointByStoryId }, executedActionIds: [...state.storyActionState.executedActionIds] },
@@ -50,17 +54,24 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
   };
 }
 export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
+  const inventoryState: InventoryState = {
+    items: { ...data.inventory.items },
+    equippedItemIds: {
+      weaponSkin: data.inventory.equippedItemIds.weaponSkin ?? null,
+      armor: data.inventory.equippedItemIds.armor ?? null,
+    },
+  };
   return {
-    playerState: { ...data.player }, questState: { ...data.quests.statuses },
+    playerState: {
+      ...data.player,
+      defense: calculateEquippedDefense(inventoryState),
+    }, questState: { ...data.quests.statuses },
     floorUnlockState: { unlockedFloorIds: [...data.floors.unlockedFloorIds] as FloorUnlockState["unlockedFloorIds"] },
     storyActionState: { executedActionIds: [...data.story.executedActionIds] },
     playTimeSeconds: data.playTimeSeconds, completedStoryIds: [...data.story.completedStoryIds],
     checkpointByStoryId: { ...data.story.checkpointByStoryId },
     currentFloorId: data.dungeon.currentFloorId, clearedFloorIds: [...data.dungeon.clearedFloorIds],
-    inventoryState: {
-      items: { ...data.inventory.items },
-      equippedItemIds: { ...data.inventory.equippedItemIds },
-    },
+    inventoryState,
     floorBestCorrect: { ...data.questProgress.floorBestCorrect },
     firstObjectiveEventSeen: { ...data.questProgress.firstObjectiveEventSeen },
     rewardClaimed: { ...data.questProgress.rewardClaimed },

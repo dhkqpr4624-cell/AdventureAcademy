@@ -5,6 +5,7 @@ export type PlayerState = {
   currentHp: number;
   maxHp: number;
   gold: number;
+  defense: number;
 };
 
 export const INITIAL_PLAYER_STATE: PlayerState = {
@@ -12,4 +13,5 @@ export const INITIAL_PLAYER_STATE: PlayerState = {
   currentHp: PLAYER_MAX_HP,
   maxHp: PLAYER_MAX_HP,
   gold: 0,
+  defense: 0,
 };

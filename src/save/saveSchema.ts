@@ -18,6 +18,7 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
   const player = value.player;
   if (!Number.isFinite(player.currentHp) || !Number.isFinite(player.maxHp) ||
       !Number.isFinite(player.gold) || (player.gold as number) < 0 ||
+      !Number.isFinite(player.defense) || (player.defense as number) < 0 ||
       typeof player.name !== "string" ||
       (player.maxHp as number) <= 0 ||
       (player.currentHp as number) < 0 || (player.currentHp as number) > (player.maxHp as number)) return null;
@@ -33,9 +34,15 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     const normalized = Math.floor(quantity as number);
     if (normalized > 0) items[itemId] = normalized;
   }
-  const equippedItemIds: Record<string, string | null> = {};
+  const equippedItemIds: Record<"weaponSkin" | "armor", string | null> = {
+    weaponSkin: null,
+    armor: null,
+  };
   for (const [slot, itemId] of Object.entries(value.inventory.equippedItemIds)) {
+    if (slot !== "weaponSkin" && slot !== "armor") continue;
     if (itemId !== null && (typeof itemId !== "string" || !ITEM_DEFINITION_REGISTRY[itemId])) return null;
+    const definition = itemId ? ITEM_DEFINITION_REGISTRY[itemId] : null;
+    if (definition && definition.type !== slot) return null;
     equippedItemIds[slot] = itemId as string | null;
   }
   const statuses: Record<string, QuestStatus> = {};
@@ -60,6 +67,7 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       currentHp: player.currentHp as number,
       maxHp: player.maxHp as number,
       gold: Math.floor(player.gold as number),
+      defense: Math.floor(player.defense as number),
     },
     quests: { statuses, activeQuestId: activeQuestId as string | null },
     floors: { unlockedFloorIds: unique(value.floors.unlockedFloorIds as string[]) },

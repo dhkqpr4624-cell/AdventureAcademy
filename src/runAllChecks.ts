@@ -40,6 +40,7 @@ import { runDungeonEventVisualPlacementChecks } from "./game/dungeon/dungeonEven
 import { runDungeonExitButtonChecks } from "./game/dungeon/dungeonExitButtonChecks";
 import { runWorldDirectionNavigationChecks } from "./game/dungeon/navigation/worldDirectionNavigationChecks";
 import { runInventoryChecks } from "./game/inventory/inventoryChecks";
+import { runPhase21ArmorDebugChecks } from "./debug/Phase21ArmorDebug";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -87,6 +88,7 @@ const checks = [
   ["autosave checks", runAutoSaveChecks],
   ["story choice checks", runStoryChoiceChecks],
   ["inventory/shop checks", runInventoryChecks],
+  ["phase21 armor/debug checks", runPhase21ArmorDebugChecks],
 ] as const;
 
 for (const [label, run] of checks) {

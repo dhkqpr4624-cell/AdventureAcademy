@@ -15,15 +15,20 @@ export function runSaveChecks() {
   state.playerState.currentHp = 31;
   state.playerState.gold = 19;
   state.inventoryState.items["potion-small"] = 3;
+  state.inventoryState.items["armor-gwanggaeto"] = 1;
+  state.inventoryState.equippedItemIds.armor = "armor-gwanggaeto";
+  state.playerState.defense = 2;
   state.questState["quest-floor-1-memory-fragment"] = "active";
   state.floorUnlockState.unlockedFloorIds = ["floor-1"];
   state.storyActionState.executedActionIds = ["quest:quest-floor-1-memory-fragment:unlock:floor-1"];
   const save = createSaveDataFromGameState(state);
   const validated = validateCurrentSave(JSON.parse(JSON.stringify(save)));
-  check(validated?.version === 4, "current version");
+  check(validated?.version === 5, "current version");
   check(validated?.player.currentHp === 31, "HP round trip");
   check(validated?.player.gold === 19, "gold round trip");
   check(validated?.inventory.items["potion-small"] === 3, "inventory round trip");
+  check(validated?.inventory.equippedItemIds.armor === "armor-gwanggaeto", "armor round trip");
+  check(validated?.player.defense === 2, "defense round trip");
   check(validated?.quests.activeQuestId === "quest-floor-1-memory-fragment", "active quest");
   check(validated?.floors.unlockedFloorIds.includes("floor-1"), "floor unlock");
   check(validated?.story.executedActionIds.length === 1, "action id");
@@ -31,7 +36,7 @@ export function runSaveChecks() {
 
 export function runSaveMigrationChecks() {
   const migrated = migrateSaveData({ playerLevel: 2, hp: 17, activeQuestId: "quest-floor-1-memory-fragment", unlockedFloors: ["floor-1"] });
-  check(migrated.success && migrated.data.version === 4 && migrated.data.player.gold === 0, "v0 migration");
+  check(migrated.success && migrated.data.version === 5 && migrated.data.player.gold === 0 && migrated.data.player.defense === 0, "v0 migration");
   const v1 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
   v1.version = 1;
   v1.player = { level: 3, currentHp: 28, maxHp: 50 };

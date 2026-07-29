@@ -16,4 +16,7 @@ export function runPlayerDamageChecks() {
     assert(result.nextHp === expectedHp, `${hp} - ${damage} HP mismatch`);
     assert(result.isDefeated === expectedDefeated, `${hp} - ${damage} defeat mismatch`);
   }
+  assert(resolvePlayerDamage(50, 6, 2).nextHp === 46, "6 damage - 2 defense must deal 4");
+  assert(resolvePlayerDamage(50, 2, 5).nextHp === 49, "minimum damage must be 1");
+  assert(resolvePlayerDamage(50, 0, 5).nextHp === 50, "zero damage must remain zero");
 }
