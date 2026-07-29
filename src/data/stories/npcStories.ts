@@ -100,17 +100,8 @@ theo.scenes[0].steps.push(
     prompt: "무엇을 하시겠습니까?",
     advanceMode: "click",
     options: [
-      { id: "buy-items", label: "아이템 사기", nextStepId: "npc-theo-shop-pending" },
+      { id: "buy-items", label: "아이템 사기", actionId: "open-theo-shop", closeStory: true },
       { id: "end-dialogue", label: "대화 끝내기", closeStory: true },
     ],
-  },
-  {
-    id: "npc-theo-shop-pending",
-    type: "dialogue",
-    speakerId: "theo",
-    speakerName: "테오",
-    activeActorId: "theo",
-    text: "상점은 아직 준비 중입니다.",
-    advanceMode: "click",
   },
 );

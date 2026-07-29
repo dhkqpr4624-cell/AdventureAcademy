@@ -131,6 +131,7 @@ export type StoryChoiceOption = {
   label: string;
   nextStepId?: string;
   closeStory?: boolean;
+  actionId?: string;
 };
 
 export type StoryScene = {

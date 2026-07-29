@@ -39,6 +39,7 @@ import { runDungeonVisualFocusChecks } from "./three/dungeon/visuals/dungeonVisu
 import { runDungeonEventVisualPlacementChecks } from "./game/dungeon/dungeonEventVisualPlacementChecks";
 import { runDungeonExitButtonChecks } from "./game/dungeon/dungeonExitButtonChecks";
 import { runWorldDirectionNavigationChecks } from "./game/dungeon/navigation/worldDirectionNavigationChecks";
+import { runInventoryChecks } from "./game/inventory/inventoryChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -85,6 +86,7 @@ const checks = [
   ["save backup checks", runSaveBackupChecks],
   ["autosave checks", runAutoSaveChecks],
   ["story choice checks", runStoryChoiceChecks],
+  ["inventory/shop checks", runInventoryChecks],
 ] as const;
 
 for (const [label, run] of checks) {

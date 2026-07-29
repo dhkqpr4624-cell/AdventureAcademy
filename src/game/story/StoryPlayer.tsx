@@ -30,6 +30,7 @@ type StoryPlayerProps = {
   onStoryCompleted?: (storyId: string) => void;
   playerStatus?: PlayerState;
   presentationMode?: StoryPresentationMode;
+  onChoiceAction?: (actionId: string) => void;
 };
 
 const INITIAL_RENDER_STATE: StoryRenderState = {
@@ -99,6 +100,7 @@ export function StoryPlayer({
   onCheckpointReached,
   playerStatus,
   presentationMode = DEFAULT_STORY_PRESENTATION_MODE,
+  onChoiceAction,
 }: StoryPlayerProps) {
   const steps = useMemo(
     () => sequence.scenes.flatMap((scene) => scene.steps),
@@ -262,6 +264,7 @@ export function StoryPlayer({
     (currentStep?.type === "dialogue" || currentStep?.type === "narration");
 
   const choose = (option: StoryChoiceOption) => {
+    if (option.actionId) onChoiceAction?.(option.actionId);
     if (choiceLockedRef.current || isTransitioning) return;
     choiceLockedRef.current = true;
     if (option.closeStory) {

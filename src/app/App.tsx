@@ -85,6 +85,9 @@ export function App() {
       }} onStoryCheckpoint={(id, checkpoint) => { setGame((current) => ({ ...current, checkpointByStoryId: { ...current.checkpointByStoryId, [id]: checkpoint } })); requestSave("storyCheckpoint"); }} />;
       case "baseCamp": return <BaseCampScreen
         onNavigate={navigate} playerState={game.playerState}
+        setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
+        inventoryState={game.inventoryState}
+        setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
         questState={game.questState} setQuestState={(value) => setGame((current) => ({ ...current, questState: typeof value === "function" ? value(current.questState) : value }))}
         floorUnlockState={game.floorUnlockState} setFloorUnlockState={(value) => setGame((current) => ({ ...current, floorUnlockState: typeof value === "function" ? value(current.floorUnlockState) : value }))}
         storyActionState={game.storyActionState} setStoryActionState={(value) => setGame((current) => ({ ...current, storyActionState: typeof value === "function" ? value(current.storyActionState) : value }))}
@@ -94,6 +97,9 @@ export function App() {
       />;
       case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
+        inventoryState={game.inventoryState}
+        setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
+        onInventoryChanged={() => requestSave("itemAcquired")}
         onGoldAwarded={() => requestSave("itemAcquired")}
         onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
         onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null }))}

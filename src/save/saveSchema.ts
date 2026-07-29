@@ -1,6 +1,7 @@
 import { QUEST_DEFINITIONS } from "../game/quest/questDefinitions";
 import type { QuestStatus } from "../game/quest/questTypes";
 import { CURRENT_SAVE_VERSION, type CurrentSaveData } from "./saveTypes";
+import { ITEM_DEFINITION_REGISTRY } from "../game/inventory/itemDefinitions";
 
 const STATUSES = new Set<QuestStatus>(["locked", "available", "active", "completed"]);
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -22,6 +23,18 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
   if (!isObject(value.quests.statuses) || !strings(value.floors.unlockedFloorIds) ||
       !strings(value.story.completedStoryIds) || !isObject(value.story.checkpointByStoryId) ||
       !strings(value.story.executedActionIds) || !strings(value.dungeon.clearedFloorIds)) return null;
+  if (!isObject(value.inventory.items) || !isObject(value.inventory.equippedItemIds)) return null;
+  const items: Record<string, number> = {};
+  for (const [itemId, quantity] of Object.entries(value.inventory.items)) {
+    if (!ITEM_DEFINITION_REGISTRY[itemId] || !Number.isFinite(quantity) || (quantity as number) < 0) return null;
+    const normalized = Math.floor(quantity as number);
+    if (normalized > 0) items[itemId] = normalized;
+  }
+  const equippedItemIds: Record<string, string | null> = {};
+  for (const [slot, itemId] of Object.entries(value.inventory.equippedItemIds)) {
+    if (itemId !== null && (typeof itemId !== "string" || !ITEM_DEFINITION_REGISTRY[itemId])) return null;
+    equippedItemIds[slot] = itemId as string | null;
+  }
   const statuses: Record<string, QuestStatus> = {};
   for (const quest of QUEST_DEFINITIONS) {
     const status = value.quests.statuses[quest.id];
@@ -55,6 +68,6 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       currentFloorId: value.dungeon.currentFloorId === null || typeof value.dungeon.currentFloorId === "string" ? value.dungeon.currentFloorId as string | null : null,
       clearedFloorIds: unique(value.dungeon.clearedFloorIds as string[]),
     },
-    inventory: { items: {}, equippedItemIds: {} },
+    inventory: { items, equippedItemIds },
   };
 }

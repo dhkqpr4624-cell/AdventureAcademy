@@ -26,10 +26,17 @@ import {
   BaseCampViewport,
   type BaseCampViewportController,
 } from "./BaseCampViewport";
+import { InventoryPopup } from "../../components/InventoryPopup";
+import { ShopPopup } from "../../components/ShopPopup";
+import type { InventoryState } from "../../game/inventory/inventoryState";
+import { purchaseShopItem } from "../../game/inventory/shopResolver";
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
   playerState: PlayerState;
+  setPlayerState: Dispatch<SetStateAction<PlayerState>>;
+  inventoryState: InventoryState;
+  setInventoryState: Dispatch<SetStateAction<InventoryState>>;
   questState: QuestState;
   setQuestState: Dispatch<SetStateAction<QuestState>>;
   floorUnlockState: FloorUnlockState;
@@ -44,6 +51,9 @@ type BaseCampScreenProps = {
 export function BaseCampScreen({
   onNavigate,
   playerState,
+  setPlayerState,
+  inventoryState,
+  setInventoryState,
   questState,
   setQuestState,
   floorUnlockState,
@@ -65,10 +75,25 @@ export function BaseCampScreen({
   const [questDetail, setQuestDetail] = useState<QuestDefinition | null>(null);
   const [floorListOpen, setFloorListOpen] = useState(false);
   const [cameraTransitioning, setCameraTransitioning] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [shopMessage, setShopMessage] = useState("");
   const activeQuest = QuestManager.getActiveQuest(questState);
   const interactionLocked = Boolean(
-    storySequenceId || questDetail || floorListOpen || cameraTransitioning,
+    storySequenceId || questDetail || floorListOpen || inventoryOpen || shopOpen || cameraTransitioning,
   );
+
+  const buyItem = (itemId: string) => {
+    const result = purchaseShopItem(inventoryState, playerState.gold, itemId);
+    if (!result.success) {
+      setShopMessage(result.reason === "maxQuantity" ? "이미 최대 개수만큼 보유하고 있습니다." : "Gold가 부족합니다.");
+      return;
+    }
+    setInventoryState(result.inventory);
+    setPlayerState((current) => ({ ...current, gold: result.gold }));
+    setShopMessage("구매했습니다.");
+    onAutoSave("shopUsed");
+  };
 
   const focusDungeonEntranceAndOpen = async (
     region: BaseCampInteractionRegion,
@@ -214,6 +239,12 @@ export function BaseCampScreen({
         )}
       </aside>
 
+      {!storySequenceId && (
+        <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
+          인벤토리
+        </button>
+      )}
+
       <nav className="base-camp-main-controls" aria-label="베이스캠프 이동">
         <button
           type="button"
@@ -242,6 +273,14 @@ export function BaseCampScreen({
             onStoryCompleted={onStoryCompleted}
             onCheckpointReached={onStoryCheckpoint}
             presentationMode="baseCampOverlay"
+            onChoiceAction={(actionId) => {
+              if (actionId === "open-theo-shop") {
+                setStorySequenceId(null);
+                setSelectedNpc(null);
+                setShopMessage("");
+                setShopOpen(true);
+              }
+            }}
           />
         </div>
       )}
@@ -304,6 +343,12 @@ export function BaseCampScreen({
           <button type="button" onClick={closeFloorList}>닫기</button>
         </section>
       )}
+      {inventoryOpen && <InventoryPopup inventory={inventoryState} gold={playerState.gold} onClose={() => setInventoryOpen(false)} />}
+      {shopOpen && <ShopPopup inventory={inventoryState} gold={playerState.gold} message={shopMessage} onBuy={buyItem} onClose={() => {
+        setShopOpen(false);
+        setFocusPointId("campCenter");
+        void viewportRef.current?.restore(450);
+      }} />}
     </main>
   );
 }

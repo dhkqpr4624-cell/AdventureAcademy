@@ -26,7 +26,7 @@ export function PlayerStatusBar(props: PlayerStatusBarProps) {
   return (
     <div
       className="combat-status-bar player-status-bar"
-      aria-label={`플레이어 체력 ${view.currentHp} / ${view.maxHp}, 골드 ${view.gold}${
+      aria-label={`플레이어 체력 ${view.currentHp} / ${view.maxHp}${
         view.questionLabel ? `, ${view.questionLabel}` : ""
       }`}
     >
@@ -47,7 +47,6 @@ export function PlayerStatusBar(props: PlayerStatusBarProps) {
         </div>
         <strong>{view.currentHp} / {view.maxHp}</strong>
       </div>
-      <strong className="combat-status-gold">{view.gold} Gold</strong>
       {view.questionLabel && (
         <div className="combat-status-question">
           <span>QUESTION</span>

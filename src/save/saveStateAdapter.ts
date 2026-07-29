@@ -5,12 +5,14 @@ import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import type { QuestState } from "../game/quest/questTypes";
 import { INITIAL_STORY_ACTION_STATE, type StoryActionState } from "../game/story/storyActionTypes";
 import { CURRENT_SAVE_VERSION, type CurrentSaveData } from "./saveTypes";
+import { INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
 
 export type GameSaveState = {
   playerState: PlayerState; questState: QuestState; floorUnlockState: FloorUnlockState;
   storyActionState: StoryActionState; playTimeSeconds: number;
   completedStoryIds: string[]; checkpointByStoryId: Record<string, string>;
   currentFloorId: string | null; clearedFloorIds: string[];
+  inventoryState: InventoryState;
 };
 export const createInitialGameSaveState = (): GameSaveState => ({
   playerState: { ...INITIAL_PLAYER_STATE }, questState: { ...INITIAL_QUEST_STATE },
@@ -18,6 +20,10 @@ export const createInitialGameSaveState = (): GameSaveState => ({
   storyActionState: { ...INITIAL_STORY_ACTION_STATE, executedActionIds: [] },
   playTimeSeconds: 0, completedStoryIds: [], checkpointByStoryId: {},
   currentFloorId: null, clearedFloorIds: [],
+  inventoryState: {
+    items: { ...INITIAL_INVENTORY_STATE.items },
+    equippedItemIds: { ...INITIAL_INVENTORY_STATE.equippedItemIds },
+  },
 });
 export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveData {
   const activeQuestId = Object.entries(state.questState).find(([, value]) => value === "active")?.[0] ?? null;
@@ -28,7 +34,10 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
     floors: { unlockedFloorIds: [...state.floorUnlockState.unlockedFloorIds] },
     story: { completedStoryIds: [...state.completedStoryIds], checkpointByStoryId: { ...state.checkpointByStoryId }, executedActionIds: [...state.storyActionState.executedActionIds] },
     dungeon: { currentFloorId: state.currentFloorId, clearedFloorIds: [...state.clearedFloorIds] },
-    inventory: { items: {}, equippedItemIds: {} },
+    inventory: {
+      items: { ...state.inventoryState.items },
+      equippedItemIds: { ...state.inventoryState.equippedItemIds },
+    },
   };
 }
 export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
@@ -39,6 +48,9 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
     playTimeSeconds: data.playTimeSeconds, completedStoryIds: [...data.story.completedStoryIds],
     checkpointByStoryId: { ...data.story.checkpointByStoryId },
     currentFloorId: data.dungeon.currentFloorId, clearedFloorIds: [...data.dungeon.clearedFloorIds],
+    inventoryState: {
+      items: { ...data.inventory.items },
+      equippedItemIds: { ...data.inventory.equippedItemIds },
+    },
   };
 }
-

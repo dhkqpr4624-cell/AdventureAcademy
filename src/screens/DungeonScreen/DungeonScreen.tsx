@@ -36,8 +36,6 @@ import { runDungeonRoomEventChecks } from "../../game/dungeon/dungeonRoomEventCh
 import { resolveDungeonRoomEvent } from "../../game/dungeon/dungeonRoomEventResolver";
 import {
   DUNGEON_PLAYER_MAX_HP,
-  INITIAL_MEDIUM_POTION_QUANTITY,
-  INITIAL_SMALL_POTION_QUANTITY,
   applyDungeonPlayerHealing,
 } from "../../game/dungeon/dungeonPlayerState";
 import { runDungeonPlayerStateChecks } from "../../game/dungeon/dungeonPlayerStateChecks";
@@ -119,6 +117,7 @@ import {
 import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitButtonResolver";
 import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
+import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -128,6 +127,9 @@ type DungeonScreenProps = {
   onDungeonAbandoned: () => void;
   onFloorCleared: () => void;
   onGoldAwarded: () => void;
+  inventoryState: InventoryState;
+  setInventoryState: Dispatch<SetStateAction<InventoryState>>;
+  onInventoryChanged: () => void;
 };
 
 type NormalCombatPhase =
@@ -240,6 +242,9 @@ export function DungeonScreen({
   onDungeonAbandoned,
   onFloorCleared,
   onGoldAwarded,
+  inventoryState,
+  setInventoryState,
+  onInventoryChanged,
 }: DungeonScreenProps) {
   const [dungeonRun] = useState(() => createFloor1DungeonRun());
   const dungeonMap = dungeonRun.map;
@@ -325,10 +330,10 @@ export function DungeonScreen({
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
   const [interactionLocked, setInteractionLocked] = useState(false);
   const [smallPotionQuantity, setSmallPotionQuantity] = useState(
-    INITIAL_SMALL_POTION_QUANTITY,
+    getItemQuantity(inventoryState, "potion-small"),
   );
   const [mediumPotionQuantity, setMediumPotionQuantity] = useState(
-    INITIAL_MEDIUM_POTION_QUANTITY,
+    getItemQuantity(inventoryState, "potion-medium"),
   );
   const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
   const [mustAttackNextTurn, setMustAttackNextTurn] = useState(false);
@@ -1036,9 +1041,12 @@ export function DungeonScreen({
     pendingPotionResultRef.current = result;
     if (kind === "smallPotion") {
       setSmallPotionQuantity(result.remainingQuantity);
+      setInventoryState((current) => changeItemQuantity(current, "potion-small", -1));
     } else {
       setMediumPotionQuantity(result.remainingQuantity);
+      setInventoryState((current) => changeItemQuantity(current, "potion-medium", -1));
     }
+    onInventoryChanged();
     setMustAttackNextTurn(true);
     setPhase("itemUse");
     setCombatMessage(
@@ -1596,8 +1604,8 @@ export function DungeonScreen({
       playerHpRef.current = MAX_HP;
       setPlayerHp(MAX_HP);
     }
-    setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
-    setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
+    setSmallPotionQuantity(getItemQuantity(inventoryState, "potion-small"));
+    setMediumPotionQuantity(getItemQuantity(inventoryState, "potion-medium"));
     const startRoom = getDungeonRoom(dungeonMap.startRoomId);
     visualAssemblyRef.current?.setActiveRoom(dungeonMap.startRoomId);
     visualsRef.current?.dungeonCamera.setPose(startRoom.explorationCameraPose);
