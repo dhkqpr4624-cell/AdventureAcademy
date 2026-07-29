@@ -7,12 +7,13 @@ function check(condition: unknown, message: string): asserts condition {
 export function runDungeonGoldDropChecks() {
   const normal = resolveDungeonGoldDrop("gold-seed", "room-a", "normal");
   const elite = resolveDungeonGoldDrop("gold-seed", "room-b", "elite");
-  check(normal >= 1 && normal <= 3, "normal drop is 1-3");
-  check(elite >= 3 && elite <= 5, "elite drop is 3-5");
+  const treasure = resolveDungeonGoldDrop("gold-seed", "room-c", "treasure");
+  check(normal >= 3 && normal <= 6, "normal drop is 3-6");
+  check(elite >= 6 && elite <= 10, "elite drop is 6-10");
+  check(treasure >= 1 && treasure <= 20, "treasure drop is 1-20");
   check(
     normal === resolveDungeonGoldDrop("gold-seed", "room-a", "normal"),
     "same seed and room repeat",
   );
   console.info("dungeon gold drop checks: PASS");
 }
-

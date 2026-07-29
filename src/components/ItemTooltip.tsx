@@ -71,6 +71,7 @@ export function ItemTooltip({
             style={{
               left: Math.min(Math.max(12, anchor.left), window.innerWidth - 332),
               top: Math.max(12, anchor.top - 12),
+              whiteSpace: "pre-line",
             }}
           >
             {content}

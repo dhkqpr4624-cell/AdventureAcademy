@@ -18,7 +18,6 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
   const player = value.player;
   if (!Number.isFinite(player.currentHp) || !Number.isFinite(player.maxHp) ||
       !Number.isFinite(player.gold) || (player.gold as number) < 0 ||
-      !Number.isFinite(player.defense) || (player.defense as number) < 0 ||
       typeof player.name !== "string" ||
       (player.maxHp as number) <= 0 ||
       (player.currentHp as number) < 0 || (player.currentHp as number) > (player.maxHp as number)) return null;
@@ -67,7 +66,6 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       currentHp: player.currentHp as number,
       maxHp: player.maxHp as number,
       gold: Math.floor(player.gold as number),
-      defense: Math.floor(player.defense as number),
     },
     quests: { statuses, activeQuestId: activeQuestId as string | null },
     floors: { unlockedFloorIds: unique(value.floors.unlockedFloorIds as string[]) },

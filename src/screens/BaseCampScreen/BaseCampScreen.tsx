@@ -28,13 +28,14 @@ import {
 } from "./BaseCampViewport";
 import { InventoryPopup } from "../../components/InventoryPopup";
 import { ShopPopup } from "../../components/ShopPopup";
-import { calculateEquippedDefense, changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
+import { calculatePlayerMaxHp, changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { purchaseShopItem } from "../../game/inventory/shopResolver";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
 import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
 import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
+import { isRareRewardEligible } from "../../game/balance/floorBalance";
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -392,7 +393,8 @@ export function BaseCampScreen({
             };
             setPlayerState((player) => ({
               ...player,
-              defense: calculateEquippedDefense(next),
+              maxHp: calculatePlayerMaxHp(next),
+              currentHp: Math.min(player.currentHp, calculatePlayerMaxHp(next)),
             }));
             return next;
           });
@@ -414,7 +416,10 @@ export function BaseCampScreen({
         onCancel={() => setRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[memoryQuestId]) return;
-          const rareUnlocked = (floorBestCorrect["floor-1"] ?? 0) >= 6;
+          const rareUnlocked = isRareRewardEligible(
+            floorBestCorrect["floor-1"] ?? 0,
+            8,
+          );
           setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
           setInventoryState((current) => {
             let next = changeItemQuantity(current, "quest-memory-fragment", -1);

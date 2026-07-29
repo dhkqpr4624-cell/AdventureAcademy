@@ -4,6 +4,20 @@ import { getItemQuantity, type InventoryState } from "../game/inventory/inventor
 import { ItemIcon } from "./ItemIcon";
 import { ItemTooltip } from "./ItemTooltip";
 
+const rarityLabel = (rarity: string) =>
+  rarity.charAt(0).toUpperCase() + rarity.slice(1);
+
+const tooltipContent = (item: NonNullable<ReturnType<typeof getItemDefinition>>) => {
+  const lines = [item.name, rarityLabel(item.rarity)];
+  if (item.type === "armor") {
+    lines.push(`최대체력 +${item.equipmentStats?.maxHpBonus ?? 0}`);
+  } else if (item.type === "weaponSkin") {
+    lines.push("외형 전용 · 능력치 변화 없음");
+  }
+  lines.push(item.description);
+  return lines.join("\n");
+};
+
 const INVENTORY_COLUMN_COUNT = 8;
 const INVENTORY_MINIMUM_SLOT_COUNT = 32;
 
@@ -50,7 +64,7 @@ export function InventoryPopup({
             const quantity = getItemQuantity(inventory, itemId);
             const isEquipped = equippedItemIds.has(itemId);
             return (
-              <ItemTooltip key={itemId} content={item.description}>
+              <ItemTooltip key={itemId} content={tooltipContent(item)}>
                 {(bindings) => (
                   <button
                     type="button"

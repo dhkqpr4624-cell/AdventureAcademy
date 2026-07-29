@@ -1,8 +1,9 @@
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "./inventoryState";
+import { getPotionPriceForFloor } from "../balance/floorBalance";
 
 export const SHOP_PRODUCTS = [
-  { itemId: "potion-small", price: 8, maxQuantity: 3 },
-  { itemId: "potion-medium", price: 15, maxQuantity: 2 },
+  { itemId: "potion-small", price: getPotionPriceForFloor(1, "small"), maxQuantity: 3 },
+  { itemId: "potion-medium", price: getPotionPriceForFloor(1, "medium"), maxQuantity: 2 },
 ] as const;
 
 export type ShopPurchaseResult =

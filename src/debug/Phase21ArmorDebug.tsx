@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  calculateEquippedDefense,
+  calculatePlayerMaxHp,
   changeItemQuantity,
   getItemQuantity,
   type InventoryState,
@@ -40,8 +40,8 @@ export function runPhase21ArmorDebugChecks(): void {
       armor: PHASE21_DEBUG_ARMOR_ID,
     },
   };
-  if (calculateEquippedDefense(equipped) !== 2) {
-    throw new Error("[Phase21ArmorDebug] equipped armor must provide 2 defense");
+  if (calculatePlayerMaxHp(equipped) !== 55) {
+    throw new Error("[Phase21ArmorDebug] equipped armor must provide 5 max HP");
   }
 }
 
@@ -59,10 +59,10 @@ export function Phase21ArmorDebug({
     <aside
       aria-label="Phase21 Debug"
       style={{
-        position: "absolute",
+        position: "fixed",
         right: 16,
-        bottom: 16,
-        zIndex: 20,
+        bottom: 72,
+        zIndex: 10000,
         display: "grid",
         gap: 8,
       }}

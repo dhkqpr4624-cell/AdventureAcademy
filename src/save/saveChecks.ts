@@ -17,18 +17,17 @@ export function runSaveChecks() {
   state.inventoryState.items["potion-small"] = 3;
   state.inventoryState.items["armor-gwanggaeto"] = 1;
   state.inventoryState.equippedItemIds.armor = "armor-gwanggaeto";
-  state.playerState.defense = 2;
   state.questState["quest-floor-1-memory-fragment"] = "active";
   state.floorUnlockState.unlockedFloorIds = ["floor-1"];
   state.storyActionState.executedActionIds = ["quest:quest-floor-1-memory-fragment:unlock:floor-1"];
   const save = createSaveDataFromGameState(state);
   const validated = validateCurrentSave(JSON.parse(JSON.stringify(save)));
-  check(validated?.version === 5, "current version");
+  check(validated?.version === 6, "current version");
   check(validated?.player.currentHp === 31, "HP round trip");
   check(validated?.player.gold === 19, "gold round trip");
   check(validated?.inventory.items["potion-small"] === 3, "inventory round trip");
   check(validated?.inventory.equippedItemIds.armor === "armor-gwanggaeto", "armor round trip");
-  check(validated?.player.defense === 2, "defense round trip");
+  check(validated?.player.maxHp === 55, "armor max HP round trip");
   check(validated?.quests.activeQuestId === "quest-floor-1-memory-fragment", "active quest");
   check(validated?.floors.unlockedFloorIds.includes("floor-1"), "floor unlock");
   check(validated?.story.executedActionIds.length === 1, "action id");
@@ -36,7 +35,7 @@ export function runSaveChecks() {
 
 export function runSaveMigrationChecks() {
   const migrated = migrateSaveData({ playerLevel: 2, hp: 17, activeQuestId: "quest-floor-1-memory-fragment", unlockedFloors: ["floor-1"] });
-  check(migrated.success && migrated.data.version === 5 && migrated.data.player.gold === 0 && migrated.data.player.defense === 0, "v0 migration");
+  check(migrated.success && migrated.data.version === 6 && migrated.data.player.gold === 0 && migrated.data.player.maxHp === 50, "v0 migration");
   const v1 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
   v1.version = 1;
   v1.player = { level: 3, currentHp: 28, maxHp: 50 };
@@ -57,6 +56,27 @@ export function runSaveMigrationChecks() {
       migratedV2.migratedFromVersion === 2 &&
       migratedV2.data.inventory.items["potion-small"] === 2,
     "v2 initializes inventory and potion quantities",
+  );
+  const v5 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
+  v5.version = 5;
+  v5.player = { ...(v5.player as Record<string, unknown>), defense: 2 };
+  v5.inventory = {
+    items: {
+      ...(v5.inventory as { items: Record<string, number> }).items,
+      "armor-gwanggaeto": 1,
+    },
+    equippedItemIds: {
+      ...(v5.inventory as { equippedItemIds: Record<string, string | null> }).equippedItemIds,
+      armor: "armor-gwanggaeto",
+    },
+  };
+  const migratedV5 = migrateSaveData(v5);
+  check(
+    migratedV5.success &&
+      migratedV5.migratedFromVersion === 5 &&
+      migratedV5.data.player.maxHp === 55 &&
+      !("defense" in migratedV5.data.player),
+    "v5 removes defense and derives armor max HP",
   );
   check(migrateSaveData({ version: 999 }).success === false, "future version rejected");
   check(migrateSaveData(null).success === false, "invalid schema rejected");

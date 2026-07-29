@@ -1,3 +1,5 @@
+import { getArmorMaxHpBonusForFloor } from "../balance/floorBalance";
+
 export type ItemType = "weaponSkin" | "armor" | "consumable" | "misc";
 export type ItemRarity = "common" | "uncommon" | "rare" | "epic";
 
@@ -9,7 +11,9 @@ export type ItemDefinition = {
   description: string;
   icon: string;
   stackable: boolean;
-  defense?: number;
+  equipmentStats?: {
+    maxHpBonus: number;
+  };
 };
 
 export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
@@ -27,7 +31,8 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     id: "armor-gwanggaeto", name: "광개토대왕의 갑옷", type: "armor",
     rarity: "rare", description: "고구려의 위대한 정복 군주를 상징하는 갑옷.",
     icon: `${import.meta.env.BASE_URL}assets/items/gwanggaeto-armor.png`,
-    stackable: false, defense: 2,
+    stackable: false,
+    equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(2) },
   },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",

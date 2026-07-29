@@ -34,10 +34,7 @@ import {
 import { runDungeonEventFlowChecks } from "../../game/dungeon/dungeonEventFlowChecks";
 import { runDungeonRoomEventChecks } from "../../game/dungeon/dungeonRoomEventChecks";
 import { resolveDungeonRoomEvent } from "../../game/dungeon/dungeonRoomEventResolver";
-import {
-  DUNGEON_PLAYER_MAX_HP,
-  applyDungeonPlayerHealing,
-} from "../../game/dungeon/dungeonPlayerState";
+import { applyDungeonPlayerHealing } from "../../game/dungeon/dungeonPlayerState";
 import { runDungeonPlayerStateChecks } from "../../game/dungeon/dungeonPlayerStateChecks";
 import { runEliteRoomChecks } from "../../game/dungeon/eliteRoomChecks";
 import {
@@ -122,6 +119,12 @@ import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolv
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { DungeonReturnPrompt, MemoryFragmentEvent } from "../../components/MemoryFragmentEvent";
 import memoryFoundUrl from "../../assets/quest/memory-fragment-found.png";
+import {
+  getFloorNumber,
+  getMonsterDamageForFloor,
+  getTrapDamageForFloor,
+  getWrongAnswerDamageForFloor,
+} from "../../game/balance/floorBalance";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -188,8 +191,8 @@ type ActiveRoomEvent = {
   message?: string;
 };
 
-const MAX_HP = DUNGEON_PLAYER_MAX_HP;
-const ENEMY_ATTACK = 7;
+const ACTIVE_FLOOR_ID = "floor-1";
+const ACTIVE_FLOOR_NUMBER = getFloorNumber(ACTIVE_FLOOR_ID);
 const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_QUESTION_Y_OFFSET = 0.34;
 const MONSTER_PLANE_HEIGHT = 2.05;
@@ -260,6 +263,7 @@ export function DungeonScreen({
 }: DungeonScreenProps) {
   const [dungeonRun] = useState(() => createFloor1DungeonRun());
   const dungeonMap = dungeonRun.map;
+  const maxHp = playerState.maxHp;
   const [runQuestionAssignments] = useState(() =>
     allocateDungeonRunQuestions(dungeonRun.map, dungeonRun.seed),
   );
@@ -385,12 +389,22 @@ export function DungeonScreen({
   };
   const activeMonsterName = () => activeMonsterDefinition().name;
   const activeEnemyAttackDamage = () => {
+    const lastAnswerWasWrong =
+      !enemyTurnFromItemRef.current &&
+      answersRef.current.length > 0 &&
+      answersRef.current[answersRef.current.length - 1] === false;
+    if (lastAnswerWasWrong) {
+      return getWrongAnswerDamageForFloor(ACTIVE_FLOOR_NUMBER);
+    }
     const roomId = activeCombatRoomIdRef.current;
     if (!roomId) {
-      return ENEMY_ATTACK;
+      return getMonsterDamageForFloor(ACTIVE_FLOOR_NUMBER);
     }
     const room = getDungeonRoom(roomId);
-    return room.type === "elite" ? room.eliteConfig!.attackDamage : ENEMY_ATTACK;
+    return getMonsterDamageForFloor(
+      ACTIVE_FLOOR_NUMBER,
+      room.type === "elite" ? "elite" : "normal",
+    );
   };
   const resolveCurrentCombat = (): CombatResolution =>
     activeCombatKindRef.current === "elite"
@@ -412,8 +426,8 @@ export function DungeonScreen({
     setFailureState("playerDefeated");
   };
 
-  const applyPlayerDamage = (damage: number, defense = 0) => {
-    const result = resolvePlayerDamage(playerHpRef.current, damage, defense);
+  const applyPlayerDamage = (damage: number) => {
+    const result = resolvePlayerDamage(playerHpRef.current, damage);
     playerHpRef.current = result.nextHp;
     setPlayerHp(result.nextHp);
     return result;
@@ -782,12 +796,12 @@ export function DungeonScreen({
         if (!mountedRef.current) {
           return;
         }
-        const damageResult = applyPlayerDamage(attackDamage, playerState.defense);
+        const damageResult = applyPlayerDamage(attackDamage);
         if (damageResult.isDefeated) {
           defeatProcessingRef.current = true;
         }
         setActualEnemyAttackCount((current) => current + 1);
-        setFloatingText(`-${Math.max(1, attackDamage - playerState.defense)}`);
+        setFloatingText(`-${attackDamage}`);
         setDamageFlash(true);
         window.setTimeout(() => {
           if (mountedRef.current) {
@@ -835,6 +849,7 @@ export function DungeonScreen({
         dungeonRun.seed,
         combatRoomId,
         activeCombatKindRef.current,
+        ACTIVE_FLOOR_NUMBER,
       );
       rewardedCombatRoomIdsRef.current.add(combatRoomId);
       setGoldDrop(amount);
@@ -991,7 +1006,7 @@ export function DungeonScreen({
       phase !== "playerCommand" ||
       processingRef.current ||
       mustAttackNextTurn ||
-      playerHp >= MAX_HP
+      playerHp >= maxHp
     ) {
       return;
     }
@@ -1004,7 +1019,7 @@ export function DungeonScreen({
       phase !== "itemSelect" ||
       itemProcessingRef.current ||
       potionQuantity(kind) <= 0 ||
-      playerHp >= MAX_HP
+      playerHp >= maxHp
     ) {
       return;
     }
@@ -1038,7 +1053,7 @@ export function DungeonScreen({
     itemProcessingRef.current = true;
     const result = resolvePotionUse({
       currentHp: playerHp,
-      maxHp: MAX_HP,
+      maxHp,
       potionKind: kind,
       quantity: potionQuantity(kind),
     });
@@ -1079,7 +1094,7 @@ export function DungeonScreen({
       return;
     }
     setPlayerHp((current) =>
-      applyDungeonPlayerHealing(current, result.healedAmount),
+      applyDungeonPlayerHealing(current, result.healedAmount, maxHp),
     );
     setFloatingText(`+${result.healedAmount}`);
     setPhase("awaitHealResult");
@@ -1377,8 +1392,8 @@ export function DungeonScreen({
       roomProgressRef.current,
     );
     if (completion.canComplete) {
-      playerHpRef.current = MAX_HP;
-      setPlayerHp(MAX_HP);
+      playerHpRef.current = maxHp;
+      setPlayerHp(maxHp);
       onFloorCleared();
       onNavigate("baseCamp");
       return;
@@ -1466,9 +1481,13 @@ export function DungeonScreen({
     eventResultProcessingRef.current = true;
     const room = getDungeonRoom(event.roomId);
     const resolution = resolveDungeonRoomEvent(room, result.isCorrect);
-    if (resolution.damage > 0) {
-      const damageResult = applyPlayerDamage(resolution.damage);
-      setFloatingText(`-${resolution.damage}`);
+    const eventDamage =
+      event.kind === "trap" && !result.isCorrect
+        ? getTrapDamageForFloor(ACTIVE_FLOOR_NUMBER)
+        : resolution.damage;
+    if (eventDamage > 0) {
+      const damageResult = applyPlayerDamage(eventDamage);
+      setFloatingText(`-${eventDamage}`);
       setDamageFlash(true);
       window.setTimeout(() => {
         if (mountedRef.current) {
@@ -1488,12 +1507,24 @@ export function DungeonScreen({
     );
     roomProgressRef.current = nextProgress;
     setRoomProgress(nextProgress);
-    setExplorationMessage(resolution.message);
+    let resultMessage = resolution.message;
+    if (event.kind === "treasure" && result.isCorrect) {
+      const amount = resolveDungeonGoldDrop(
+        dungeonRun.seed,
+        event.roomId,
+        "treasure",
+        ACTIVE_FLOOR_NUMBER,
+      );
+      setPlayerState((current) => ({ ...current, gold: current.gold + amount }));
+      onGoldAwarded();
+      resultMessage = `보물상자에서 ${amount} Gold를 획득했다!`;
+    }
+    setExplorationMessage(resultMessage);
     updateActiveRoomEvent({
       ...event,
       phase: "result",
       isCorrect: result.isCorrect,
-      message: resolution.message,
+      message: resultMessage,
     });
   };
 
@@ -1626,8 +1657,8 @@ export function DungeonScreen({
     interactionLockRef.current = false;
     setInteractionLocked(false);
     if (restoreHp) {
-      playerHpRef.current = MAX_HP;
-      setPlayerHp(MAX_HP);
+      playerHpRef.current = maxHp;
+      setPlayerHp(maxHp);
     }
     setSmallPotionQuantity(getItemQuantity(inventoryState, "potion-small"));
     setMediumPotionQuantity(getItemQuantity(inventoryState, "potion-medium"));
@@ -1923,14 +1954,14 @@ export function DungeonScreen({
                     onClick={openItemSelect}
                     disabled={
                       mustAttackNextTurn ||
-                      playerHp >= MAX_HP ||
+                      playerHp >= maxHp ||
                       (smallPotionQuantity <= 0 &&
                         mediumPotionQuantity <= 0)
                     }
                     title={
                       mustAttackNextTurn
                         ? "이번 턴에는 공격해야 합니다."
-                        : playerHp >= MAX_HP
+                        : playerHp >= maxHp
                           ? "HP가 가득 차 있습니다."
                           : undefined
                     }
@@ -1972,7 +2003,7 @@ export function DungeonScreen({
                   <button
                     key={kind}
                     type="button"
-                    disabled={quantity <= 0 || playerHp >= MAX_HP}
+                    disabled={quantity <= 0 || playerHp >= maxHp}
                     onClick={() => selectPotion(kind)}
                   >
                     <ItemIcon item={getItemDefinition(kind === "smallPotion" ? "potion-small" : "potion-medium")!} />
@@ -2155,8 +2186,8 @@ export function DungeonScreen({
         />
       )}
       {objectiveEvent === "first" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
-        playerHpRef.current = MAX_HP;
-        setPlayerHp(MAX_HP);
+        playerHpRef.current = maxHp;
+        setPlayerHp(maxHp);
         setInventoryState((current) => changeItemQuantity(current, "quest-memory-fragment", 1));
         onObjectiveAcquired(runCorrectCountRef.current);
         onInventoryChanged();
@@ -2166,8 +2197,8 @@ export function DungeonScreen({
         setObjectiveEvent(null);
         setDungeonMode("exploration");
       }} onConfirm={() => {
-        playerHpRef.current = MAX_HP;
-        setPlayerHp(MAX_HP);
+        playerHpRef.current = maxHp;
+        setPlayerHp(maxHp);
         onBestCorrect(runCorrectCountRef.current);
         onFloorCleared();
         onNavigate("baseCamp");

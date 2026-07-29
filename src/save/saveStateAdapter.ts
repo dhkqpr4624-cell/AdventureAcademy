@@ -5,7 +5,7 @@ import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import type { QuestState } from "../game/quest/questTypes";
 import { INITIAL_STORY_ACTION_STATE, type StoryActionState } from "../game/story/storyActionTypes";
 import { CURRENT_SAVE_VERSION, type CurrentSaveData } from "./saveTypes";
-import { calculateEquippedDefense, INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
+import { calculatePlayerMaxHp, INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
 
 export type GameSaveState = {
   playerState: PlayerState; questState: QuestState; floorUnlockState: FloorUnlockState;
@@ -31,12 +31,14 @@ export const createInitialGameSaveState = (): GameSaveState => ({
 });
 export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveData {
   const activeQuestId = Object.entries(state.questState).find(([, value]) => value === "active")?.[0] ?? null;
+  const maxHp = calculatePlayerMaxHp(state.inventoryState);
   return {
     version: CURRENT_SAVE_VERSION, savedAt: new Date().toISOString(),
     playTimeSeconds: state.playTimeSeconds, player: {
       ...state.playerState,
       name: state.playerState.name ?? "",
-      defense: calculateEquippedDefense(state.inventoryState),
+      maxHp,
+      currentHp: Math.min(state.playerState.currentHp, maxHp),
     },
     quests: { statuses: { ...state.questState }, activeQuestId },
     floors: { unlockedFloorIds: [...state.floorUnlockState.unlockedFloorIds] },
@@ -64,7 +66,8 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
   return {
     playerState: {
       ...data.player,
-      defense: calculateEquippedDefense(inventoryState),
+      maxHp: calculatePlayerMaxHp(inventoryState),
+      currentHp: Math.min(data.player.currentHp, calculatePlayerMaxHp(inventoryState)),
     }, questState: { ...data.quests.statuses },
     floorUnlockState: { unlockedFloorIds: [...data.floors.unlockedFloorIds] as FloorUnlockState["unlockedFloorIds"] },
     storyActionState: { executedActionIds: [...data.story.executedActionIds] },

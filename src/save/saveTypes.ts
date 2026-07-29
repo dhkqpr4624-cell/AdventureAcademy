@@ -1,7 +1,7 @@
 import type { QuestStatus } from "../game/quest/questTypes";
 import type { InventoryState } from "../game/inventory/inventoryState";
 
-export const CURRENT_SAVE_VERSION = 5 as const;
+export const CURRENT_SAVE_VERSION = 6 as const;
 
 export type SaveReason =
   | "introCompleted" | "baseCampEntered" | "storyStarted"
@@ -56,7 +56,12 @@ export type SaveDataV5 = Omit<SaveDataV4, "version" | "player"> & {
   player: SaveDataV4["player"] & { defense: number };
 };
 
-export type CurrentSaveData = SaveDataV5;
+export type SaveDataV6 = Omit<SaveDataV5, "version" | "player"> & {
+  version: 6;
+  player: Omit<SaveDataV5["player"], "defense">;
+};
+
+export type CurrentSaveData = SaveDataV6;
 export type SaveSource = "main" | "backup-1" | "backup-2" | "backup-3";
 export type SaveResult =
   | { success: true; savedAt: string; skipped?: boolean }

@@ -16,8 +16,11 @@ export const INITIAL_DUNGEON_PLAYER_STATE: DungeonPlayerState = {
   mediumPotionQuantity: INITIAL_MEDIUM_POTION_QUANTITY,
 };
 
-export function clampDungeonPlayerHp(hp: number): number {
-  return Math.max(0, Math.min(DUNGEON_PLAYER_MAX_HP, hp));
+export function clampDungeonPlayerHp(
+  hp: number,
+  maxHp = DUNGEON_PLAYER_MAX_HP,
+): number {
+  return Math.max(0, Math.min(Math.max(1, maxHp), hp));
 }
 
 export function applyDungeonPlayerDamage(
@@ -30,8 +33,9 @@ export function applyDungeonPlayerDamage(
 export function applyDungeonPlayerHealing(
   currentHp: number,
   healing: number,
+  maxHp = DUNGEON_PLAYER_MAX_HP,
 ): number {
-  return clampDungeonPlayerHp(currentHp + Math.max(0, healing));
+  return clampDungeonPlayerHp(currentHp + Math.max(0, healing), maxHp);
 }
 
 export function resolveDungeonPlayerStateReset(
