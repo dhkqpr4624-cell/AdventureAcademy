@@ -8,8 +8,10 @@ export type DungeonRoomType =
   | "quest";
 
 export type DungeonDirection = "forward" | "left" | "right" | "back";
+export type RelativeDungeonDirection = DungeonDirection;
 
 export type DungeonFacing = "north" | "east" | "south" | "west";
+export type WorldCardinalDirection = DungeonFacing;
 
 export type DungeonVector3 = [number, number, number];
 
@@ -110,5 +112,6 @@ export type TraversableDungeonConnection = {
   connection: DungeonConnection;
   targetRoomId: string;
   direction: DungeonDirection;
+  worldDirection?: WorldCardinalDirection;
   cameraPath: DungeonCameraPathPoint[];
 };

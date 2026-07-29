@@ -49,10 +49,15 @@ import {
 import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
 import type {
   DungeonDirection,
+  DungeonFacing,
   DungeonRoomNode,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
+import {
+  facingFromCameraPose,
+  labelRoutesRelativeToFacing,
+} from "../../game/dungeon/navigation/relativeDirectionResolver";
 import treasureClosedUrl from "../../assets/dungeon/events/treasure_closed.png";
 import treasureOpenUrl from "../../assets/dungeon/events/treasure_open.png";
 import trapIdleUrl from "../../assets/dungeon/events/trap_idle.png";
@@ -102,6 +107,10 @@ import { resolvePlayerDamage } from "../../game/player/playerDamageResolver";
 import { DungeonExitButton } from "../../components/DungeonExitButton";
 import { DungeonExitConfirmDialog } from "../../components/DungeonExitConfirmDialog";
 import { PlayerDefeatedOverlay } from "../../components/PlayerDefeatedOverlay";
+import { loadDungeonTextureSet, disposeDungeonTextureSet } from "../../three/dungeon/visuals/dungeonTextureRegistry";
+import { assembleDungeonVisuals } from "../../three/dungeon/visuals/DungeonVisualAssembler";
+import { FLOOR1_STANDARD_ROOM } from "../../three/dungeon/visuals/roomVisualTemplates";
+import { FLOOR1_STANDARD_CORRIDOR } from "../../three/dungeon/visuals/corridorTemplates";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -298,6 +307,13 @@ export function DungeonScreen({
   const [hasCriticalOccurred, setHasCriticalOccurred] = useState(false);
   const [enemyStunned, setEnemyStunned] = useState(false);
   const [criticalEffect, setCriticalEffect] = useState(false);
+  const [explorationFacing, setExplorationFacing] = useState<DungeonFacing>(() => {
+    const room = getDungeonRoomFromMap(dungeonMap, dungeonMap.startRoomId);
+    return facingFromCameraPose(
+      room.explorationCameraPose.position,
+      room.explorationCameraPose.lookAt,
+    );
+  });
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
   const [interactionLocked, setInteractionLocked] = useState(false);
   const [smallPotionQuantity, setSmallPotionQuantity] = useState(
@@ -485,7 +501,7 @@ export function DungeonScreen({
       materials.push(material);
     };
 
-    dungeonMap.rooms.forEach((roomNode, index) => {
+    const buildLegacyWorld = () => dungeonMap.rooms.forEach((roomNode, index) => {
       const room = new THREE.Group();
       room.position.set(roomNode.position.x, roomNode.position.y, roomNode.position.z);
       const floorColor = index % 2 === 0 ? 0x2b2927 : 0x302d29;
@@ -497,7 +513,7 @@ export function DungeonScreen({
       addRoomPlane(room, 12, 6, 0x24262c, [5, 0, -2], [0, -Math.PI / 2, 0]);
       dungeonWorld.add(room);
     });
-    dungeonMap.connections.forEach((connection) => {
+    const buildLegacyCorridors = () => dungeonMap.connections.forEach((connection) => {
       const source = getDungeonRoom(connection.fromRoomId);
       const target = getDungeonRoom(connection.toRoomId);
       const dx = target.position.x - source.position.x;
@@ -514,7 +530,30 @@ export function DungeonScreen({
       addRoomPlane(corridor, 4, length, 0x15171b, [0, 2.98, 0], [Math.PI / 2, 0, 0]);
       dungeonWorld.add(corridor);
     });
-    scene.add(dungeonWorld);
+    let visualAssembly: ReturnType<typeof assembleDungeonVisuals> | null = null;
+    let dungeonTextures: Awaited<ReturnType<typeof loadDungeonTextureSet>> | null = null;
+    let visualCancelled = false;
+    loadDungeonTextureSet()
+      .then((textures) => {
+        if (visualCancelled) {
+          disposeDungeonTextureSet(textures);
+          return;
+        }
+        dungeonTextures = textures;
+        visualAssembly = assembleDungeonVisuals({
+          dungeonMap,
+          roomTemplate: FLOOR1_STANDARD_ROOM,
+          corridorTemplate: FLOOR1_STANDARD_CORRIDOR,
+          textures,
+        });
+        scene.add(visualAssembly.root);
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) console.warn("[DungeonVisual] falling back", error);
+        buildLegacyWorld();
+        buildLegacyCorridors();
+        scene.add(dungeonWorld);
+      });
 
     const monsterGeometry = new THREE.PlaneGeometry(
       MONSTER_PLANE_HEIGHT * MONSTER_TEXTURE_ASPECT,
@@ -596,6 +635,7 @@ export function DungeonScreen({
     animationFrameId = window.requestAnimationFrame(render);
 
     return () => {
+      visualCancelled = true;
       window.cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateViewport);
       const activeMonsterTexture = visualsRef.current?.monsterTexture;
@@ -613,6 +653,8 @@ export function DungeonScreen({
       monsterGeometry.dispose();
       monsterMaterial.dispose();
       scene.remove(dungeonWorld);
+      visualAssembly?.dispose();
+      if (dungeonTextures) disposeDungeonTextureSet(dungeonTextures);
       geometries.forEach((geometry) => geometry.dispose());
       materials.forEach((material) => material.dispose());
       renderer.dispose();
@@ -803,10 +845,14 @@ export function DungeonScreen({
       forceCriticalNextAttackRef.current = false;
       setForceCriticalNextAttack(false);
     }
+    const nextAnswers = [...answersRef.current, isCorrect];
+    const isFinalQuestion = questionIndexRef.current >= combatQuestionCount - 1;
+    const hasUpcomingEnemyTurn =
+      !isFinalQuestion || nextAnswers.filter(Boolean).length < combatQuestionCount;
     criticalStateRef.current = applyCriticalResult(
       criticalStateRef.current,
       criticalResult,
-      questionIndexRef.current < combatQuestionCount - 1,
+      hasUpcomingEnemyTurn,
     );
     setHasCriticalOccurred(criticalStateRef.current.hasCriticalOccurred);
     setEnemyStunned(criticalStateRef.current.enemyStunned);
@@ -832,7 +878,6 @@ export function DungeonScreen({
       setFloatingText(null);
     }
 
-    const nextAnswers = [...answersRef.current, isCorrect];
     answersRef.current = nextAnswers;
     setPhase(
       criticalResult.isCritical ? "awaitCriticalResult" : "awaitAttackResult",
@@ -860,15 +905,18 @@ export function DungeonScreen({
       return;
     }
 
-    criticalStateRef.current = {
-      ...criticalStateRef.current,
-      enemyStunned: false,
-      pendingSkipEnemyTurn: false,
-    };
-    setEnemyStunned(false);
     const correctCount = answersRef.current.filter(Boolean).length;
     if (correctCount === combatQuestionCount) {
+      criticalStateRef.current = {
+        ...criticalStateRef.current,
+        enemyStunned: false,
+        pendingSkipEnemyTurn: false,
+      };
+      setEnemyStunned(false);
       await playVictory();
+    } else if (criticalStateRef.current.pendingSkipEnemyTurn) {
+      setPhase("awaitStunSkip");
+      setCombatMessage(`${activeMonsterName()}은 기절해서 움직일 수 없다!`);
     } else {
       setPhase("awaitEnemyTurn");
       setCombatMessage(`${activeMonsterName()}의 턴!`);
@@ -1028,6 +1076,13 @@ export function DungeonScreen({
           setSkippedEnemyAttackCount((current) => current + 1);
         }
         setEnemyStunned(false);
+        if (questionIndexRef.current >= combatQuestionCount - 1) {
+          pendingResultRef.current = null;
+          setPhase("awaitEscape");
+          setCombatMessage(`${activeMonsterName()}이 경계하며 뒤로 물러난다.`);
+          processingRef.current = false;
+          return;
+        }
         const nextQuestionIndex = questionIndexRef.current + 1;
         questionIndexRef.current = nextQuestionIndex;
         setQuestionIndex(nextQuestionIndex);
@@ -1458,6 +1513,10 @@ export function DungeonScreen({
         movementProcessingRef.current = false;
         setPreviousRoomId(sourceRoomId);
         setCurrentRoomId(route.targetRoomId);
+        const targetPose = getDungeonRoom(route.targetRoomId).explorationCameraPose;
+        setExplorationFacing(
+          facingFromCameraPose(targetPose.position, targetPose.lookAt),
+        );
         handleRoomEntered(route.targetRoomId);
       },
     });
@@ -1499,6 +1558,12 @@ export function DungeonScreen({
     setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
     setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
     const startRoom = getDungeonRoom(dungeonMap.startRoomId);
+    setExplorationFacing(
+      facingFromCameraPose(
+        startRoom.explorationCameraPose.position,
+        startRoom.explorationCameraPose.lookAt,
+      ),
+    );
     visualsRef.current?.dungeonCamera.setPose(startRoom.explorationCameraPose);
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
@@ -1558,7 +1623,13 @@ export function DungeonScreen({
         ? "정예 몬스터가 도망쳤다."
         : "몬스터가 도망쳤다.";
   const dialogueMode = dialogueModeForPhase(phase);
-  const availableConnections = getConnectionsForRoom(currentRoomId).sort(
+  const availableConnections = labelRoutesRelativeToFacing({
+    currentRoom: getDungeonRoom(currentRoomId),
+    routes: getConnectionsForRoom(currentRoomId),
+    currentFacing: explorationFacing,
+    previousRoomId,
+    getRoom: getDungeonRoom,
+  }).sort(
     (left, right) =>
       DIRECTION_ORDER.indexOf(left.direction) -
       DIRECTION_ORDER.indexOf(right.direction),

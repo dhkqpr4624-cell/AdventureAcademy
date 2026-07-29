@@ -1,5 +1,8 @@
 import { runPlayerStatusChecks } from "./components/playerStatusChecks";
 import { runCriticalChecks } from "./game/combat/criticalChecks";
+import { runFinalCriticalTurnSkipChecks } from "./game/combat/finalCriticalTurnSkipChecks";
+import { runRelativeDirectionChecks } from "./game/dungeon/navigation/relativeDirectionChecks";
+import { runCorridorAssemblyChecks, runDungeonVisualChecks } from "./three/dungeon/visuals/dungeonVisualChecks";
 import { runNormalCombatChecks } from "./game/combat/normalCombatChecks";
 import { runPotionChecks } from "./game/combat/potionChecks";
 import { runDungeonCameraChecks } from "./game/dungeon/dungeonCameraChecks";
@@ -29,6 +32,10 @@ import { runDungeonGeneratorChecks } from "./game/dungeon/generation/dungeonGene
 import { runDungeonValidatorChecks } from "./game/dungeon/generation/dungeonValidatorChecks";
 
 const checks = [
+  ["relative direction checks", runRelativeDirectionChecks],
+  ["dungeon visual checks", runDungeonVisualChecks],
+  ["corridor assembly checks", runCorridorAssemblyChecks],
+  ["final critical turn-skip checks", runFinalCriticalTurnSkipChecks],
   ["npc checks", runNpcChecks],
   ["quest checks", runQuestChecks],
   ["quest marker checks", runQuestMarkerChecks],
