@@ -30,11 +30,19 @@ import { runDungeonFailureChecks } from "./game/dungeon/dungeonFailureChecks";
 import { runSeededRandomChecks } from "./game/dungeon/generation/seededRandomChecks";
 import { runDungeonGeneratorChecks } from "./game/dungeon/generation/dungeonGeneratorChecks";
 import { runDungeonValidatorChecks } from "./game/dungeon/generation/dungeonValidatorChecks";
+import { runDungeonNavigationPathChecks } from "./game/dungeon/navigation/dungeonNavigationPathChecks";
+import { runDungeonNavigationLabelChecks } from "./game/dungeon/navigation/dungeonNavigationLabelChecks";
+import { runDungeonWallVisibilityChecks } from "./three/dungeon/visuals/dungeonWallVisibilityChecks";
+import { runDungeonVisualFocusChecks } from "./three/dungeon/visuals/dungeonVisualFocusChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
+  ["dungeon navigation path checks", runDungeonNavigationPathChecks],
+  ["dungeon navigation label checks", runDungeonNavigationLabelChecks],
   ["dungeon visual checks", runDungeonVisualChecks],
   ["corridor assembly checks", runCorridorAssemblyChecks],
+  ["dungeon wall visibility checks", runDungeonWallVisibilityChecks],
+  ["dungeon visual focus checks", runDungeonVisualFocusChecks],
   ["final critical turn-skip checks", runFinalCriticalTurnSkipChecks],
   ["npc checks", runNpcChecks],
   ["quest checks", runQuestChecks],

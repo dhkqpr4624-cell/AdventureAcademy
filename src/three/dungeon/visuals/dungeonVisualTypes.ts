@@ -41,6 +41,7 @@ export type DungeonVisualAssembly = {
   roomGroups: Map<string, THREE.Group>;
   corridorGroups: Map<string, THREE.Group>;
   passageSockets: OpenPassageSocket[];
+  setActiveRoom(roomId: string): void;
   dispose(): void;
 };
 

@@ -30,6 +30,19 @@ export type DungeonCameraPathPoint = {
   duration?: number;
 };
 
+export type DungeonCameraPathStep =
+  | {
+      type: "move";
+      position: DungeonVector3;
+      duration?: number;
+      movementMode?: "forward" | "backward";
+    }
+  | {
+      type: "rotate";
+      yaw: number;
+      duration?: number;
+    };
+
 export type DungeonCameraPose = {
   position: DungeonVector3;
   lookAt: DungeonVector3;

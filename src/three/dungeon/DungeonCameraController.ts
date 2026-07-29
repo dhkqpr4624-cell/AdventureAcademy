@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type {
   DungeonCameraPathPoint,
+  DungeonCameraPathStep,
   DungeonCameraPose,
 } from "../../game/dungeon/dungeonTypes";
 
@@ -225,6 +226,72 @@ export class DungeonCameraController {
       this.frameId = requestAnimationFrame(animate);
     };
     this.frameId = requestAnimationFrame(animate);
+  }
+
+  moveAlongSteps(
+    steps: readonly DungeonCameraPathStep[],
+    options: MovementOptions,
+  ): void {
+    this.cancel();
+    const sequenceId = ++this.sequenceId;
+    const runStep = (index: number) => {
+      if (sequenceId !== this.sequenceId) return;
+      const step = steps[index];
+      if (!step) {
+        this.frameId = null;
+        options.onComplete();
+        return;
+      }
+      if (options.reducedMotion) {
+        if (step.type === "move") this.camera.position.set(...step.position);
+        else this.camera.rotation.y = step.yaw;
+        runStep(index + 1);
+        return;
+      }
+      const startedAt = performance.now();
+      const fromPosition = this.camera.position.clone();
+      const fromYaw = this.camera.rotation.y;
+      const targetPosition =
+        step.type === "move"
+          ? new THREE.Vector3(...step.position)
+          : fromPosition.clone();
+      const distance = fromPosition.distanceTo(targetPosition);
+      const duration =
+        step.duration ??
+        (step.type === "rotate"
+          ? ARRIVAL_TURN_DURATION_MS
+          : Math.max(250, distance / CAMERA_SPEED_UNITS_PER_SECOND * 1000));
+      const yawDelta =
+        step.type === "rotate"
+          ? shortestAngleDelta(fromYaw, step.yaw)
+          : 0;
+      const animateStep = (now: number) => {
+        if (sequenceId !== this.sequenceId) return;
+        const progress = THREE.MathUtils.clamp((now - startedAt) / duration, 0, 1);
+        const eased = THREE.MathUtils.smoothstep(progress, 0, 1);
+        if (step.type === "move") {
+          this.camera.position.lerpVectors(fromPosition, targetPosition, eased);
+          this.camera.rotation.y = fromYaw;
+        } else {
+          this.camera.position.copy(fromPosition);
+          this.camera.rotation.y = fromYaw + yawDelta * eased;
+        }
+        if (progress >= 1) {
+          if (step.type === "move") {
+            this.camera.position.copy(targetPosition);
+            this.camera.rotation.y = fromYaw;
+          } else {
+            this.camera.position.copy(fromPosition);
+            this.camera.rotation.y = step.yaw;
+          }
+          runStep(index + 1);
+          return;
+        }
+        this.frameId = requestAnimationFrame(animateStep);
+      };
+      this.frameId = requestAnimationFrame(animateStep);
+    };
+    runStep(0);
   }
 
   cancel(): void {

@@ -25,9 +25,7 @@ import type {
 
 const CAMERA_Y = 0.2;
 
-function facingFor(slot: MapTemplateRoomSlot): DungeonFacing {
-  if (slot.position.x < 0) return "west";
-  if (slot.position.x > 0) return "east";
+function facingFor(_slot: MapTemplateRoomSlot): DungeonFacing {
   return "north";
 }
 
@@ -36,13 +34,8 @@ function cameraPose(
   facing: DungeonFacing,
 ): DungeonCameraPose {
   const { x, z } = slot.position;
-  if (facing === "west") {
-    return { position: [x + 3.8, CAMERA_Y, z], lookAt: [x - 4, -0.15, z] };
-  }
-  if (facing === "east") {
-    return { position: [x - 3.8, CAMERA_Y, z], lookAt: [x + 4, -0.15, z] };
-  }
-  return { position: [x, CAMERA_Y, z + 3.8], lookAt: [x, -0.15, z - 4] };
+  void facing;
+  return { position: [x, CAMERA_Y, z], lookAt: [x, -0.15, z - 4] };
 }
 
 function lerp(from: DungeonVector3, to: DungeonVector3, amount: number): DungeonVector3 {

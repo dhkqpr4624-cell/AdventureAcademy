@@ -111,7 +111,10 @@ export type DungeonValidationErrorCode =
   | "invalidCameraPath"
   | "invalidQuestionSetReference"
   | "invalidMonsterReference"
-  | "invalidEventConfig";
+  | "invalidEventConfig"
+  | "duplicateNavigationDirection"
+  | "multipleBackRoutes"
+  | "unsupportedRearConnection";
 
 export type DungeonValidationError = {
   code: DungeonValidationErrorCode;

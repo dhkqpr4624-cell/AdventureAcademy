@@ -49,15 +49,15 @@ import {
 import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
 import type {
   DungeonDirection,
-  DungeonFacing,
   DungeonRoomNode,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
 import {
-  facingFromCameraPose,
-  labelRoutesRelativeToFacing,
-} from "../../game/dungeon/navigation/relativeDirectionResolver";
+  DUNGEON_CANONICAL_YAW,
+  buildDungeonNavigationPath,
+} from "../../game/dungeon/navigation/dungeonNavigationPathBuilder";
+import { labelDungeonNavigationRoutes } from "../../game/dungeon/navigation/dungeonNavigationLabelResolver";
 import treasureClosedUrl from "../../assets/dungeon/events/treasure_closed.png";
 import treasureOpenUrl from "../../assets/dungeon/events/treasure_open.png";
 import trapIdleUrl from "../../assets/dungeon/events/trap_idle.png";
@@ -111,6 +111,7 @@ import { loadDungeonTextureSet, disposeDungeonTextureSet } from "../../three/dun
 import { assembleDungeonVisuals } from "../../three/dungeon/visuals/DungeonVisualAssembler";
 import { FLOOR1_STANDARD_ROOM } from "../../three/dungeon/visuals/roomVisualTemplates";
 import { FLOOR1_STANDARD_CORRIDOR } from "../../three/dungeon/visuals/corridorTemplates";
+import type { DungeonVisualAssembly } from "../../three/dungeon/visuals/dungeonVisualTypes";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -239,6 +240,7 @@ export function DungeonScreen({
     getConnectionsForRoomFromMap(dungeonMap, roomId);
   const sceneContainerRef = useRef<HTMLDivElement>(null);
   const visualsRef = useRef<CombatVisuals | null>(null);
+  const visualAssemblyRef = useRef<DungeonVisualAssembly | null>(null);
   const mountedRef = useRef(true);
   const processingRef = useRef(false);
   const interactionLockRef = useRef(false);
@@ -307,13 +309,6 @@ export function DungeonScreen({
   const [hasCriticalOccurred, setHasCriticalOccurred] = useState(false);
   const [enemyStunned, setEnemyStunned] = useState(false);
   const [criticalEffect, setCriticalEffect] = useState(false);
-  const [explorationFacing, setExplorationFacing] = useState<DungeonFacing>(() => {
-    const room = getDungeonRoomFromMap(dungeonMap, dungeonMap.startRoomId);
-    return facingFromCameraPose(
-      room.explorationCameraPose.position,
-      room.explorationCameraPose.lookAt,
-    );
-  });
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
   const [interactionLocked, setInteractionLocked] = useState(false);
   const [smallPotionQuantity, setSmallPotionQuantity] = useState(
@@ -427,6 +422,10 @@ export function DungeonScreen({
       !roomProgress[currentRoomId]?.eventCompleted;
     visuals.monsterRoot.visible = showMonster;
   }, [activeCombatRoomId, currentRoomId, dungeonMode, roomProgress]);
+
+  useEffect(() => {
+    visualAssemblyRef.current?.setActiveRoom(currentRoomId);
+  }, [currentRoomId]);
 
   useEffect(() => {
     if (dungeonMode !== "combat" || phase !== "intro") {
@@ -546,6 +545,8 @@ export function DungeonScreen({
           corridorTemplate: FLOOR1_STANDARD_CORRIDOR,
           textures,
         });
+        visualAssembly.setActiveRoom(dungeonMap.startRoomId);
+        visualAssemblyRef.current = visualAssembly;
         scene.add(visualAssembly.root);
       })
       .catch((error) => {
@@ -654,6 +655,7 @@ export function DungeonScreen({
       monsterMaterial.dispose();
       scene.remove(dungeonWorld);
       visualAssembly?.dispose();
+      visualAssemblyRef.current = null;
       if (dungeonTextures) disposeDungeonTextureSet(dungeonTextures);
       geometries.forEach((geometry) => geometry.dispose());
       materials.forEach((material) => material.dispose());
@@ -1503,20 +1505,29 @@ export function DungeonScreen({
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    controller.moveAlongPath(route.cameraPath, {
+    const targetRoom = getDungeonRoom(route.targetRoomId);
+    const isBackRoute = route.targetRoomId === previousRoomId;
+    const steps = buildDungeonNavigationPath({
+      sourceRoom: getDungeonRoom(sourceRoomId),
+      targetRoom,
+      route,
+      isBackRoute,
+    });
+    controller.moveAlongSteps(steps, {
       reducedMotion,
-      mode: route.direction === "back" ? "backward" : "forward",
       onComplete: () => {
         if (!mountedRef.current || !movementProcessingRef.current) {
           return;
         }
+        controller.setPose({
+          position: targetRoom.explorationCameraPose.position,
+          lookAt: targetRoom.explorationCameraPose.lookAt,
+          rotationY: DUNGEON_CANONICAL_YAW,
+        });
         movementProcessingRef.current = false;
         setPreviousRoomId(sourceRoomId);
         setCurrentRoomId(route.targetRoomId);
-        const targetPose = getDungeonRoom(route.targetRoomId).explorationCameraPose;
-        setExplorationFacing(
-          facingFromCameraPose(targetPose.position, targetPose.lookAt),
-        );
+        visualAssemblyRef.current?.setActiveRoom(route.targetRoomId);
         handleRoomEntered(route.targetRoomId);
       },
     });
@@ -1558,12 +1569,7 @@ export function DungeonScreen({
     setSmallPotionQuantity(INITIAL_SMALL_POTION_QUANTITY);
     setMediumPotionQuantity(INITIAL_MEDIUM_POTION_QUANTITY);
     const startRoom = getDungeonRoom(dungeonMap.startRoomId);
-    setExplorationFacing(
-      facingFromCameraPose(
-        startRoom.explorationCameraPose.position,
-        startRoom.explorationCameraPose.lookAt,
-      ),
-    );
+    visualAssemblyRef.current?.setActiveRoom(dungeonMap.startRoomId);
     visualsRef.current?.dungeonCamera.setPose(startRoom.explorationCameraPose);
     visualsRef.current?.monster.reset();
     if (visualsRef.current) {
@@ -1623,10 +1629,9 @@ export function DungeonScreen({
         ? "정예 몬스터가 도망쳤다."
         : "몬스터가 도망쳤다.";
   const dialogueMode = dialogueModeForPhase(phase);
-  const availableConnections = labelRoutesRelativeToFacing({
+  const availableConnections = labelDungeonNavigationRoutes({
     currentRoom: getDungeonRoom(currentRoomId),
     routes: getConnectionsForRoom(currentRoomId),
-    currentFacing: explorationFacing,
     previousRoomId,
     getRoom: getDungeonRoom,
   }).sort(

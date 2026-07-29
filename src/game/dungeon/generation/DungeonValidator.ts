@@ -1,6 +1,7 @@
 import { DUNGEON_REWARDS } from "../dungeonEventData";
 import { DUNGEON_QUESTION_SETS } from "../dungeonQuestionSets";
 import type { DungeonRoomNode, DungeonRoomType } from "../dungeonTypes";
+import { worldDirectionBetween } from "../navigation/relativeDirectionResolver";
 import {
   countComponents,
   countCycles,
@@ -83,6 +84,27 @@ export function validateDungeon({
       !connection.cameraPath.some((point) => point.kind === "roomEntrance")
     ) {
       add("invalidCameraPath", { connectionId: connection.id });
+    }
+  }
+
+  for (const room of dungeon.rooms) {
+    const directions = dungeon.connections.flatMap((connection) => {
+      const otherId =
+        connection.fromRoomId === room.id
+          ? connection.toRoomId
+          : connection.toRoomId === room.id
+            ? connection.fromRoomId
+            : null;
+      const other = otherId
+        ? dungeon.rooms.find((candidate) => candidate.id === otherId)
+        : undefined;
+      return other ? [worldDirectionBetween(room, other)] : [];
+    });
+    if (new Set(directions).size !== directions.length) {
+      add("duplicateNavigationDirection", { roomId: room.id });
+    }
+    if (directions.filter((direction) => direction === "south").length > 1) {
+      add("multipleBackRoutes", { roomId: room.id });
     }
   }
 
