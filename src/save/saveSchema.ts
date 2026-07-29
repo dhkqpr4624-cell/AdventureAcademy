@@ -15,8 +15,9 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       !isObject(value.player) || !isObject(value.quests) || !isObject(value.floors) ||
       !isObject(value.story) || !isObject(value.dungeon) || !isObject(value.inventory)) return null;
   const player = value.player;
-  if (!Number.isFinite(player.level) || !Number.isFinite(player.currentHp) ||
-      !Number.isFinite(player.maxHp) || (player.maxHp as number) <= 0 ||
+  if (!Number.isFinite(player.currentHp) || !Number.isFinite(player.maxHp) ||
+      !Number.isFinite(player.gold) || (player.gold as number) < 0 ||
+      (player.maxHp as number) <= 0 ||
       (player.currentHp as number) < 0 || (player.currentHp as number) > (player.maxHp as number)) return null;
   if (!isObject(value.quests.statuses) || !strings(value.floors.unlockedFloorIds) ||
       !strings(value.story.completedStoryIds) || !isObject(value.story.checkpointByStoryId) ||
@@ -35,10 +36,14 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     checkpointByStoryId[id] = checkpoint;
   }
   return {
-    version: 1,
+    version: CURRENT_SAVE_VERSION,
     savedAt: value.savedAt,
     playTimeSeconds: Math.max(0, Math.floor(value.playTimeSeconds as number)),
-    player: { level: player.level as number, currentHp: player.currentHp as number, maxHp: player.maxHp as number },
+    player: {
+      currentHp: player.currentHp as number,
+      maxHp: player.maxHp as number,
+      gold: Math.floor(player.gold as number),
+    },
     quests: { statuses, activeQuestId: activeQuestId as string | null },
     floors: { unlockedFloorIds: unique(value.floors.unlockedFloorIds as string[]) },
     story: {
@@ -53,4 +58,3 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     inventory: { items: {}, equippedItemIds: {} },
   };
 }
-

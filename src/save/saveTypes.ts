@@ -1,12 +1,12 @@
 import type { QuestStatus } from "../game/quest/questTypes";
 
-export const CURRENT_SAVE_VERSION = 1 as const;
+export const CURRENT_SAVE_VERSION = 2 as const;
 
 export type SaveReason =
   | "introCompleted" | "baseCampEntered" | "storyStarted"
   | "storyCheckpoint" | "storyCompleted" | "npcDialogueCompleted"
   | "questAccepted" | "floorUnlocked" | "dungeonEntered" | "floorCleared"
-  | "itemAcquired" | "equipmentChanged" | "levelUp"
+  | "itemAcquired" | "equipmentChanged"
   | "interval" | "visibilityHidden" | "pageHide" | "manual" | "imported";
 
 export type SaveDataV1 = {
@@ -28,7 +28,12 @@ export type SaveDataV1 = {
   };
 };
 
-export type CurrentSaveData = SaveDataV1;
+export type SaveDataV2 = Omit<SaveDataV1, "version" | "player"> & {
+  version: 2;
+  player: { currentHp: number; maxHp: number; gold: number };
+};
+
+export type CurrentSaveData = SaveDataV2;
 export type SaveSource = "main" | "backup-1" | "backup-2" | "backup-3";
 export type SaveResult =
   | { success: true; savedAt: string; skipped?: boolean }
@@ -39,4 +44,3 @@ export type LoadResult =
 export type ImportResult =
   | { success: true; data: CurrentSaveData; migratedFromVersion?: number }
   | { success: false; reason: Exclude<LoadResult, { success: true }>["reason"] };
-

@@ -117,6 +117,8 @@ import {
   applyDungeonEventVisualVerticalOffset,
 } from "../../game/dungeon/dungeonEventVisualPlacement";
 import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitButtonResolver";
+import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
+import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -125,6 +127,7 @@ type DungeonScreenProps = {
   onDungeonEntered: () => void;
   onDungeonAbandoned: () => void;
   onFloorCleared: () => void;
+  onGoldAwarded: () => void;
 };
 
 type NormalCombatPhase =
@@ -236,9 +239,13 @@ export function DungeonScreen({
   onDungeonEntered,
   onDungeonAbandoned,
   onFloorCleared,
+  onGoldAwarded,
 }: DungeonScreenProps) {
   const [dungeonRun] = useState(() => createFloor1DungeonRun());
   const dungeonMap = dungeonRun.map;
+  const [runQuestionAssignments] = useState(() =>
+    allocateDungeonRunQuestions(dungeonRun.map, dungeonRun.seed),
+  );
   const getDungeonRoom = (roomId: string) =>
     getDungeonRoomFromMap(dungeonMap, roomId);
   const getConnectionsForRoom = (roomId: string) =>
@@ -251,6 +258,7 @@ export function DungeonScreen({
   const interactionLockRef = useRef(false);
   const enemyTurnProcessingRef = useRef(false);
   const resultFinalizedRef = useRef(false);
+  const rewardedCombatRoomIdsRef = useRef(new Set<string>());
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const weaponResultRef = useRef<WeaponAttackType | null>(null);
   const answersRef = useRef<boolean[]>([]);
@@ -331,6 +339,7 @@ export function DungeonScreen({
   const [damageFlash, setDamageFlash] = useState(false);
   const [resolution, setResolution] =
     useState<CombatResolution | null>(null);
+  const [goldDrop, setGoldDrop] = useState(0);
   const [activeQuestions, setActiveQuestions] = useState(
     activeQuestionsRef.current,
   );
@@ -795,6 +804,21 @@ export function DungeonScreen({
     const combatRoomId = activeCombatRoomIdRef.current;
     if (
       combatRoomId &&
+      resolutionOutcome(finalResolution) === "perfectVictory" &&
+      !rewardedCombatRoomIdsRef.current.has(combatRoomId)
+    ) {
+      const amount = resolveDungeonGoldDrop(
+        dungeonRun.seed,
+        combatRoomId,
+        activeCombatKindRef.current,
+      );
+      rewardedCombatRoomIdsRef.current.add(combatRoomId);
+      setGoldDrop(amount);
+      setPlayerState((current) => ({ ...current, gold: current.gold + amount }));
+      onGoldAwarded();
+    }
+    if (
+      combatRoomId &&
       ((getDungeonRoom(combatRoomId).type === "combat" &&
         "outcome" in finalResolution &&
         shouldCompleteCombatRoom(finalResolution.outcome)) ||
@@ -1209,6 +1233,7 @@ export function DungeonScreen({
     setSelectedPotion(null);
     setMustAttackNextTurn(false);
     setResolution(null);
+    setGoldDrop(0);
     setFloatingText(null);
     setDamageFlash(false);
     setCombatMessage(
@@ -1233,10 +1258,10 @@ export function DungeonScreen({
     if (!config) {
       throw new Error(`[DungeonScreen] Combat room ${roomId} has no config`);
     }
-    const questions = getDungeonQuestionSet(
-      config.questionSetId,
-      combatKind === "elite" ? ELITE_COMBAT_QUESTION_COUNT : 2,
-    );
+    const questions = runQuestionAssignments[roomId];
+    if (!questions) {
+      throw new Error(`[DungeonScreen] No run question assignment for ${roomId}`);
+    }
     activeQuestionsRef.current = questions;
     setActiveQuestions(questions);
     activeCombatKindRef.current = combatKind;
@@ -2013,6 +2038,9 @@ export function DungeonScreen({
                   ? "정예 몬스터가 도망쳤다."
                   : "몬스터가 도망쳤습니다."}
               </p>
+            )}
+            {goldDrop > 0 && (
+              <p className="combat-gold-result">+{goldDrop} Gold 획득</p>
             )}
             <div className="button-group">
               <button

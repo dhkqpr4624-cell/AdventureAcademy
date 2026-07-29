@@ -19,9 +19,6 @@ export type Floor1DungeonRun = {
 let productionSeedCounter = 0;
 
 export function createFloor1RunSeed(): string {
-  if (import.meta.env.DEV) {
-    return "floor1-development-seed";
-  }
   productionSeedCounter += 1;
   return `floor1-${Date.now()}-${productionSeedCounter}`;
 }

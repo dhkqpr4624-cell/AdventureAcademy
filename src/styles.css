@@ -971,7 +971,7 @@ button:focus-visible {
   background: rgba(12, 14, 19, 0.92);
 }
 
-.combat-status-level {
+.combat-status-gold {
   padding-right: 0.8rem;
   border-right: 1px solid rgba(233, 201, 120, 0.3);
   color: #f3d577;

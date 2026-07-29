@@ -5,17 +5,17 @@ type PlayerStatusBarProps = PlayerState & {
 };
 
 export function getPlayerStatusView({
-  level,
   currentHp,
   maxHp,
+  gold,
   questionLabel,
 }: PlayerStatusBarProps) {
   const safeMaxHp = Math.max(1, maxHp);
   const safeHp = Math.min(Math.max(0, currentHp), safeMaxHp);
   return {
-    level,
     currentHp: safeHp,
     maxHp: safeMaxHp,
+    gold: Math.max(0, Math.floor(gold)),
     hpPercent: (safeHp / safeMaxHp) * 100,
     questionLabel,
   };
@@ -26,11 +26,10 @@ export function PlayerStatusBar(props: PlayerStatusBarProps) {
   return (
     <div
       className="combat-status-bar player-status-bar"
-      aria-label={`레벨 ${view.level}, 플레이어 체력 ${view.currentHp} / ${view.maxHp}${
+      aria-label={`플레이어 체력 ${view.currentHp} / ${view.maxHp}, 골드 ${view.gold}${
         view.questionLabel ? `, ${view.questionLabel}` : ""
       }`}
     >
-      <strong className="combat-status-level">LV.{view.level}</strong>
       <div className="combat-status-hp">
         <span>HP</span>
         <div
@@ -48,6 +47,7 @@ export function PlayerStatusBar(props: PlayerStatusBarProps) {
         </div>
         <strong>{view.currentHp} / {view.maxHp}</strong>
       </div>
+      <strong className="combat-status-gold">{view.gold} Gold</strong>
       {view.questionLabel && (
         <div className="combat-status-question">
           <span>QUESTION</span>
@@ -57,4 +57,3 @@ export function PlayerStatusBar(props: PlayerStatusBarProps) {
     </div>
   );
 }
-

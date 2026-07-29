@@ -94,6 +94,7 @@ export function App() {
       />;
       case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
+        onGoldAwarded={() => requestSave("itemAcquired")}
         onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
         onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null }))}
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}

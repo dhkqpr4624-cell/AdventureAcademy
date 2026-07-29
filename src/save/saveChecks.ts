@@ -13,13 +13,15 @@ const check = (condition: unknown, message: string) => {
 export function runSaveChecks() {
   const state = createInitialGameSaveState();
   state.playerState.currentHp = 31;
+  state.playerState.gold = 19;
   state.questState["quest-floor-1-memory-fragment"] = "active";
   state.floorUnlockState.unlockedFloorIds = ["floor-1"];
   state.storyActionState.executedActionIds = ["quest:quest-floor-1-memory-fragment:unlock:floor-1"];
   const save = createSaveDataFromGameState(state);
   const validated = validateCurrentSave(JSON.parse(JSON.stringify(save)));
-  check(validated?.version === 1, "current version");
+  check(validated?.version === 2, "current version");
   check(validated?.player.currentHp === 31, "HP round trip");
+  check(validated?.player.gold === 19, "gold round trip");
   check(validated?.quests.activeQuestId === "quest-floor-1-memory-fragment", "active quest");
   check(validated?.floors.unlockedFloorIds.includes("floor-1"), "floor unlock");
   check(validated?.story.executedActionIds.length === 1, "action id");
@@ -27,7 +29,18 @@ export function runSaveChecks() {
 
 export function runSaveMigrationChecks() {
   const migrated = migrateSaveData({ playerLevel: 2, hp: 17, activeQuestId: "quest-floor-1-memory-fragment", unlockedFloors: ["floor-1"] });
-  check(migrated.success && migrated.data.version === 1, "v0 migration");
+  check(migrated.success && migrated.data.version === 2 && migrated.data.player.gold === 0, "v0 migration");
+  const v1 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
+  v1.version = 1;
+  v1.player = { level: 3, currentHp: 28, maxHp: 50 };
+  const migratedV1 = migrateSaveData(v1);
+  check(
+    migratedV1.success &&
+      migratedV1.migratedFromVersion === 1 &&
+      migratedV1.data.player.gold === 0 &&
+      !("level" in migratedV1.data.player),
+    "v1 removes level and initializes gold",
+  );
   check(migrateSaveData({ version: 999 }).success === false, "future version rejected");
   check(migrateSaveData(null).success === false, "invalid schema rejected");
   check(INITIAL_PLAYER_STATE.maxHp > 0 && Object.keys(INITIAL_QUEST_STATE).length > 0, "defaults available");
