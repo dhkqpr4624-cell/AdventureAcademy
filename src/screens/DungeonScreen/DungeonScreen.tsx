@@ -91,7 +91,7 @@ import { QuestionScreen } from "../QuestionScreen/QuestionScreen";
 import { MonsterAnimationController } from "../../three/monster/MonsterAnimationController";
 import { DungeonCameraController } from "../../three/dungeon/DungeonCameraController";
 import {
-  BASIC_SWORD_DEFINITION,
+  getSwordDefinitionForEquippedItem,
   SwordViewModel,
 } from "../../three/weapon/SwordViewModel";
 import {
@@ -650,7 +650,12 @@ export function DungeonScreen({
     };
 
     updateViewport();
-    sword.setDefinition(BASIC_SWORD_DEFINITION, camera.aspect);
+    sword.setDefinition(
+      getSwordDefinitionForEquippedItem(
+        inventoryState.equippedItemIds.weaponSkin,
+      ),
+      camera.aspect,
+    );
     window.addEventListener("resize", updateViewport);
 
     let animationFrameId = 0;
@@ -1372,6 +1377,8 @@ export function DungeonScreen({
       roomProgressRef.current,
     );
     if (completion.canComplete) {
+      playerHpRef.current = MAX_HP;
+      setPlayerHp(MAX_HP);
       onFloorCleared();
       onNavigate("baseCamp");
       return;
@@ -2148,6 +2155,8 @@ export function DungeonScreen({
         />
       )}
       {objectiveEvent === "first" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
+        playerHpRef.current = MAX_HP;
+        setPlayerHp(MAX_HP);
         setInventoryState((current) => changeItemQuantity(current, "quest-memory-fragment", 1));
         onObjectiveAcquired(runCorrectCountRef.current);
         onInventoryChanged();
@@ -2157,6 +2166,8 @@ export function DungeonScreen({
         setObjectiveEvent(null);
         setDungeonMode("exploration");
       }} onConfirm={() => {
+        playerHpRef.current = MAX_HP;
+        setPlayerHp(MAX_HP);
         onBestCorrect(runCorrectCountRef.current);
         onFloorCleared();
         onNavigate("baseCamp");

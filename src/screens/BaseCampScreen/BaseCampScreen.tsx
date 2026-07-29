@@ -205,6 +205,7 @@ export function BaseCampScreen({
       setStoryActionState(progression.nextActionState);
       onAutoSave("questAccepted");
       setQuestDetail(null);
+      dialogueCompletedRef.current = false;
       setStorySequenceId(questDetail.acceptStorySequenceId ?? null);
     }
     questAcceptProcessingRef.current = false;
@@ -367,7 +368,21 @@ export function BaseCampScreen({
           <button type="button" onClick={closeFloorList}>닫기</button>
         </section>
       )}
-      {inventoryOpen && <InventoryPopup inventory={inventoryState} gold={playerState.gold} onClose={() => setInventoryOpen(false)} />}
+      {inventoryOpen && <InventoryPopup
+        inventory={inventoryState}
+        gold={playerState.gold}
+        onClose={() => setInventoryOpen(false)}
+        onEquipmentChange={(slot, itemId) => {
+          setInventoryState((current) => ({
+            ...current,
+            equippedItemIds: {
+              ...current.equippedItemIds,
+              [slot]: itemId,
+            },
+          }));
+          onAutoSave("equipmentChanged");
+        }}
+      />}
       {shopOpen && <ShopPopup inventory={inventoryState} gold={playerState.gold} message={shopMessage} onBuy={buyItem} onClose={() => {
         setShopOpen(false);
         setFocusPointId("campCenter");
