@@ -2256,7 +2256,7 @@ button:focus-visible {
 }
 
 .story-player-ruins .story-npc {
-  transform: translate(-50%, 10px);
+  transform: translate(-50%, -15px);
 }
 
 .story-player-airship .story-npc[data-actor-id="luna"] {

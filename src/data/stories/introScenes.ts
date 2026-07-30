@@ -437,7 +437,7 @@ const SCENE_2 = storySequence(
     {
       id: "scene2-camera-zoom-out",
       type: "cameraZoom",
-      zoom: 0.94,
+      zoom: 1,
       durationMs: 1500,
       advanceMode: "auto",
     },
