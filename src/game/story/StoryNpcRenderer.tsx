@@ -2,6 +2,8 @@ import type { StoryRenderState } from "../../types/story";
 import type { CSSProperties } from "react";
 import {
   getStoryNpcAsset,
+  STORY_NPC_DISPLAY_HEIGHT,
+  STORY_NPC_DISPLAY_WIDTH,
   STORY_NPC_WALK_FPS,
   STORY_NPC_WALK_FRAME_COUNT,
 } from "./storyNpcRegistry";
@@ -15,6 +17,8 @@ export function StoryNpcRenderer({ npcs }: { npcs: StoryRenderState["storyNpcs"]
         const style = {
           left: `${npc.x}%`,
           bottom: `${npc.y}%`,
+          width: `${STORY_NPC_DISPLAY_WIDTH}%`,
+          height: `${STORY_NPC_DISPLAY_HEIGHT}%`,
           transitionDuration: `${npc.durationMs}ms`,
           "--story-npc-sheet": `url("${asset}")`,
           "--story-npc-frame-count": STORY_NPC_WALK_FRAME_COUNT,
@@ -29,7 +33,12 @@ export function StoryNpcRenderer({ npcs }: { npcs: StoryRenderState["storyNpcs"]
             data-facing={npc.facing}
             style={style}
           >
-            {npc.pose !== "Walking" && <img src={asset} alt="" draggable={false} />}
+            <img
+              className="story-npc-static-frame"
+              src={asset}
+              alt=""
+              draggable={false}
+            />
           </div>
         );
       })}

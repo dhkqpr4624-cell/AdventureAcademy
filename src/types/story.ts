@@ -7,6 +7,11 @@ export type StoryNpcPose = "Standing" | "Walking" | "FallDown";
 
 export type StoryVisualAsset = {
   imageUrl?: string;
+  layers?: {
+    id: string;
+    imageUrl: string;
+    order: number;
+  }[];
   placeholder: {
     label: string;
     subtitle?: string;
@@ -19,6 +24,7 @@ export type StoryActor = {
   name: string;
   role?: string;
   portraits: Record<string, StoryVisualAsset>;
+  accentColor?: string;
 };
 
 type AutoStoryStep = {

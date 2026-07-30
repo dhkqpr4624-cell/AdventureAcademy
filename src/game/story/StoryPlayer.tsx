@@ -21,6 +21,7 @@ import {
 import { StoryChoiceList } from "../../components/StoryChoiceList";
 import type { StoryChoiceOption } from "../../types/story";
 import { StoryNpcRenderer } from "./StoryNpcRenderer";
+import { STORY_NPC_ASSET_URLS } from "./storyNpcRegistry";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
@@ -59,7 +60,15 @@ function collectImageUrls(sequence: StorySequence) {
     ),
   ];
 
-  return [...new Set(assets.flatMap((asset) => (asset.imageUrl ? [asset.imageUrl] : [])))];
+  return [
+    ...new Set([
+      ...assets.flatMap((asset) => [
+        ...(asset.imageUrl ? [asset.imageUrl] : []),
+        ...(asset.layers?.map((layer) => layer.imageUrl) ?? []),
+      ]),
+      ...STORY_NPC_ASSET_URLS,
+    ]),
+  ];
 }
 
 function StoryAsset({
@@ -318,6 +327,22 @@ export function StoryPlayer({
     presentationMode,
     Boolean(playerStatus),
   );
+  const dialogueActor =
+    renderState.dialogue?.kind === "dialogue" && activeActorId
+      ? sequence.actors[activeActorId]
+      : undefined;
+  const visiblePortraits =
+    Object.keys(renderState.portraits).length > 0
+      ? Object.values(renderState.portraits)
+      : dialogueActor?.portraits.default
+        ? [{
+            actorId: dialogueActor.id,
+            portraitId: "default",
+            position: "left" as const,
+            transition: "fade" as const,
+            revision: 0,
+          }]
+        : [];
 
   return (
     <main
@@ -340,7 +365,18 @@ export function StoryPlayer({
           key={renderState.backgroundRevision}
           className={`story-background story-transition-${renderState.backgroundTransition}`}
         >
-          {background && (
+          {background?.layers?.map((layer) => (
+            <img
+              key={layer.id}
+              className="story-background-layer"
+              src={layer.imageUrl}
+              alt=""
+              draggable={false}
+              style={{ zIndex: layer.order }}
+              onError={() => markImageFailed(layer.imageUrl)}
+            />
+          ))}
+          {background && !background.layers?.length && (
             <StoryAsset
               asset={background}
               alt={background.placeholder.label}
@@ -378,7 +414,7 @@ export function StoryPlayer({
       )}
 
       <div className="story-portrait-layer" aria-live="polite">
-        {Object.values(renderState.portraits).map((portrait) => {
+        {visiblePortraits.map((portrait) => {
           const actor = sequence.actors[portrait.actorId];
           const asset = actor?.portraits[portrait.portraitId];
           const isDimmed = !isNarration && activeActorId !== portrait.actorId;
@@ -419,6 +455,11 @@ export function StoryPlayer({
             renderState.dialogue.kind === "narration" ? "is-narration" : ""
           }`}
           aria-live="polite"
+          style={
+            dialogueActor
+              ? ({ "--story-speaker-accent": dialogueActor.accentColor } as CSSProperties)
+              : undefined
+          }
         >
           {renderState.dialogue.kind === "dialogue" && (
             <p className="story-speaker-name">

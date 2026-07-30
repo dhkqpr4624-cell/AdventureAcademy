@@ -1,42 +1,69 @@
 import type {
   IntroSceneSequence,
+  StoryActor,
   StorySequence,
   StoryStep,
 } from "../../types/story";
+import { NPC_PORTRAIT_REGISTRY } from "../../game/npc/npcPortraitRegistry";
+import { INTRO_SCRIPT } from "./introScript";
 
-const AIRSHIP_BACKGROUND = "/assets/story/backgrounds/intro-airship.png";
-const RUINS_BACKGROUND = "/assets/story/backgrounds/intro-ruins.png";
 const PORTAL_APPEARS_ILLUST =
-  "/assets/story/illustrations/intro-portal-appears.png";
+  "/assets/story/illustrations/intro_portal_opened.png";
 const PORTAL_PULL_ILLUST =
-  "/assets/story/illustrations/intro-portal-pull.png";
+  "/assets/story/illustrations/intro_portal_swallow_plane.png";
+
+const scriptCursors = { scene1: 0, scene2: 0 };
 
 function dialogue(
   id: string,
   actorId: string,
   speakerName: string,
-  text: string,
 ): StoryStep {
+  const sceneId = id.startsWith("scene1") ? "scene1" : "scene2";
+  const entry = INTRO_SCRIPT[sceneId][scriptCursors[sceneId]++];
+  if (!entry || entry.speakerId !== actorId || entry.speakerName !== speakerName) {
+    throw new Error(`[IntroScript] Dialogue order mismatch at ${id}.`);
+  }
   return {
     id,
     type: "dialogue",
     speakerId: actorId,
     speakerName,
     activeActorId: actorId,
-    text,
+    text: entry.text,
     advanceMode: "click",
   };
 }
 
-function narration(id: string, text: string): StoryStep {
-  return { id, type: "narration", text, advanceMode: "click" };
+function createActor(
+  id: "luna" | "theo" | "kaiden",
+  name: string,
+  role: string,
+  accentColor: string,
+): StoryActor {
+  return {
+    id,
+    name,
+    role,
+    accentColor,
+    portraits: {
+      default: {
+        imageUrl: NPC_PORTRAIT_REGISTRY[`${id}.default`],
+        placeholder: {
+          label: name,
+          subtitle: role,
+          gradient: "linear-gradient(135deg, #30291f, #111)",
+        },
+      },
+    },
+  };
 }
 
 function storySequence(
   id: string,
   title: string,
   backgroundId: string,
-  backgroundUrl: string,
+  layers: NonNullable<StorySequence["backgrounds"][string]["layers"]>,
   steps: StoryStep[],
 ): StorySequence {
   return {
@@ -45,14 +72,18 @@ function storySequence(
     scenes: [{ id: `${id}-scene`, steps }],
     backgrounds: {
       [backgroundId]: {
-        imageUrl: backgroundUrl,
+        layers,
         placeholder: {
           label: title,
           gradient: "linear-gradient(180deg, #399eea, #162334)",
         },
       },
     },
-    actors: {},
+    actors: {
+      luna: createActor("luna", "루나", "지형 분석가", "#ff8b72"),
+      theo: createActor("theo", "테오", "보급 담당", "#7fc8ff"),
+      kaiden: createActor("kaiden", "카이든", "지휘관", "#d9b6ff"),
+    },
     replayable: true,
     skippable: true,
     onCompleteScreen: "story",
@@ -63,7 +94,11 @@ const SCENE_1 = storySequence(
   "intro-scene-1",
   "하늘을 나는 비행선",
   "airship",
-  AIRSHIP_BACKGROUND,
+  [
+    { id: "sky", imageUrl: "/assets/story/backgrounds/airship/sky.png", order: 0 },
+    { id: "ground", imageUrl: "/assets/story/backgrounds/airship/ground.png", order: 1 },
+    { id: "foreground", imageUrl: "/assets/story/backgrounds/airship/foreground.png", order: 2 },
+  ],
   [
     {
       id: "scene1-background",
@@ -79,7 +114,7 @@ const SCENE_1 = storySequence(
       pose: "Standing",
       facing: "Left",
       x: 54,
-      y: 20,
+      y: 49,
       advanceMode: "auto",
     },
     {
@@ -100,13 +135,8 @@ const SCENE_1 = storySequence(
       durationMs: 2800,
       advanceMode: "auto",
     },
-    dialogue("scene1-luna-01", "luna", "루나", "우와~ 오늘 날씨 최고다!"),
-    dialogue(
-      "scene1-luna-02",
-      "luna",
-      "루나",
-      "이 정도면 포탈 조사도 금방 끝나겠는데?",
-    ),
+    dialogue("scene1-luna-01", "luna", "루나"),
+    dialogue("scene1-luna-02", "luna", "루나"),
     {
       id: "scene1-theo-walk-in",
       type: "npcWalk",
@@ -118,13 +148,8 @@ const SCENE_1 = storySequence(
       durationMs: 2200,
       advanceMode: "auto",
     },
-    dialogue("scene1-theo-01", "theo", "테오", "...방심은 금물입니다."),
-    dialogue(
-      "scene1-theo-02",
-      "theo",
-      "테오",
-      "포탈은 겉보기와 실제 위험도가 다른 경우가 많습니다.",
-    ),
+    dialogue("scene1-theo-01", "theo", "테오"),
+    dialogue("scene1-theo-02", "theo", "테오"),
     {
       id: "scene1-theo-check-supplies",
       type: "cameraPan",
@@ -140,26 +165,11 @@ const SCENE_1 = storySequence(
       durationMs: 700,
       advanceMode: "auto",
     },
-    dialogue("scene1-luna-03", "luna", "루나", "에이~ 또 시작이네."),
-    dialogue(
-      "scene1-luna-04",
-      "luna",
-      "루나",
-      "테오는 언제나 걱정부터 한다니까?",
-    ),
-    dialogue("scene1-theo-03", "theo", "테오", "걱정이 아니라 대비입니다."),
-    dialogue(
-      "scene1-theo-04",
-      "theo",
-      "테오",
-      "대비가 충분하면 위험은 줄어듭니다.",
-    ),
-    dialogue(
-      "scene1-luna-05",
-      "luna",
-      "루나",
-      "그래도 너무 긴장하면 재미없잖아!",
-    ),
+    dialogue("scene1-luna-03", "luna", "루나"),
+    dialogue("scene1-luna-04", "luna", "루나"),
+    dialogue("scene1-theo-03", "theo", "테오"),
+    dialogue("scene1-theo-04", "theo", "테오"),
+    dialogue("scene1-luna-05", "luna", "루나"),
     {
       id: "scene1-kaiden-walk-in",
       type: "npcWalk",
@@ -171,56 +181,16 @@ const SCENE_1 = storySequence(
       durationMs: 2100,
       advanceMode: "auto",
     },
-    dialogue(
-      "scene1-kaiden-01",
-      "kaiden",
-      "카이든",
-      "둘 다 거기까지만 하도록 하지.",
-    ),
-    dialogue(
-      "scene1-kaiden-02",
-      "kaiden",
-      "카이든",
-      "이번 임무에 함께할 대원도 도착했으니, 서로 인사 먼저 나누는 게 좋겠군.",
-    ),
-    dialogue(
-      "scene1-kaiden-03",
-      "kaiden",
-      "카이든",
-      "이번에 함께할 어드벤처 아카데미의 대원, (플레이어 이름)이다.",
-    ),
-    dialogue(
-      "scene1-luna-06",
-      "luna",
-      "루나",
-      "아하~ 당신이 이번에 함께하기로 한 멤버구나!",
-    ),
-    dialogue(
-      "scene1-luna-07",
-      "luna",
-      "루나",
-      "잘 부탁해! 나는 루나! 포탈 안쪽 지형을 분석하는 사람이야!",
-    ),
-    dialogue(
-      "scene1-theo-05",
-      "theo",
-      "테오",
-      "보급 담당인 테오입니다.\n잘 부탁합니다, (플레이어 이름).",
-    ),
-    dialogue(
-      "scene1-kaiden-04",
-      "kaiden",
-      "카이든",
-      "이번 임무는 서울 근처에 나타난 포탈을 조사하는 것이다.",
-    ),
-    dialogue(
-      "scene1-kaiden-05",
-      "kaiden",
-      "카이든",
-      "도착까지 얼마 남지 않았으니, 모두 장비를 점검하도록.",
-    ),
-    dialogue("scene1-luna-08", "luna", "루나", "네, 대장~!"),
-    dialogue("scene1-theo-06", "theo", "테오", "알겠습니다."),
+    dialogue("scene1-kaiden-01", "kaiden", "카이든"),
+    dialogue("scene1-kaiden-02", "kaiden", "카이든"),
+    dialogue("scene1-kaiden-03", "kaiden", "카이든"),
+    dialogue("scene1-luna-06", "luna", "루나"),
+    dialogue("scene1-luna-07", "luna", "루나"),
+    dialogue("scene1-theo-05", "theo", "테오"),
+    dialogue("scene1-kaiden-04", "kaiden", "카이든"),
+    dialogue("scene1-kaiden-05", "kaiden", "카이든"),
+    dialogue("scene1-luna-08", "luna", "루나"),
+    dialogue("scene1-theo-06", "theo", "테오"),
     {
       id: "scene1-first-shake",
       type: "shake",
@@ -242,29 +212,14 @@ const SCENE_1 = storySequence(
       durationMs: 500,
       advanceMode: "auto",
     },
-    dialogue(
-      "scene1-luna-09",
-      "luna",
-      "루나",
-      "어라, 대장!\n큰일... 난 것 같은데?",
-    ),
-    dialogue("scene1-theo-07", "theo", "테오", "...저런."),
-    dialogue(
-      "scene1-theo-08",
-      "theo",
-      "테오",
-      "예정된 좌표에 없는 포탈입니다.",
-    ),
-    dialogue("scene1-luna-10", "luna", "루나", "엄청 큰데?"),
-    dialogue("scene1-luna-11", "luna", "루나", "저런 건 처음 보는데!?"),
-    dialogue("scene1-kaiden-06", "kaiden", "카이든", "..."),
-    dialogue("scene1-kaiden-07", "kaiden", "카이든", "방향이 바뀐다."),
-    dialogue(
-      "scene1-sailor-01",
-      "sailor",
-      "선원",
-      "선박이 빨려들어갑니다!",
-    ),
+    dialogue("scene1-luna-09", "luna", "루나"),
+    dialogue("scene1-theo-07", "theo", "테오"),
+    dialogue("scene1-theo-08", "theo", "테오"),
+    dialogue("scene1-luna-10", "luna", "루나"),
+    dialogue("scene1-luna-11", "luna", "루나"),
+    dialogue("scene1-kaiden-06", "kaiden", "카이든"),
+    dialogue("scene1-kaiden-07", "kaiden", "카이든"),
+    dialogue("scene1-sailor-01", "sailor", "선원"),
     {
       id: "scene1-strong-shake",
       type: "shake",
@@ -272,9 +227,8 @@ const SCENE_1 = storySequence(
       amplitude: 18,
       advanceMode: "auto",
     },
-    dialogue("scene1-luna-12", "luna", "루나", "앗?!"),
-    dialogue("scene1-theo-09", "theo", "테오", "모두 고정하십시오!"),
-    narration("scene1-light", "거대한 빛."),
+    dialogue("scene1-luna-12", "luna", "루나"),
+    dialogue("scene1-theo-09", "theo", "테오"),
     {
       id: "scene1-portal-appears-hide",
       type: "illustOverlay",
@@ -317,7 +271,10 @@ const SCENE_2 = storySequence(
   "intro-scene-2",
   "시간이 뒤틀린 유적",
   "ruins",
-  RUINS_BACKGROUND,
+  [
+    { id: "background", imageUrl: "/assets/story/backgrounds/ruins/background.png", order: 0 },
+    { id: "ground", imageUrl: "/assets/story/backgrounds/ruins/ground.png", order: 1 },
+  ],
   [
     {
       id: "scene2-background",
@@ -431,179 +388,45 @@ const SCENE_2 = storySequence(
       durationMs: 1500,
       advanceMode: "auto",
     },
-    narration("scene2-dots-01", "..."),
-    narration("scene2-dots-02", "..."),
-    narration("scene2-dots-03", "..."),
-    narration("scene2-impact", "쿵!!"),
-    dialogue("scene2-luna-01", "luna", "루나", "...으아..."),
-    dialogue("scene2-luna-02", "luna", "루나", "여긴 뭐야?"),
-    dialogue("scene2-luna-03", "luna", "루나", "...대장~!"),
-    dialogue(
-      "scene2-luna-04",
-      "luna",
-      "루나",
-      "여기, 시간의 흐름이 완전 이상해!",
-    ),
-    dialogue("scene2-theo-01", "theo", "테오", "..."),
-    dialogue(
-      "scene2-theo-02",
-      "theo",
-      "테오",
-      "이곳은 일반 포탈이 아닙니다.",
-    ),
-    dialogue(
-      "scene2-theo-03",
-      "theo",
-      "테오",
-      "시간의 흐름 자체가 뒤틀려 있습니다.",
-    ),
-    dialogue("scene2-luna-05", "luna", "루나", "우와!"),
-    dialogue(
-      "scene2-luna-06",
-      "luna",
-      "루나",
-      "이런 포탈은 처음 보는걸?",
-    ),
-    dialogue(
-      "scene2-theo-04",
-      "theo",
-      "테오",
-      "...신기한 만큼 위험합니다.",
-    ),
-    dialogue(
-      "scene2-theo-05",
-      "theo",
-      "테오",
-      "시간이 일정하지 않다면 지형도 계속 변할 가능성이 있습니다.",
-    ),
-    dialogue(
-      "scene2-kaiden-01",
-      "kaiden",
-      "카이든",
-      "...모두 상태를 보고하라.",
-    ),
-    dialogue("scene2-luna-07", "luna", "루나", "몸은 괜찮아!"),
-    dialogue(
-      "scene2-luna-08",
-      "luna",
-      "루나",
-      "...근데 힘이 조금 빠지는 느낌?",
-    ),
-    dialogue("scene2-theo-06", "theo", "테오", "저도 같습니다."),
-    dialogue(
-      "scene2-theo-07",
-      "theo",
-      "테오",
-      "포탈 내부의 영향으로 능력이 크게 제한된 상태입니다.",
-    ),
-    dialogue("scene2-kaiden-02", "kaiden", "카이든", "예상 범위다."),
-    dialogue(
-      "scene2-kaiden-03",
-      "kaiden",
-      "카이든",
-      "포탈 안에서는 언제나 우리의 힘이 약해진다.",
-    ),
-    dialogue("scene2-luna-09", "luna", "루나", "그래도 익숙하잖아!"),
-    dialogue(
-      "scene2-luna-10",
-      "luna",
-      "루나",
-      "천천히 조사하면 돼!",
-    ),
-    dialogue(
-      "scene2-kaiden-04",
-      "kaiden",
-      "카이든",
-      "(플레이어 이름).",
-    ),
-    dialogue(
-      "scene2-kaiden-05",
-      "kaiden",
-      "카이든",
-      "무기를 확인해라.",
-    ),
-    dialogue(
-      "scene2-kaiden-06",
-      "kaiden",
-      "카이든",
-      "이곳에서는 기본 장비만 사용할 수 있다.",
-    ),
-    dialogue(
-      "scene2-theo-08",
-      "theo",
-      "테오",
-      "비상 보급품은 충분합니다.",
-    ),
-    dialogue(
-      "scene2-theo-09",
-      "theo",
-      "테오",
-      "하지만 이곳의 구조를 파악하기 전까지는 신중히 움직이는 편이 좋겠습니다.",
-    ),
-    dialogue("scene2-luna-11", "luna", "루나", "대장~!"),
-    dialogue(
-      "scene2-luna-12",
-      "luna",
-      "루나",
-      "저기 언덕 위가 주변이 잘 보일 것 같은데?",
-    ),
-    dialogue(
-      "scene2-luna-13",
-      "luna",
-      "루나",
-      "거기서 시작하면 어떨까?",
-    ),
-    dialogue("scene2-kaiden-07", "kaiden", "카이든", "...좋다."),
-    dialogue(
-      "scene2-kaiden-08",
-      "kaiden",
-      "카이든",
-      "우선 저곳을 베이스 캠프로 삼는다.",
-    ),
-    dialogue(
-      "scene2-kaiden-09",
-      "kaiden",
-      "카이든",
-      "루나는 주변 지형을 조사.",
-    ),
-    dialogue(
-      "scene2-kaiden-10",
-      "kaiden",
-      "카이든",
-      "테오는 장비와 보급품을 점검.",
-    ),
-    dialogue("scene2-theo-10", "theo", "테오", "알겠습니다."),
-    dialogue(
-      "scene2-theo-11",
-      "theo",
-      "테오",
-      "바로 준비하겠습니다.",
-    ),
-    dialogue("scene2-luna-14", "luna", "루나", "좋아!"),
-    dialogue(
-      "scene2-kaiden-11",
-      "kaiden",
-      "카이든",
-      "(플레이어 이름).",
-    ),
-    dialogue(
-      "scene2-kaiden-12",
-      "kaiden",
-      "카이든",
-      "우선 이 포탈에 갇힌 이상,\n이 포탈을 클리어하여 탈출하는 방법밖에 없다.",
-    ),
-    dialogue(
-      "scene2-kaiden-13",
-      "kaiden",
-      "카이든",
-      "함께 천천히 이 포탈을 조사해 나가도록 하지.",
-    ),
-    dialogue(
-      "scene2-kaiden-14",
-      "kaiden",
-      "카이든",
-      "...출발하겠다.",
-    ),
+    dialogue("scene2-luna-01", "luna", "루나"),
+    dialogue("scene2-luna-02", "luna", "루나"),
+    dialogue("scene2-luna-03", "luna", "루나"),
+    dialogue("scene2-luna-04", "luna", "루나"),
+    dialogue("scene2-theo-01", "theo", "테오"),
+    dialogue("scene2-theo-02", "theo", "테오"),
+    dialogue("scene2-theo-03", "theo", "테오"),
+    dialogue("scene2-luna-05", "luna", "루나"),
+    dialogue("scene2-luna-06", "luna", "루나"),
+    dialogue("scene2-theo-04", "theo", "테오"),
+    dialogue("scene2-theo-05", "theo", "테오"),
+    dialogue("scene2-kaiden-01", "kaiden", "카이든"),
+    dialogue("scene2-luna-07", "luna", "루나"),
+    dialogue("scene2-luna-08", "luna", "루나"),
+    dialogue("scene2-theo-06", "theo", "테오"),
+    dialogue("scene2-theo-07", "theo", "테오"),
+    dialogue("scene2-kaiden-02", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-03", "kaiden", "카이든"),
+    dialogue("scene2-luna-09", "luna", "루나"),
+    dialogue("scene2-luna-10", "luna", "루나"),
+    dialogue("scene2-kaiden-04", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-05", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-06", "kaiden", "카이든"),
+    dialogue("scene2-theo-08", "theo", "테오"),
+    dialogue("scene2-theo-09", "theo", "테오"),
+    dialogue("scene2-luna-11", "luna", "루나"),
+    dialogue("scene2-luna-12", "luna", "루나"),
+    dialogue("scene2-luna-13", "luna", "루나"),
+    dialogue("scene2-kaiden-07", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-08", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-09", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-10", "kaiden", "카이든"),
+    dialogue("scene2-theo-10", "theo", "테오"),
+    dialogue("scene2-theo-11", "theo", "테오"),
+    dialogue("scene2-luna-14", "luna", "루나"),
+    dialogue("scene2-kaiden-11", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-12", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-13", "kaiden", "카이든"),
+    dialogue("scene2-kaiden-14", "kaiden", "카이든"),
     {
       id: "scene2-camera-pan-up",
       type: "cameraPan",
@@ -630,14 +453,7 @@ export const INTRO_SCENE_SEQUENCE: IntroSceneSequence = {
     {
       id: "Scene0",
       mode: "introText",
-      lines: [
-        "어드벤처 아카데미",
-        "오래전부터 정체를 알 수 없는 포탈이 세계 곳곳에 나타나기 시작했다.",
-        "포탈 안에서는 마물들이 사람들을 위협하고",
-        "수많은 이상현상이 발생한다.",
-        "어드벤처 아카데미는 이러한 포탈을 조사하고",
-        "세계의 흐름을 바로잡는 탐험가들의 단체이다.",
-      ],
+      lines: INTRO_SCRIPT.scene0,
     },
     { id: "Scene1", mode: "story", sequence: SCENE_1 },
     { id: "Scene2", mode: "story", sequence: SCENE_2 },
