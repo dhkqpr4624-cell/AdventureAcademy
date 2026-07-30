@@ -2760,8 +2760,8 @@ button:focus-visible {
 .story-portrait {
   position: absolute;
   bottom: max(2.2vh, env(safe-area-inset-bottom));
-  width: clamp(112px, 13vw, 176px);
-  height: clamp(7rem, 20vh, 10.5rem);
+  width: clamp(101px, 11.7vw, 158px);
+  height: clamp(6.3rem, 18vh, 9.45rem);
   overflow: visible;
   transform-origin: bottom center;
   transition:
@@ -3047,10 +3047,13 @@ button:focus-visible {
 }
 
 .story-dialogue-text {
-  max-width: 72ch;
+  width: 60%;
+  max-width: 60%;
   margin: 0;
-  font-size: clamp(0.94rem, 1.8vw, 1.18rem);
+  font-size: 18px;
+  font-weight: 600;
   line-height: 1.65;
+  text-align: left;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -3191,8 +3194,8 @@ button:focus-visible {
 @media (max-aspect-ratio: 4 / 3) {
   .story-portrait {
     bottom: max(2.2vh, env(safe-area-inset-bottom));
-    width: clamp(104px, 18vw, 152px);
-    height: clamp(7rem, 18vh, 9rem);
+    width: clamp(94px, 16.2vw, 137px);
+    height: clamp(6.3rem, 16.2vh, 8.1rem);
   }
 
   .story-dialogue-box {
@@ -3202,6 +3205,11 @@ button:focus-visible {
 }
 
 @media (max-width: 680px) {
+  .story-dialogue-text {
+    width: 100%;
+    max-width: 100%;
+  }
+
   .story-choice-list {
     position: static;
     width: 100%;
