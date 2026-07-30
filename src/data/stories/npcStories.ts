@@ -100,6 +100,17 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
   ),
 };
 
+NPC_STORY_SEQUENCES["npc-kaiden-quest-accepted"].scenes[0].steps.push({
+  id: "npc-kaiden-quest-accepted-danger-warning",
+  type: "dialogue",
+  speakerId: "kaiden",
+  speakerName: "카이든",
+  activeActorId: "kaiden",
+  text: "던전 안에서 오답을 선택할 경우\n마물들이 강해지니 조심해야 한다는 점도\n잊지 말게.",
+  emphasis: "danger",
+  advanceMode: "click",
+});
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {

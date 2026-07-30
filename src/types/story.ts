@@ -56,6 +56,7 @@ export type StoryStep =
       speakerName: string;
       activeActorId?: string;
       text: string;
+      emphasis?: "danger";
       advanceMode: "click";
     }
   | {
@@ -96,6 +97,7 @@ export type StoryStep =
       type: "cameraPan";
       x: number;
       y: number;
+      zoom?: number;
       durationMs: number;
       advanceMode: "auto";
     }
@@ -209,6 +211,7 @@ export type StoryDialogueState =
       speakerName: string;
       text: string;
       activeActorId?: string;
+      emphasis?: "danger";
     }
   | {
       kind: "narration";

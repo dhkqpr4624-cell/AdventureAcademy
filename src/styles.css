@@ -2692,6 +2692,11 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
+.story-dialogue-text.is-danger-emphasis {
+  color: #ff5a52;
+  font-weight: 900;
+}
+
 .story-next-button {
   position: absolute;
   right: clamp(0.75rem, 2vw, 1.2rem);

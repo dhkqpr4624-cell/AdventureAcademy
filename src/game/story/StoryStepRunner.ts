@@ -137,6 +137,7 @@ export class StoryStepRunner {
             speakerName: context.resolveText(step.speakerName),
             text: context.resolveText(step.text),
             activeActorId: step.activeActorId,
+            emphasis: step.emphasis,
           },
         }));
         break;
@@ -164,7 +165,13 @@ export class StoryStepRunner {
       case "cameraPan":
         context.updateState((state) => ({
           ...state,
-          camera: { ...state.camera, x: step.x, y: step.y, durationMs: step.durationMs },
+          camera: {
+            ...state.camera,
+            x: step.x,
+            y: step.y,
+            zoom: step.zoom ?? state.camera.zoom,
+            durationMs: step.durationMs,
+          },
         }));
         break;
       case "cameraZoom":

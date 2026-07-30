@@ -425,7 +425,16 @@ export function StoryPlayer({
               {renderState.dialogue.speakerName}
             </p>
           )}
-          <p className="story-dialogue-text">{renderState.dialogue.text}</p>
+          <p
+            className={`story-dialogue-text ${
+              renderState.dialogue.kind === "dialogue" &&
+              renderState.dialogue.emphasis === "danger"
+                ? "is-danger-emphasis"
+                : ""
+            }`}
+          >
+            {renderState.dialogue.text}
+          </p>
           {currentStep?.type === "choice" ? (
             <StoryChoiceList options={currentStep.options} disabled={isTransitioning} onChoose={choose} />
           ) : <button
