@@ -62,8 +62,11 @@ export type SaveDataV6 = Omit<SaveDataV5, "version" | "player"> & {
   player: Omit<SaveDataV5["player"], "defense">;
 };
 
-export type SaveDataV7 = Omit<SaveDataV6, "version" | "dungeon"> & {
+export type SaveDataV7 = Omit<SaveDataV6, "version" | "dungeon" | "questProgress"> & {
   version: 7;
+  questProgress: SaveDataV6["questProgress"] & {
+    achievementReceived: Record<string, boolean>;
+  };
   dungeon: SaveDataV6["dungeon"] & {
     currentFloorRun: DungeonFloorRunState | null;
   };

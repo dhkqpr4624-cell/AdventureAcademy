@@ -36,6 +36,8 @@ import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
 import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
 import { isRareRewardEligible } from "../../game/balance/floorBalance";
+import { AchievementPopup } from "../../components/AchievementPopup";
+import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -55,6 +57,8 @@ type BaseCampScreenProps = {
   floorBestCorrect: Record<string, number>;
   rewardClaimed: Record<string, boolean>;
   setRewardClaimed: (questId: string) => void;
+  achievementReceived: Record<string, boolean>;
+  setAchievementReceived: (achievementId: string) => void;
 };
 
 export function BaseCampScreen({
@@ -75,6 +79,8 @@ export function BaseCampScreen({
   floorBestCorrect,
   rewardClaimed,
   setRewardClaimed,
+  achievementReceived,
+  setAchievementReceived,
 }: BaseCampScreenProps) {
   const viewportRef = useRef<BaseCampViewportController>(null);
   const interactionLockRef = useRef(false);
@@ -88,6 +94,7 @@ export function BaseCampScreen({
   const [floorListOpen, setFloorListOpen] = useState(false);
   const [cameraTransitioning, setCameraTransitioning] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [achievementOpen, setAchievementOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [shopMessage, setShopMessage] = useState("");
   const [memoryCompletionOpen, setMemoryCompletionOpen] = useState(false);
@@ -266,10 +273,16 @@ export function BaseCampScreen({
       </aside>
 
       {!storySequenceId && (
-        <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
-          <img src={`${import.meta.env.BASE_URL}assets/ui/inventory.png`} alt="" aria-hidden="true" draggable={false} />
-          <span className="visually-hidden">인벤토리</span>
-        </button>
+        <div className="utility-button-row">
+          <button type="button" className="inventory-open-button" disabled={interactionLocked} onClick={() => setInventoryOpen(true)}>
+            <img src={`${import.meta.env.BASE_URL}assets/ui/inventory.png`} alt="" aria-hidden="true" draggable={false} />
+            <span className="visually-hidden">인벤토리</span>
+          </button>
+          <button type="button" className="achievement-open-button" disabled={interactionLocked} onClick={() => setAchievementOpen(true)}>
+            <img src={`${import.meta.env.BASE_URL}assets/ui/achievement.png`} alt="" aria-hidden="true" draggable={false} />
+            <span className="visually-hidden">업적</span>
+          </button>
+        </div>
       )}
 
       <nav className="base-camp-main-controls" aria-label="베이스캠프 이동">
@@ -402,6 +415,19 @@ export function BaseCampScreen({
           onAutoSave("equipmentChanged");
         }}
       />}
+      {achievementOpen && <AchievementPopup
+        floorBestCorrect={floorBestCorrect}
+        achievementReceived={achievementReceived}
+        onClose={() => setAchievementOpen(false)}
+        onClaim={(achievementId) => {
+          const achievement = ACHIEVEMENT_DEFINITIONS.find((entry) => entry.id === achievementId);
+          if (!achievement || achievementReceived[achievement.id]) return;
+          if ((floorBestCorrect[achievement.floorId] ?? 0) < achievement.requiredCorrect) return;
+          setInventoryState((current) => changeItemQuantity(current, achievement.rewardItemId, 1));
+          setAchievementReceived(achievement.id);
+          onAutoSave("itemAcquired");
+        }}
+      />}
       {shopOpen && <ShopPopup inventory={inventoryState} gold={playerState.gold} message={shopMessage} onBuy={buyItem} onClose={() => {
         setShopOpen(false);
         setFocusPointId("campCenter");
@@ -429,6 +455,9 @@ export function BaseCampScreen({
           });
           setQuestState((current) => ({ ...current, [memoryQuestId]: "completed" }));
           setRewardClaimed(memoryQuestId);
+          if (rareUnlocked) {
+            setAchievementReceived("achievement-floor-1-rare-reward");
+          }
           onAutoSave("questCompleted");
           setRewardOpen(false);
         }}

@@ -131,6 +131,9 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
       floorBestCorrect: Object.fromEntries(Object.entries(value.questProgress.floorBestCorrect).filter(([, count]) => Number.isFinite(count) && (count as number) >= 0).map(([id, count]) => [id, Math.floor(count as number)])),
       firstObjectiveEventSeen: Object.fromEntries(Object.entries(value.questProgress.firstObjectiveEventSeen).filter(([, seen]) => typeof seen === "boolean")) as Record<string, boolean>,
       rewardClaimed: Object.fromEntries(Object.entries(value.questProgress.rewardClaimed).filter(([, claimed]) => typeof claimed === "boolean")) as Record<string, boolean>,
+      achievementReceived: isObject(value.questProgress.achievementReceived)
+        ? Object.fromEntries(Object.entries(value.questProgress.achievementReceived).filter(([, received]) => typeof received === "boolean")) as Record<string, boolean>
+        : {},
     },
   };
 }

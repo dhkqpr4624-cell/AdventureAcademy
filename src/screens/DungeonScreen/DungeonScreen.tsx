@@ -125,6 +125,7 @@ import {
   getWrongAnswerDamageForFloor,
 } from "../../game/balance/floorBalance";
 import { DungeonMinimap } from "../../components/DungeonMinimap";
+import { DungeonFloorIntro } from "../../components/DungeonFloorIntro";
 import {
   canEnterFinalRoom,
   isFinalRoom,
@@ -317,6 +318,7 @@ export function DungeonScreen({
   );
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
+  const [floorIntroVisible, setFloorIntroVisible] = useState(true);
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
     savedFloorRun?.floorId === ACTIVE_FLOOR_ID &&
@@ -445,6 +447,8 @@ export function DungeonScreen({
 
   useEffect(() => {
     onDungeonEntered();
+    const timer = window.setTimeout(() => setFloorIntroVisible(false), 3200);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const minimapVisible =
@@ -1806,6 +1810,7 @@ export function DungeonScreen({
         className="dungeon-scene"
         aria-label="고정 테스트 던전"
       />
+      {floorIntroVisible && <DungeonFloorIntro floorId={ACTIVE_FLOOR_ID} />}
       {exitButtonState.visible && (
         <DungeonExitButton
           disabled={exitButtonState.disabled}
@@ -2124,7 +2129,7 @@ export function DungeonScreen({
         )}
       </CombatDialoguePanel>}
 
-      {(dungeonMode === "exploration" || dungeonMode === "moving") && (
+      {!floorIntroVisible && (dungeonMode === "exploration" || dungeonMode === "moving") && (
         <section className="dungeon-movement-panel" aria-label="던전 이동 선택">
           <p className="eyebrow">DUNGEON EXPLORATION</p>
           {finalGateDialogueStep === null ? (

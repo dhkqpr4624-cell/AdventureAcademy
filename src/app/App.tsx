@@ -105,6 +105,8 @@ export function App() {
         floorBestCorrect={game.floorBestCorrect}
         rewardClaimed={game.rewardClaimed}
         setRewardClaimed={(questId) => setGame((current) => ({ ...current, rewardClaimed: { ...current.rewardClaimed, [questId]: true } }))}
+        achievementReceived={game.achievementReceived}
+        setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
       />;
       case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}

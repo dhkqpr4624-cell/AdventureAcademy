@@ -17,7 +17,7 @@ function initialInventory() {
 }
 
 const emptyQuestProgress = () => ({
-  floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {},
+  floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {}, achievementReceived: {},
 });
 
 function migrateV0ToV6(raw: LegacySaveDataV0): SaveDataV6 {
@@ -102,6 +102,10 @@ function migrateV6ToV7(raw: SaveDataV6): CurrentSaveData {
   return {
     ...raw,
     version: 7,
+    questProgress: {
+      ...raw.questProgress,
+      achievementReceived: {},
+    },
     dungeon: {
       ...raw.dungeon,
       currentFloorRun: null,

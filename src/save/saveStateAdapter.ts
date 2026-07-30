@@ -17,6 +17,7 @@ export type GameSaveState = {
   floorBestCorrect: Record<string, number>;
   firstObjectiveEventSeen: Record<string, boolean>;
   rewardClaimed: Record<string, boolean>;
+  achievementReceived: Record<string, boolean>;
   currentFloorRun: DungeonFloorRunState | null;
 };
 export const createInitialGameSaveState = (): GameSaveState => ({
@@ -25,7 +26,7 @@ export const createInitialGameSaveState = (): GameSaveState => ({
   storyActionState: { ...INITIAL_STORY_ACTION_STATE, executedActionIds: [] },
   playTimeSeconds: 0, completedStoryIds: [], checkpointByStoryId: {},
   currentFloorId: null, clearedFloorIds: [],
-  floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {},
+  floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {}, achievementReceived: {},
   currentFloorRun: null,
   inventoryState: {
     items: { ...INITIAL_INVENTORY_STATE.items },
@@ -68,6 +69,7 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
       floorBestCorrect: { ...state.floorBestCorrect },
       firstObjectiveEventSeen: { ...state.firstObjectiveEventSeen },
       rewardClaimed: { ...state.rewardClaimed },
+      achievementReceived: { ...state.achievementReceived },
     },
   };
 }
@@ -104,5 +106,6 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
     floorBestCorrect: { ...data.questProgress.floorBestCorrect },
     firstObjectiveEventSeen: { ...data.questProgress.firstObjectiveEventSeen },
     rewardClaimed: { ...data.questProgress.rewardClaimed },
+    achievementReceived: { ...data.questProgress.achievementReceived },
   };
 }
