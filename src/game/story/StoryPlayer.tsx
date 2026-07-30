@@ -52,6 +52,22 @@ const INITIAL_RENDER_STATE: StoryRenderState = {
   illust: { imageUrl: null, visible: false, fadeMs: 250 },
 };
 
+function createInitialRenderState(sequence: StorySequence): StoryRenderState {
+  if (sequence.id !== "intro-scene-1") {
+    return INITIAL_RENDER_STATE;
+  }
+
+  return {
+    ...INITIAL_RENDER_STATE,
+    camera: {
+      ...INITIAL_RENDER_STATE.camera,
+      x: 115,
+      y: 100,
+      zoom: 0.78,
+    },
+  };
+}
+
 function collectImageUrls(sequence: StorySequence) {
   const assets: StoryVisualAsset[] = [
     ...Object.values(sequence.backgrounds),
@@ -156,7 +172,7 @@ export function StoryPlayer({
   );
   const [stepIndex, setStepIndex] = useState(0);
   const [renderState, setRenderState] =
-    useState<StoryRenderState>(INITIAL_RENDER_STATE);
+    useState<StoryRenderState>(() => createInitialRenderState(sequence));
   const [isTransitioning, setIsTransitioning] = useState(true);
   const [failedUrls, setFailedUrls] = useState<ReadonlySet<string>>(new Set());
   const clickLockRef = useRef(false);
@@ -379,11 +395,22 @@ export function StoryPlayer({
   const fixedAirshipSky = isAirshipScene
     ? backgroundLayers.find((layer) => layer.id === "sky")
     : undefined;
-  const movingBackgroundLayers = fixedAirshipSky
-    ? backgroundLayers.filter((layer) => layer.id !== "sky")
+  const fixedRuinsBackground = isRuinsScene
+    ? backgroundLayers.find((layer) => layer.id === "background")
+    : undefined;
+  const fixedBackgroundLayer = fixedAirshipSky ?? fixedRuinsBackground;
+  const movingBackgroundLayers = fixedBackgroundLayer
+    ? backgroundLayers.filter((layer) => layer.id !== fixedBackgroundLayer.id)
     : backgroundLayers;
   const dialogueFollowsWalk =
     currentStep?.type === "dialogue" && steps[stepIndex - 1]?.type === "npcWalk";
+  const ruinsWorldDescendIndex = steps.findIndex(
+    (step) => step.id === "scene2-world-descend",
+  );
+  const isRuinsWorldDescending =
+    isRuinsScene &&
+    ruinsWorldDescendIndex >= 0 &&
+    stepIndex >= ruinsWorldDescendIndex;
 
   return (
     <main
@@ -396,14 +423,14 @@ export function StoryPlayer({
       aria-label={sequence.title}
       data-presentation-mode={presentationMode}
     >
-      {fixedAirshipSky && (
+      {fixedBackgroundLayer && (
         <div className="story-fixed-sky" aria-hidden="true">
           <img
             className="story-background-layer"
-            src={fixedAirshipSky.imageUrl}
+            src={fixedBackgroundLayer.imageUrl}
             alt=""
             draggable={false}
-            onError={() => markImageFailed(fixedAirshipSky.imageUrl)}
+            onError={() => markImageFailed(fixedBackgroundLayer.imageUrl)}
           />
         </div>
       )}
@@ -417,32 +444,36 @@ export function StoryPlayer({
           "--story-shake-duration": `${renderState.camera.shakeDurationMs}ms`,
         } as CSSProperties}
       >
-      {!isBaseCampOverlay && (
-        <div
-          key={renderState.backgroundRevision}
-          className={`story-background story-transition-${renderState.backgroundTransition}`}
-        >
-          {movingBackgroundLayers.map((layer) => (
-            <img
-              key={layer.id}
-              className="story-background-layer"
-              src={layer.imageUrl}
-              alt=""
-              draggable={false}
-              style={{ zIndex: layer.order }}
-              onError={() => markImageFailed(layer.imageUrl)}
-            />
-          ))}
-          {background && !background.layers?.length && (
-            <StoryAsset
-              asset={background}
-              alt={background.placeholder.label}
-              failedUrls={failedUrls}
-              onImageError={markImageFailed}
-            />
-          )}
-        </div>
-      )}
+      <div className={`story-moving-world ${isRuinsWorldDescending ? "is-descending" : ""}`}>
+        {!isBaseCampOverlay && (
+          <div
+            key={renderState.backgroundRevision}
+            className={`story-background story-transition-${renderState.backgroundTransition}`}
+          >
+            {movingBackgroundLayers.map((layer) => (
+              <img
+                key={layer.id}
+                className="story-background-layer"
+                src={layer.imageUrl}
+                alt=""
+                draggable={false}
+                style={{ zIndex: layer.order }}
+                onError={() => markImageFailed(layer.imageUrl)}
+              />
+            ))}
+            {background && !background.layers?.length && (
+              <StoryAsset
+                asset={background}
+                alt={background.placeholder.label}
+                failedUrls={failedUrls}
+                onImageError={markImageFailed}
+              />
+            )}
+          </div>
+        )}
+
+        <StoryNpcRenderer npcs={renderState.storyNpcs} />
+      </div>
 
       {renderState.baseCampMapId && (
         <BaseCampStoryAdapter
@@ -458,7 +489,6 @@ export function StoryPlayer({
         className="story-background-shade"
         aria-hidden="true"
       />
-      <StoryNpcRenderer npcs={renderState.storyNpcs} />
       </div>
 
       {renderState.illust.imageUrl && (

@@ -125,8 +125,8 @@ const SCENE_1 = storySequence(
     {
       id: "scene1-camera-start",
       type: "cameraPan",
-      x: 30,
-      y: 24,
+      x: 115,
+      y: 100,
       zoom: 0.78,
       durationMs: 1,
       advanceMode: "auto",
@@ -279,6 +279,7 @@ const SCENE_2 = storySequence(
   [
     { id: "background", imageUrl: storyAssetUrl("assets/story/backgrounds/ruins/background.png"), order: 0 },
     { id: "ground", imageUrl: storyAssetUrl("assets/story/backgrounds/ruins/ground.png"), order: 1 },
+    { id: "foreground", imageUrl: storyAssetUrl("assets/story/backgrounds/ruins/foreground.png"), order: 2 },
   ],
   [
     {
@@ -440,11 +441,8 @@ const SCENE_2 = storySequence(
     dialogue("scene2-kaiden-13", "kaiden", "카이든"),
     dialogue("scene2-kaiden-14", "kaiden", "카이든"),
     {
-      id: "scene2-camera-pan-up",
-      type: "cameraPan",
-      x: 0,
-      y: 18,
-      zoom: 0.94,
+      id: "scene2-world-descend",
+      type: "wait",
       durationMs: 2200,
       advanceMode: "auto",
     },

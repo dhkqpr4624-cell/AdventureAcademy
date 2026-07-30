@@ -2209,6 +2209,16 @@ button:focus-visible {
   animation: story-camera-shake var(--story-shake-duration) ease-in-out;
 }
 
+.story-moving-world {
+  position: absolute;
+  inset: 0;
+  transition: transform 2200ms ease-in;
+}
+
+.story-player-ruins .story-moving-world.is-descending {
+  transform: translateY(42vh);
+}
+
 .story-npc-layer {
   position: absolute;
   inset: 0;
@@ -2224,15 +2234,35 @@ button:focus-visible {
   transition-timing-function: linear;
 }
 
-.story-player-airship .story-npc[data-actor-id="luna"],
 .story-player-ruins .story-npc {
   transform: translate(-50%, 10px);
+}
+
+.story-player-airship .story-npc[data-actor-id="luna"] {
+  transform: translate(-50%, 10px);
+}
+
+.story-player-airship .story-npc[data-actor-id="theo"],
+.story-player-airship .story-npc[data-actor-id="kaiden"] {
+  transform: translate(-50%, 25px);
 }
 
 .story-npc img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.story-npc-falldown[data-actor-id="luna"] img,
+.story-npc-falldown[data-actor-id="theo"] img {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: calc(100% * 600 / 380);
+  height: calc(100% * 947 / 600);
+  max-width: none;
+  max-height: none;
+  transform: translateX(-50%);
 }
 
 .story-npc-walking {
@@ -2385,12 +2415,8 @@ button:focus-visible {
   z-index: 0;
 }
 
-.story-player-ruins .story-background {
-  inset: -20%;
-}
-
 .story-player-ruins .story-background-layer {
-  object-fit: cover;
+  object-fit: fill;
 }
 
 .story-background > img,
