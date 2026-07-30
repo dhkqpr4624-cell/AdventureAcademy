@@ -1,5 +1,10 @@
 import { getItemDefinition } from "../game/inventory/itemDefinitions";
 import { ItemIcon } from "./ItemIcon";
+import { getQuestRareRewardCondition } from "../game/quest/questRareRewardConditions";
+
+const memoryQuestRareRewardCondition = getQuestRareRewardCondition(
+  "quest-floor-1-memory-fragment",
+);
 
 export function QuestRewardPopup({ bestCorrect, claimed, onClaim, onCancel }: {
   bestCorrect: number;
@@ -7,7 +12,7 @@ export function QuestRewardPopup({ bestCorrect, claimed, onClaim, onCancel }: {
   onClaim: () => void;
   onCancel: () => void;
 }) {
-  const required = 6;
+  const required = memoryQuestRareRewardCondition.requiredCorrect;
   const rareUnlocked = bestCorrect >= required;
   const skin = getItemDefinition("weapon-gojoseon-bronze-dagger")!;
   return (

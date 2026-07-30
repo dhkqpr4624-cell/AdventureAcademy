@@ -25,7 +25,7 @@ export function AchievementPopup({
           {ACHIEVEMENT_DEFINITIONS.map((achievement) => {
             const progress = Math.min(
               floorBestCorrect[achievement.floorId] ?? 0,
-              achievement.totalQuestions,
+              achievement.requiredCorrect,
             );
             const received = Boolean(achievementReceived[achievement.id]);
             const completed = progress >= achievement.requiredCorrect;
@@ -36,7 +36,7 @@ export function AchievementPopup({
                   <small>{achievement.floorTitle}</small>
                   <strong>{achievement.title}</strong>
                   <span>{achievement.description}</span>
-                  <b className={completed ? "is-ready" : ""}>{progress} / {achievement.totalQuestions}</b>
+                  <b className={completed ? "is-ready" : ""}>{progress} / {achievement.requiredCorrect}</b>
                 </div>
                 <div className="achievement-reward">
                   <span>희귀 보상</span>

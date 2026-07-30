@@ -35,9 +35,13 @@ import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
 import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
 import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
-import { isRareRewardEligible } from "../../game/balance/floorBalance";
+import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { AchievementPopup } from "../../components/AchievementPopup";
 import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
+
+const memoryQuestRareRewardCondition = getQuestRareRewardCondition(
+  "quest-floor-1-memory-fragment",
+);
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -443,10 +447,9 @@ export function BaseCampScreen({
         onCancel={() => setRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[memoryQuestId]) return;
-          const rareUnlocked = isRareRewardEligible(
-            floorBestCorrect["floor-1"] ?? 0,
-            8,
-          );
+          const rareUnlocked =
+            (floorBestCorrect["floor-1"] ?? 0) >=
+            memoryQuestRareRewardCondition.requiredCorrect;
           setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
           setInventoryState((current) => {
             let next = changeItemQuantity(current, "quest-memory-fragment", -1);

@@ -1,3 +1,5 @@
+import { getQuestRareRewardCondition } from "../game/quest/questRareRewardConditions";
+
 export type AchievementDefinition = {
   id: string;
   floorId: string;
@@ -11,6 +13,10 @@ export type AchievementDefinition = {
   description: string;
 };
 
+const floor1RareRewardCondition = getQuestRareRewardCondition(
+  "quest-floor-1-memory-fragment",
+);
+
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
     id: "achievement-floor-1-rare-reward",
@@ -20,8 +26,8 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     rewardIcon: `${import.meta.env.BASE_URL}assets/items/bipa-bronze-sword.png`,
     rewardItemId: "weapon-gojoseon-bronze-dagger",
     rewardStateId: "quest-floor-1-memory-fragment",
-    requiredCorrect: 6,
-    totalQuestions: 8,
+    requiredCorrect: floor1RareRewardCondition.requiredCorrect,
+    totalQuestions: floor1RareRewardCondition.totalQuestions,
     description: "던전 1층 정답",
   },
 ];

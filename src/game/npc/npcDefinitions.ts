@@ -1,9 +1,12 @@
 import lunaStanding from "../../assets/npcs/luna/luna_standing.png";
 import lunaBlink from "../../assets/npcs/luna/luna_blink.png";
+import lunaPortrait from "../../assets/npcs/luna/luna_portrait.png";
 import theoStanding from "../../assets/npcs/theo/theo_standing.png";
 import theoBlink from "../../assets/npcs/theo/theo_blink.png";
+import theoPortrait from "../../assets/npcs/theo/theo_portrait.png";
 import kaidenStanding from "../../assets/npcs/kaiden/kaiden_standing.png";
 import kaidenBlink from "../../assets/npcs/kaiden/kaiden_blink.png";
+import kaidenPortrait from "../../assets/npcs/kaiden/kaiden_portrait.png";
 import type { NpcDefinition, NpcId } from "./npcTypes";
 import {
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
@@ -31,7 +34,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       blinkSpriteSheet: lunaBlink,
       blinkFrameCount: 4,
     },
-    portraits: { default: lunaStanding, happy: lunaStanding },
+    portraits: { default: lunaPortrait, happy: lunaPortrait },
     dialogue: { defaultStorySequenceId: "npc-luna-default" },
     offeredQuestIds: [],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
@@ -48,7 +51,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       blinkSpriteSheet: theoBlink,
       blinkFrameCount: 4,
     },
-    portraits: { default: theoStanding },
+    portraits: { default: theoPortrait },
     dialogue: { defaultStorySequenceId: "npc-theo-default" },
     offeredQuestIds: [],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo),
@@ -67,7 +70,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       sourceSheetWidth: 2048,
       sourceSheetHeight: 461,
     },
-    portraits: { default: kaidenStanding, serious: kaidenStanding },
+    portraits: { default: kaidenPortrait, serious: kaidenPortrait },
     dialogue: {
       defaultStorySequenceId: "npc-kaiden-default",
       questAvailableStorySequenceId: "npc-kaiden-quest-available",
