@@ -66,6 +66,13 @@ function collectImageUrls(sequence: StorySequence) {
         ...(asset.imageUrl ? [asset.imageUrl] : []),
         ...(asset.layers?.map((layer) => layer.imageUrl) ?? []),
       ]),
+      ...sequence.scenes.flatMap((scene) =>
+        scene.steps.flatMap((step) =>
+          step.type === "illustOverlay" && step.imageUrl
+            ? [step.imageUrl]
+            : [],
+        ),
+      ),
       ...STORY_NPC_ASSET_URLS,
     ]),
   ];
@@ -439,11 +446,6 @@ export function StoryPlayer({
                 failedUrls={failedUrls}
                 onImageError={markImageFailed}
               />
-              <div className="story-portrait-caption">
-                <strong>{actor.name}</strong>
-                <span>{actor.role}</span>
-                <small>{asset.placeholder.subtitle ?? portrait.portraitId}</small>
-              </div>
             </div>
           );
         })}

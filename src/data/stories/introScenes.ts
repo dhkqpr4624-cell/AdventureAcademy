@@ -7,10 +7,15 @@ import type {
 import { NPC_PORTRAIT_REGISTRY } from "../../game/npc/npcPortraitRegistry";
 import { INTRO_SCRIPT } from "./introScript";
 
-const PORTAL_APPEARS_ILLUST =
-  "/assets/story/illustrations/intro_portal_opened.png";
-const PORTAL_PULL_ILLUST =
-  "/assets/story/illustrations/intro_portal_swallow_plane.png";
+const storyAssetUrl = (path: string) =>
+  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
+const PORTAL_APPEARS_ILLUST = storyAssetUrl(
+  "assets/story/illustrations/intro_portal_opened.png",
+);
+const PORTAL_PULL_ILLUST = storyAssetUrl(
+  "assets/story/illustrations/intro_portal_swallow_plane.png",
+);
 
 const scriptCursors = { scene1: 0, scene2: 0 };
 
@@ -95,9 +100,9 @@ const SCENE_1 = storySequence(
   "하늘을 나는 비행선",
   "airship",
   [
-    { id: "sky", imageUrl: "/assets/story/backgrounds/airship/sky.png", order: 0 },
-    { id: "ground", imageUrl: "/assets/story/backgrounds/airship/ground.png", order: 1 },
-    { id: "foreground", imageUrl: "/assets/story/backgrounds/airship/foreground.png", order: 2 },
+    { id: "sky", imageUrl: storyAssetUrl("assets/story/backgrounds/airship/sky.png"), order: 0 },
+    { id: "ground", imageUrl: storyAssetUrl("assets/story/backgrounds/airship/ground.png"), order: 1 },
+    { id: "foreground", imageUrl: storyAssetUrl("assets/story/backgrounds/airship/foreground.png"), order: 2 },
   ],
   [
     {
@@ -272,8 +277,8 @@ const SCENE_2 = storySequence(
   "시간이 뒤틀린 유적",
   "ruins",
   [
-    { id: "background", imageUrl: "/assets/story/backgrounds/ruins/background.png", order: 0 },
-    { id: "ground", imageUrl: "/assets/story/backgrounds/ruins/ground.png", order: 1 },
+    { id: "background", imageUrl: storyAssetUrl("assets/story/backgrounds/ruins/background.png"), order: 0 },
+    { id: "ground", imageUrl: storyAssetUrl("assets/story/backgrounds/ruins/ground.png"), order: 1 },
   ],
   [
     {
