@@ -125,8 +125,8 @@ const SCENE_1 = storySequence(
     {
       id: "scene1-camera-start",
       type: "cameraPan",
-      x: -30,
-      y: -24,
+      x: 30,
+      y: 24,
       zoom: 0.78,
       durationMs: 1,
       advanceMode: "auto",
@@ -134,7 +134,7 @@ const SCENE_1 = storySequence(
     {
       id: "scene1-camera-luna",
       type: "cameraPan",
-      x: 2,
+      x: -2,
       y: 0,
       zoom: 1.08,
       durationMs: 2800,
@@ -158,10 +158,10 @@ const SCENE_1 = storySequence(
     {
       id: "scene1-theo-check-supplies",
       type: "cameraPan",
-      x: 8,
-      y: 1,
-      zoom: 1.12,
-      durationMs: 900,
+      x: -2,
+      y: 0,
+      zoom: 1.08,
+      durationMs: 1,
       advanceMode: "auto",
     },
     {
@@ -214,7 +214,7 @@ const SCENE_1 = storySequence(
     {
       id: "scene1-portal-appears-settle",
       type: "wait",
-      durationMs: 500,
+      durationMs: 900,
       advanceMode: "auto",
     },
     dialogue("scene1-luna-09", "luna", "루나"),
@@ -332,6 +332,13 @@ const SCENE_2 = storySequence(
       direction: "in",
       color: "#000000",
       durationMs: 700,
+      advanceMode: "auto",
+    },
+    {
+      id: "scene2-impact-shake",
+      type: "shake",
+      durationMs: 1000,
+      amplitude: 24,
       advanceMode: "auto",
     },
     {

@@ -194,6 +194,7 @@ export class StoryStepRunner {
       case "npcWalk":
         context.updateState((state) => ({
           ...state,
+          dialogue: null,
           storyNpcs: {
             ...state.storyNpcs,
             [step.actorId]: {

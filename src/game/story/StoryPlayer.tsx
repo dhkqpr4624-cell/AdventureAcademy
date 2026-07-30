@@ -115,6 +115,29 @@ function StoryAsset({
   );
 }
 
+function DialogueText({
+  text,
+  playerName,
+}: {
+  text: string;
+  playerName: string;
+}) {
+  if (!playerName || !text.includes(playerName)) {
+    return text;
+  }
+
+  return text.split(playerName).flatMap((part, index, parts) => [
+    part,
+    ...(index < parts.length - 1
+      ? [
+          <strong className="story-player-name" key={`player-name-${index}`}>
+            {playerName}
+          </strong>,
+        ]
+      : []),
+  ]);
+}
+
 export function StoryPlayer({
   sequence,
   onNavigate,
@@ -350,13 +373,40 @@ export function StoryPlayer({
             revision: 0,
           }]
         : [];
+  const isAirshipScene = renderState.backgroundId === "airship";
+  const isRuinsScene = renderState.backgroundId === "ruins";
+  const backgroundLayers = background?.layers ?? [];
+  const fixedAirshipSky = isAirshipScene
+    ? backgroundLayers.find((layer) => layer.id === "sky")
+    : undefined;
+  const movingBackgroundLayers = fixedAirshipSky
+    ? backgroundLayers.filter((layer) => layer.id !== "sky")
+    : backgroundLayers;
+  const dialogueFollowsWalk =
+    currentStep?.type === "dialogue" && steps[stepIndex - 1]?.type === "npcWalk";
 
   return (
     <main
-      className={`story-player story-player-${presentationMode}`}
+      className={[
+        "story-player",
+        `story-player-${presentationMode}`,
+        isAirshipScene ? "story-player-airship" : "",
+        isRuinsScene ? "story-player-ruins" : "",
+      ].filter(Boolean).join(" ")}
       aria-label={sequence.title}
       data-presentation-mode={presentationMode}
     >
+      {fixedAirshipSky && (
+        <div className="story-fixed-sky" aria-hidden="true">
+          <img
+            className="story-background-layer"
+            src={fixedAirshipSky.imageUrl}
+            alt=""
+            draggable={false}
+            onError={() => markImageFailed(fixedAirshipSky.imageUrl)}
+          />
+        </div>
+      )}
       <div
         key={renderState.camera.shakeRevision}
         className={`story-camera ${renderState.camera.shakeDurationMs > 0 ? "is-shaking" : ""}`}
@@ -372,7 +422,7 @@ export function StoryPlayer({
           key={renderState.backgroundRevision}
           className={`story-background story-transition-${renderState.backgroundTransition}`}
         >
-          {background?.layers?.map((layer) => (
+          {movingBackgroundLayers.map((layer) => (
             <img
               key={layer.id}
               className="story-background-layer"
@@ -413,8 +463,10 @@ export function StoryPlayer({
 
       {renderState.illust.imageUrl && (
         <div
-          className={`story-illust-overlay ${renderState.illust.visible ? "is-visible" : ""}`}
-          style={{ transitionDuration: `${renderState.illust.fadeMs}ms` }}
+          className={`story-illust-overlay has-image ${renderState.illust.visible ? "is-visible" : ""}`}
+          style={{
+            "--story-illust-fade": `${renderState.illust.fadeMs}ms`,
+          } as CSSProperties}
         >
           <img src={renderState.illust.imageUrl} alt="" draggable={false} />
         </div>
@@ -455,7 +507,7 @@ export function StoryPlayer({
         <section
           className={`story-dialogue-box ${
             renderState.dialogue.kind === "narration" ? "is-narration" : ""
-          }`}
+          } ${dialogueFollowsWalk ? "is-after-walk" : ""}`}
           aria-live="polite"
           style={
             dialogueActor
@@ -476,7 +528,10 @@ export function StoryPlayer({
                 : ""
             }`}
           >
-            {renderState.dialogue.text}
+            <DialogueText
+              text={renderState.dialogue.text}
+              playerName={playerName}
+            />
           </p>
           {currentStep?.type === "choice" ? (
             <StoryChoiceList options={currentStep.options} disabled={isTransitioning} onChoose={choose} />
