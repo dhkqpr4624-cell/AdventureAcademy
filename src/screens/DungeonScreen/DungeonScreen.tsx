@@ -347,9 +347,9 @@ export function DungeonScreen({
         typeof next === "function" ? next(current.currentHp) : next,
     }));
   };
-  const [actualEnemyAttackCount, setActualEnemyAttackCount] = useState(0);
-  const [skippedEnemyAttackCount, setSkippedEnemyAttackCount] = useState(0);
-  const [hasCriticalOccurred, setHasCriticalOccurred] = useState(false);
+  const [, setActualEnemyAttackCount] = useState(0);
+  const [, setSkippedEnemyAttackCount] = useState(0);
+  const [, setHasCriticalOccurred] = useState(false);
   const [enemyStunned, setEnemyStunned] = useState(false);
   const [criticalEffect, setCriticalEffect] = useState(false);
   const [forceCriticalNextAttack, setForceCriticalNextAttack] = useState(false);
@@ -1372,22 +1372,6 @@ export function DungeonScreen({
     );
   };
 
-  const resetCombat = () => {
-    if (phase !== "result" || !activeCombatRoomIdRef.current) {
-      return;
-    }
-    const roomId = activeCombatRoomIdRef.current;
-    const nextProgress = {
-      ...roomProgressRef.current,
-      [roomId]: { roomId, eventCompleted: false },
-    };
-    roomProgressRef.current = nextProgress;
-    setRoomProgress(nextProgress);
-    activeCombatRoomIdRef.current = null;
-    setActiveCombatRoomId(null);
-    startCombatForRoom(roomId);
-  };
-
   const continueExplorationAfterResult = (
     message = "전투 이벤트가 끝났다. 이동할 길을 선택하자.",
   ) => {
@@ -1955,29 +1939,6 @@ export function DungeonScreen({
         </CombatDialoguePanel>
       )}
 
-      {finalGateDialogueStep !== null && (
-        <CombatDialoguePanel mode="message" busy={false} statusBar={playerStatusBar}>
-          <div className="combat-message-layout" role="dialog" aria-modal="true">
-            <p className="combat-message">
-              {finalGateDialogueStep === 0
-                ? "아직 살펴보지 않은 곳이 있다."
-                : "모두 살펴봐야 들어갈 수 있을 것 같다."}
-            </p>
-            <button
-              type="button"
-              className="combat-message-next"
-              onClick={() =>
-                setFinalGateDialogueStep((current) =>
-                  current === 0 ? 1 : null,
-                )
-              }
-            >
-              {finalGateDialogueStep === 0 ? "다음" : "확인"}
-            </button>
-          </div>
-        </CombatDialoguePanel>
-      )}
-
       {dungeonMode === "combat" && <section className="dungeon-overlay">
         <header className="combat-hud">
           <div className="monster-status-hud">
@@ -2148,30 +2109,8 @@ export function DungeonScreen({
             <h2 id="combat-result-title">{resultTitle}</h2>
             <dl>
               <div><dt>정답 수</dt><dd>{resolution.correctAnswerCount} / {combatQuestionCount}</dd></div>
-              <div>
-                <dt>예정 몬스터 턴</dt>
-                <dd>
-                  {"plannedEnemyAttackCount" in resolution
-                    ? resolution.plannedEnemyAttackCount
-                    : resolution.enemyAttackCount}
-                </dd>
-              </div>
-              <div><dt>받은 몬스터 공격 횟수</dt><dd>{actualEnemyAttackCount}</dd></div>
-              <div><dt>크리티컬</dt><dd>{hasCriticalOccurred ? "1회" : "없음"}</dd></div>
-              {skippedEnemyAttackCount > 0 && (
-                <div><dt>기절로 공격 무효</dt><dd>{skippedEnemyAttackCount}회</dd></div>
-              )}
+              <div><dt>획득 Gold</dt><dd>{goldDrop} Gold</dd></div>
             </dl>
-            {currentResolutionOutcome === "enemyEscaped" && (
-              <p>
-                {activeCombatKind === "elite"
-                  ? "정예 몬스터가 도망쳤다."
-                  : "몬스터가 도망쳤습니다."}
-              </p>
-            )}
-            {goldDrop > 0 && (
-              <p className="combat-gold-result">+{goldDrop} Gold 획득</p>
-            )}
             <div className="button-group">
               <button
                 type="button"
@@ -2179,9 +2118,6 @@ export function DungeonScreen({
               >
                 이동 계속하기
               </button>
-              {import.meta.env.DEV && (
-                <button type="button" onClick={resetCombat}>이 전투 다시 테스트</button>
-              )}
               <button type="button" onClick={() => onNavigate("title")}>타이틀로 돌아가기</button>
             </div>
           </div>
@@ -2191,40 +2127,63 @@ export function DungeonScreen({
       {(dungeonMode === "exploration" || dungeonMode === "moving") && (
         <section className="dungeon-movement-panel" aria-label="던전 이동 선택">
           <p className="eyebrow">DUNGEON EXPLORATION</p>
-          <p className="dungeon-movement-message" role="status">
-            {explorationMessage}
-          </p>
-          <h2>어느 길로 이동할까?</h2>
-          <div className="dungeon-direction-buttons">
-            {availableConnections.map((route) => (
+          {finalGateDialogueStep === null ? (
+            <>
+              <p className="dungeon-movement-message" role="status">
+                {explorationMessage}
+              </p>
+              <h2>어느 길로 이동할까?</h2>
+              <div className="dungeon-direction-buttons">
+                {availableConnections.map((route) => (
+                  <button
+                    key={route.connection.id}
+                    type="button"
+                    disabled={dungeonMode === "moving"}
+                    aria-label={`${DIRECTION_LABELS[route.direction]}: ${route.targetRoomId}`}
+                    onClick={() => moveToConnectedRoom(route)}
+                  >
+                    {DIRECTION_LABELS[route.direction]}
+                  </button>
+                ))}
+              </div>
               <button
-                key={route.connection.id}
                 type="button"
+                className="dungeon-reset-button"
                 disabled={dungeonMode === "moving"}
-                aria-label={`${DIRECTION_LABELS[route.direction]}: ${route.targetRoomId}`}
-                onClick={() => moveToConnectedRoom(route)}
-              >
-                {DIRECTION_LABELS[route.direction]}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="dungeon-reset-button"
-            disabled={dungeonMode === "moving"}
                 onClick={() => restartTestDungeon()}
-          >
-            던전 처음부터 다시 시작
-          </button>
-          {import.meta.env.DEV && (
-            <small className="dungeon-debug">
-              current: {currentRoomId} · previous: {previousRoomId ?? "none"} ·
-              mode: {dungeonMode} · completed:{" "}
-              {Object.values(roomProgress)
-                .filter((progress) => progress.eventCompleted)
-                .map((progress) => progress.roomId)
-                .join(", ") || "none"}
-            </small>
+              >
+                던전 처음부터 다시 시작
+              </button>
+              {import.meta.env.DEV && (
+                <small className="dungeon-debug">
+                  current: {currentRoomId} · previous: {previousRoomId ?? "none"} ·
+                  mode: {dungeonMode} · completed:{" "}
+                  {Object.values(roomProgress)
+                    .filter((progress) => progress.eventCompleted)
+                    .map((progress) => progress.roomId)
+                    .join(", ") || "none"}
+                </small>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="dungeon-movement-message" role="status">
+                {finalGateDialogueStep === 0
+                  ? "아직 살펴보지 않은 곳이 있다."
+                  : "모두 살펴봐야 들어갈 수 있을 것 같다."}
+              </p>
+              <button
+                type="button"
+                className="dungeon-reset-button"
+                onClick={() =>
+                  setFinalGateDialogueStep((current) =>
+                    current === 0 ? 1 : null,
+                  )
+                }
+              >
+                {finalGateDialogueStep === 0 ? "다음" : "확인"}
+              </button>
+            </>
           )}
           <footer className="dungeon-movement-status">
             {playerStatusBar}

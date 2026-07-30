@@ -1304,10 +1304,17 @@ button:focus-visible {
 }
 
 .combat-dialogue-panel.is-message .combat-dialogue-content,
-.combat-dialogue-panel.is-command .combat-dialogue-content,
-.combat-dialogue-panel.is-result .combat-dialogue-content {
+.combat-dialogue-panel.is-command .combat-dialogue-content {
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.combat-dialogue-panel.is-result {
+  max-height: min(calc(100svh - 1rem), 28rem);
+}
+
+.combat-dialogue-panel.is-result .combat-dialogue-content {
+  overflow: hidden;
 }
 
 .combat-message-layout {
