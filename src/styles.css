@@ -1289,12 +1289,17 @@ button:focus-visible {
 }
 .achievement-popup-header h2 { margin: 2px 0 0; color: #ffe3a1; }
 .achievement-close-button {
+  display: grid;
+  place-items: center;
   width: 42px;
   height: 42px;
+  padding: 0 0 3px;
   border: 2px solid #21160f;
   background: #805139;
   color: white;
   font-size: 1.6rem;
+  line-height: 1;
+  text-align: center;
 }
 .achievement-list {
   display: grid;
