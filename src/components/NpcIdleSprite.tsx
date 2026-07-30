@@ -14,8 +14,31 @@ export function NpcIdleSprite({
   interactionHighlighted,
 }: NpcIdleSpriteProps) {
   const [frame, setFrame] = useState<number | null>(null);
+  const [blinkTextureReady, setBlinkTextureReady] = useState(false);
   const blinkTimerRef = useRef<number | null>(null);
   const frameTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    const blinkTexture = new Image();
+    blinkTexture.onload = () => {
+      if (!disposed) setBlinkTextureReady(true);
+    };
+    blinkTexture.onerror = () => {
+      if (!disposed) setBlinkTextureReady(false);
+    };
+    blinkTexture.src = npc.idle.blinkSpriteSheet;
+
+    if (blinkTexture.complete && blinkTexture.naturalWidth > 0) {
+      setBlinkTextureReady(true);
+    }
+
+    return () => {
+      disposed = true;
+      blinkTexture.onload = null;
+      blinkTexture.onerror = null;
+    };
+  }, [npc.idle.blinkSpriteSheet]);
 
   useEffect(() => {
     let disposed = false;
@@ -28,6 +51,10 @@ export function NpcIdleSprite({
     const schedule = () => {
       blinkTimerRef.current = window.setTimeout(() => {
         if (disposed || frameTimerRef.current !== null) return;
+        if (!blinkTextureReady) {
+          schedule();
+          return;
+        }
         let nextFrame = 0;
         setFrame(nextFrame);
         frameTimerRef.current = window.setInterval(() => {
@@ -52,7 +79,7 @@ export function NpcIdleSprite({
       disposed = true;
       clearTimers();
     };
-  }, [npc]);
+  }, [blinkTextureReady, npc]);
 
   const backgroundSize = `${npc.placement.width * npc.idle.blinkFrameCount}px ${npc.placement.height}px`;
 
@@ -72,18 +99,15 @@ export function NpcIdleSprite({
       aria-hidden="true"
     >
       <span className="base-camp-npc-art" aria-hidden="true">
-        {frame === null ? (
-          <img src={npc.idle.standingImage} alt="" draggable={false} />
-        ) : (
-          <span
-            className="base-camp-npc-blink"
-            style={{
-              backgroundImage: `url("${npc.idle.blinkSpriteSheet}")`,
-              backgroundSize,
-              backgroundPosition: `${-frame * npc.placement.width}px 0`,
-            }}
-          />
-        )}
+        <img src={npc.idle.standingImage} alt="" draggable={false} />
+        <span
+          className={`base-camp-npc-blink ${frame === null ? "" : "is-visible"}`}
+          style={{
+            backgroundImage: `url("${npc.idle.blinkSpriteSheet}")`,
+            backgroundSize,
+            backgroundPosition: `${-(frame ?? 0) * npc.placement.width}px 0`,
+          }}
+        />
       </span>
     </div>
   );

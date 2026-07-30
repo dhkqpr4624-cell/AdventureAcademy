@@ -217,7 +217,12 @@ button:focus-visible {
 
 .base-camp-npc-blink {
   background-repeat: no-repeat;
+  opacity: 0;
   transform-origin: top left;
+}
+
+.base-camp-npc-blink.is-visible {
+  opacity: 1;
 }
 
 .base-camp-npc-name-tag {
@@ -2205,6 +2210,14 @@ button:focus-visible {
   transition-timing-function: ease-in-out;
 }
 
+.story-player-ruins .story-camera.is-ruins-focus-left {
+  transform-origin: 27% 50%;
+}
+
+.story-player-ruins .story-camera.is-ruins-focus-right {
+  transform-origin: 73% 50%;
+}
+
 .story-camera.is-shaking {
   animation: story-camera-shake var(--story-shake-duration) ease-in-out;
 }
@@ -2213,6 +2226,14 @@ button:focus-visible {
   position: absolute;
   inset: 0;
   transition: transform 2200ms ease-in;
+}
+
+.story-ruins-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .story-player-ruins .story-moving-world.is-descending {
@@ -2244,7 +2265,7 @@ button:focus-visible {
 
 .story-player-airship .story-npc[data-actor-id="theo"],
 .story-player-airship .story-npc[data-actor-id="kaiden"] {
-  transform: translate(-50%, 25px);
+  transform: translate(-50%, 35px);
 }
 
 .story-npc img {

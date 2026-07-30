@@ -411,6 +411,17 @@ export function StoryPlayer({
     isRuinsScene &&
     ruinsWorldDescendIndex >= 0 &&
     stepIndex >= ruinsWorldDescendIndex;
+  const isRuinsLeftFocus =
+    isRuinsScene &&
+    currentStep?.id.startsWith("scene2-camera-left") === true;
+  const isRuinsRightFocus =
+    isRuinsScene &&
+    currentStep?.id.startsWith("scene2-camera-right") === true;
+  const ruinsCameraFocusClass = isRuinsLeftFocus
+    ? "is-ruins-focus-left"
+    : isRuinsRightFocus
+      ? "is-ruins-focus-right"
+      : "";
 
   return (
     <main
@@ -423,20 +434,20 @@ export function StoryPlayer({
       aria-label={sequence.title}
       data-presentation-mode={presentationMode}
     >
-      {fixedBackgroundLayer && (
+      {fixedAirshipSky && (
         <div className="story-fixed-sky" aria-hidden="true">
           <img
             className="story-background-layer"
-            src={fixedBackgroundLayer.imageUrl}
+            src={fixedAirshipSky.imageUrl}
             alt=""
             draggable={false}
-            onError={() => markImageFailed(fixedBackgroundLayer.imageUrl)}
+            onError={() => markImageFailed(fixedAirshipSky.imageUrl)}
           />
         </div>
       )}
       <div
         key={renderState.camera.shakeRevision}
-        className={`story-camera ${renderState.camera.shakeDurationMs > 0 ? "is-shaking" : ""}`}
+        className={`story-camera ${renderState.camera.shakeDurationMs > 0 ? "is-shaking" : ""} ${ruinsCameraFocusClass}`}
         style={{
           transform: `translate(${renderState.camera.x}%, ${renderState.camera.y}%) scale(${renderState.camera.zoom})`,
           transitionDuration: `${renderState.camera.durationMs}ms`,
@@ -444,6 +455,17 @@ export function StoryPlayer({
           "--story-shake-duration": `${renderState.camera.shakeDurationMs}ms`,
         } as CSSProperties}
       >
+      {fixedRuinsBackground && (
+        <div className="story-ruins-background" aria-hidden="true">
+          <img
+            className="story-background-layer"
+            src={fixedRuinsBackground.imageUrl}
+            alt=""
+            draggable={false}
+            onError={() => markImageFailed(fixedRuinsBackground.imageUrl)}
+          />
+        </div>
+      )}
       <div className={`story-moving-world ${isRuinsWorldDescending ? "is-descending" : ""}`}>
         {!isBaseCampOverlay && (
           <div
