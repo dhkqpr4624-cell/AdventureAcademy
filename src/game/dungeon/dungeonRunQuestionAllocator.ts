@@ -21,11 +21,18 @@ export function allocateDungeonRunQuestions(
   map: DungeonMapDefinition,
   seed: string,
 ): DungeonRunQuestionAssignments {
-  const combatRooms = map.rooms
-    .filter((room) => room.type === "combat" || room.type === "elite")
+  const questionRooms = map.rooms
+    .filter((room) =>
+      room.type === "combat" ||
+      room.type === "elite" ||
+      room.type === "treasure" ||
+      room.type === "trap"
+    )
     .sort((left, right) => left.id.localeCompare(right.id));
-  const requiredCount = combatRooms.reduce(
-    (sum, room) => sum + (room.type === "elite" ? 3 : 2),
+  const questionCount = (room: (typeof questionRooms)[number]) =>
+    room.type === "elite" ? 3 : room.type === "combat" ? 2 : 1;
+  const requiredCount = questionRooms.reduce(
+    (sum, room) => sum + questionCount(room),
     0,
   );
   const pool = shuffledQuestions(
@@ -39,12 +46,11 @@ export function allocateDungeonRunQuestions(
 
   let offset = 0;
   return Object.fromEntries(
-    combatRooms.map((room) => {
-      const count = room.type === "elite" ? 3 : 2;
+    questionRooms.map((room) => {
+      const count = questionCount(room);
       const questions = pool.slice(offset, offset + count);
       offset += count;
       return [room.id, questions];
     }),
   );
 }
-

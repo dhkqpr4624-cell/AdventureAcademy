@@ -42,6 +42,7 @@ import { runWorldDirectionNavigationChecks } from "./game/dungeon/navigation/wor
 import { runInventoryChecks } from "./game/inventory/inventoryChecks";
 import { runPhase21ArmorDebugChecks } from "./debug/Phase21ArmorDebug";
 import { runFloorBalanceChecks } from "./game/balance/floorBalanceChecks";
+import { runDungeonExplorationChecks } from "./game/dungeon/dungeonExplorationChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -66,6 +67,7 @@ const checks = [
   ["dungeon camera checks", runDungeonCameraChecks],
   ["dungeon question checks", () => runDungeonQuestionChecks(TEST_DUNGEON_MAP)],
   ["dungeon completion checks", runDungeonCompletionChecks],
+  ["dungeon exploration/minimap checks", runDungeonExplorationChecks],
   ["dungeon room event checks", runDungeonRoomEventChecks],
   ["dungeon event flow checks", runDungeonEventFlowChecks],
   ["dungeon player state checks", runDungeonPlayerStateChecks],

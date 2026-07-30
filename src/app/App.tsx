@@ -45,6 +45,12 @@ export function App() {
     setCurrentScreen(screen);
     if (screen === "baseCamp") requestSave("baseCampEntered");
   }, [requestSave]);
+  const updateFloorRun = useCallback(
+    (currentFloorRun: GameSaveState["currentFloorRun"]) => {
+      setGame((current) => ({ ...current, currentFloorRun }));
+    },
+    [],
+  );
   const hydrate = (data: ReturnType<typeof snapshot>) => {
     setGame(applySaveDataToGameState(data)); gameRef.current = applySaveDataToGameState(data);
     startedAtRef.current = Date.now(); setCurrentScreen("title");
@@ -107,12 +113,15 @@ export function App() {
         onInventoryChanged={() => requestSave("itemAcquired")}
         onGoldAwarded={() => requestSave("itemAcquired")}
         onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
-        onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null }))}
+        onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null }))}
+        savedFloorRun={game.currentFloorRun}
+        onFloorRunChanged={updateFloorRun}
         firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen["floor-1"])}
         onObjectiveAcquired={(correctCount) => {
           setGame((current) => ({
             ...current,
             currentFloorId: null,
+            currentFloorRun: null,
             clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])],
             firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, "floor-1": true },
             floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) },
@@ -121,7 +130,7 @@ export function App() {
         }}
         onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) } }))}
         floorQuestStarted={game.questState["quest-floor-1-memory-fragment"] !== "available"}
-        onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}
+        onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
       default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onNewGame={() => {

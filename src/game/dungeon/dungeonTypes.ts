@@ -121,6 +121,14 @@ export type DungeonMapDefinition = {
   connections: DungeonConnection[];
 };
 
+export type DungeonFloorRunState = {
+  floorId: string;
+  seed: string;
+  currentRoomId: string;
+  roomProgress: Record<string, DungeonRoomProgress>;
+  minimapVisible: boolean;
+};
+
 export type TraversableDungeonConnection = {
   connection: DungeonConnection;
   targetRoomId: string;

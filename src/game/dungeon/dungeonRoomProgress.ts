@@ -11,8 +11,32 @@ export function createInitialRoomProgress(
   return Object.fromEntries(
     map.rooms.map((room) => [
       room.id,
-      { roomId: room.id, eventCompleted: false },
+      { roomId: room.id, eventCompleted: room.type === "start" },
     ]),
+  );
+}
+
+export function restoreRoomProgress(
+  map: DungeonMapDefinition,
+  saved: Record<string, DungeonRoomProgress> | undefined,
+): Record<string, DungeonRoomProgress> {
+  const initial = createInitialRoomProgress(map);
+  if (!saved) return initial;
+  return Object.fromEntries(
+    map.rooms.map((room) => {
+      const value = saved[room.id];
+      return [
+        room.id,
+        value?.roomId === room.id
+          ? {
+              roomId: room.id,
+              eventCompleted:
+                room.type === "start" ? true : value.eventCompleted === true,
+              ...(value.eventResult ? { eventResult: value.eventResult } : {}),
+            }
+          : initial[room.id],
+      ];
+    }),
   );
 }
 

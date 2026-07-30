@@ -1,7 +1,7 @@
 import { INITIAL_PLAYER_STATE } from "../game/player/playerState";
 import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import { validateCurrentSave } from "./saveSchema";
-import type { CurrentSaveData, ImportResult, SaveDataV1, SaveDataV2, SaveDataV3, SaveDataV4, SaveDataV5 } from "./saveTypes";
+import type { CurrentSaveData, ImportResult, SaveDataV1, SaveDataV2, SaveDataV3, SaveDataV4, SaveDataV5, SaveDataV6 } from "./saveTypes";
 import { calculatePlayerMaxHp, INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
 
 type LegacySaveDataV0 = {
@@ -20,7 +20,7 @@ const emptyQuestProgress = () => ({
   floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {},
 });
 
-function migrateV0ToV6(raw: LegacySaveDataV0): CurrentSaveData {
+function migrateV0ToV6(raw: LegacySaveDataV0): SaveDataV6 {
   const hp = typeof raw.hp === "number" ? Math.max(0, Math.min(raw.hp, INITIAL_PLAYER_STATE.maxHp)) : INITIAL_PLAYER_STATE.currentHp;
   const statuses = { ...INITIAL_QUEST_STATE };
   if (raw.activeQuestId && raw.activeQuestId in statuses) statuses[raw.activeQuestId] = "active";
@@ -36,7 +36,7 @@ function migrateV0ToV6(raw: LegacySaveDataV0): CurrentSaveData {
   };
 }
 
-function migrateV1ToV6(raw: SaveDataV1): CurrentSaveData {
+function migrateV1ToV6(raw: SaveDataV1): SaveDataV6 {
   return {
     ...raw,
     version: 6,
@@ -51,16 +51,16 @@ function migrateV1ToV6(raw: SaveDataV1): CurrentSaveData {
   };
 }
 
-function migrateV2ToV6(raw: SaveDataV2): CurrentSaveData {
+function migrateV2ToV6(raw: SaveDataV2): SaveDataV6 {
   return { ...raw, version: 6, player: { ...raw.player, name: "" }, inventory: initialInventory(), questProgress: emptyQuestProgress() };
 }
 
-function migrateV3ToV6(raw: SaveDataV3): CurrentSaveData {
+function migrateV3ToV6(raw: SaveDataV3): SaveDataV6 {
   const maxHp = calculatePlayerMaxHp(raw.inventory);
   return { ...raw, version: 6, player: { ...raw.player, name: "", maxHp, currentHp: Math.min(raw.player.currentHp, maxHp) }, questProgress: emptyQuestProgress() };
 }
 
-function migrateV4ToV6(raw: SaveDataV4): CurrentSaveData {
+function migrateV4ToV6(raw: SaveDataV4): SaveDataV6 {
   const inventory: InventoryState = {
     items: { ...raw.inventory.items },
     equippedItemIds: {
@@ -80,7 +80,7 @@ function migrateV4ToV6(raw: SaveDataV4): CurrentSaveData {
   };
 }
 
-function migrateV5ToV6(raw: SaveDataV5): CurrentSaveData {
+function migrateV5ToV6(raw: SaveDataV5): SaveDataV6 {
   const inventory: InventoryState = {
     items: { ...raw.inventory.items },
     equippedItemIds: {
@@ -98,14 +98,25 @@ function migrateV5ToV6(raw: SaveDataV5): CurrentSaveData {
   };
 }
 
+function migrateV6ToV7(raw: SaveDataV6): CurrentSaveData {
+  return {
+    ...raw,
+    version: 7,
+    dungeon: {
+      ...raw.dungeon,
+      currentFloorRun: null,
+    },
+  };
+}
+
 export function migrateSaveData(raw: unknown): ImportResult {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { success: false, reason: "invalidSchema" };
   const version = (raw as { version?: unknown }).version;
-  if (typeof version === "number" && version > 6) return { success: false, reason: "unsupportedVersion" };
+  if (typeof version === "number" && version > 7) return { success: false, reason: "unsupportedVersion" };
   try {
     const migratedFromVersion =
-      version === undefined || version === 0 ? 0 : version === 1 ? 1 : version === 2 ? 2 : version === 3 ? 3 : version === 4 ? 4 : version === 5 ? 5 : undefined;
-    const candidate =
+      version === undefined || version === 0 ? 0 : version === 1 ? 1 : version === 2 ? 2 : version === 3 ? 3 : version === 4 ? 4 : version === 5 ? 5 : version === 6 ? 6 : undefined;
+    const v6Candidate =
       migratedFromVersion === 0
         ? migrateV0ToV6(raw as LegacySaveDataV0)
         : migratedFromVersion === 1
@@ -118,7 +129,12 @@ export function migrateSaveData(raw: unknown): ImportResult {
                 ? migrateV4ToV6(raw as SaveDataV4)
                 : migratedFromVersion === 5
                   ? migrateV5ToV6(raw as SaveDataV5)
-            : raw;
+                  : migratedFromVersion === 6
+                    ? raw as SaveDataV6
+                    : null;
+    const candidate = v6Candidate
+      ? migrateV6ToV7(v6Candidate)
+      : raw;
     const data = validateCurrentSave(candidate);
     return data ? { success: true, data, ...(migratedFromVersion !== undefined ? { migratedFromVersion } : {}) } : { success: false, reason: "invalidSchema" };
   } catch {

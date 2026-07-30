@@ -9,6 +9,12 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const strings = (value: unknown) =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 const unique = (items: string[]) => [...new Set(items)];
+const ROOM_EVENT_RESULTS = new Set([
+  "treasureOpened",
+  "treasureLocked",
+  "trapAvoided",
+  "trapTriggered",
+]);
 
 export function validateCurrentSave(value: unknown): CurrentSaveData | null {
   if (!isObject(value) || value.version !== CURRENT_SAVE_VERSION ||
@@ -57,6 +63,47 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     if (typeof checkpoint !== "string") return null;
     checkpointByStoryId[id] = checkpoint;
   }
+  const rawFloorRun = value.dungeon.currentFloorRun;
+  let currentFloorRun = null;
+  if (rawFloorRun !== null) {
+    if (
+      !isObject(rawFloorRun) ||
+      typeof rawFloorRun.floorId !== "string" ||
+      typeof rawFloorRun.seed !== "string" ||
+      typeof rawFloorRun.currentRoomId !== "string" ||
+      typeof rawFloorRun.minimapVisible !== "boolean" ||
+      !isObject(rawFloorRun.roomProgress)
+    ) return null;
+    const roomProgress: Record<string, {
+      roomId: string;
+      eventCompleted: boolean;
+      eventResult?: "treasureOpened" | "treasureLocked" | "trapAvoided" | "trapTriggered";
+    }> = {};
+    for (const [roomId, rawProgress] of Object.entries(rawFloorRun.roomProgress)) {
+      if (
+        !isObject(rawProgress) ||
+        rawProgress.roomId !== roomId ||
+        typeof rawProgress.eventCompleted !== "boolean" ||
+        (rawProgress.eventResult !== undefined &&
+          (typeof rawProgress.eventResult !== "string" ||
+            !ROOM_EVENT_RESULTS.has(rawProgress.eventResult)))
+      ) return null;
+      roomProgress[roomId] = {
+        roomId,
+        eventCompleted: rawProgress.eventCompleted,
+        ...(rawProgress.eventResult
+          ? { eventResult: rawProgress.eventResult as typeof roomProgress[string]["eventResult"] }
+          : {}),
+      };
+    }
+    currentFloorRun = {
+      floorId: rawFloorRun.floorId,
+      seed: rawFloorRun.seed,
+      currentRoomId: rawFloorRun.currentRoomId,
+      minimapVisible: rawFloorRun.minimapVisible,
+      roomProgress,
+    };
+  }
   return {
     version: CURRENT_SAVE_VERSION,
     savedAt: value.savedAt,
@@ -77,6 +124,7 @@ export function validateCurrentSave(value: unknown): CurrentSaveData | null {
     dungeon: {
       currentFloorId: value.dungeon.currentFloorId === null || typeof value.dungeon.currentFloorId === "string" ? value.dungeon.currentFloorId as string | null : null,
       clearedFloorIds: unique(value.dungeon.clearedFloorIds as string[]),
+      currentFloorRun,
     },
     inventory: { items, equippedItemIds },
     questProgress: {

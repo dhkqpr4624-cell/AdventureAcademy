@@ -12,7 +12,6 @@ import { runEliteCombatChecks } from "../../game/combat/eliteCombatChecks";
 import { runDungeonMapChecks } from "../../game/dungeon/dungeonMapChecks";
 import { runDungeonCameraChecks } from "../../game/dungeon/dungeonCameraChecks";
 import { runDungeonCompletionChecks } from "../../game/dungeon/dungeonCompletionChecks";
-import { resolveDungeonCompletion } from "../../game/dungeon/dungeonCompletionResolver";
 import {
   getDungeonQuestionSet,
   runDungeonQuestionChecks,
@@ -20,7 +19,7 @@ import {
 import {
   completeRoomEvent,
   completeRoomEventWithResult,
-  createInitialRoomProgress,
+  restoreRoomProgress,
   shouldCompleteCombatRoom,
   shouldCompleteEliteRoom,
 } from "../../game/dungeon/dungeonRoomProgress";
@@ -44,7 +43,7 @@ import {
 import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
 import type {
   DungeonDirection,
-  DungeonRoomNode,
+  DungeonFloorRunState,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
@@ -125,6 +124,11 @@ import {
   getTrapDamageForFloor,
   getWrongAnswerDamageForFloor,
 } from "../../game/balance/floorBalance";
+import { DungeonMinimap } from "../../components/DungeonMinimap";
+import {
+  canEnterFinalRoom,
+  isFinalRoom,
+} from "../../game/dungeon/dungeonExplorationResolver";
 
 type DungeonScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -141,6 +145,8 @@ type DungeonScreenProps = {
   onObjectiveAcquired: (correctCount: number) => void;
   onBestCorrect: (correctCount: number) => void;
   floorQuestStarted: boolean;
+  savedFloorRun: DungeonFloorRunState | null;
+  onFloorRunChanged: (run: DungeonFloorRunState) => void;
 };
 
 type NormalCombatPhase =
@@ -216,20 +222,6 @@ const DIRECTION_LABELS: Record<DungeonDirection, string> = {
   back: "뒤로가기",
 };
 
-function requireTreasureConfig(room: DungeonRoomNode) {
-  if (!room.eventConfig || !("rewardId" in room.eventConfig)) {
-    throw new Error(`[DungeonScreen] Treasure room ${room.id} has no treasure config`);
-  }
-  return room.eventConfig;
-}
-
-function requireTrapConfig(room: DungeonRoomNode) {
-  if (!room.eventConfig || !("damage" in room.eventConfig)) {
-    throw new Error(`[DungeonScreen] Trap room ${room.id} has no trap config`);
-  }
-  return room.eventConfig;
-}
-
 function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
   switch (phase) {
     case "playerCommand":
@@ -260,8 +252,16 @@ export function DungeonScreen({
   onObjectiveAcquired,
   onBestCorrect,
   floorQuestStarted,
+  savedFloorRun,
+  onFloorRunChanged,
 }: DungeonScreenProps) {
-  const [dungeonRun] = useState(() => createFloor1DungeonRun());
+  const [dungeonRun] = useState(() =>
+    createFloor1DungeonRun(
+      savedFloorRun?.floorId === ACTIVE_FLOOR_ID
+        ? savedFloorRun.seed
+        : undefined,
+    ),
+  );
   const dungeonMap = dungeonRun.map;
   const maxHp = playerState.maxHp;
   const [runQuestionAssignments] = useState(() =>
@@ -294,7 +294,7 @@ export function DungeonScreen({
   const enemyTurnFromItemRef = useRef(false);
   const movementProcessingRef = useRef(false);
   const roomEventProcessingRef = useRef(false);
-  const dungeonCompletionProcessingRef = useRef(false);
+  const resumeRoomEntryRef = useRef<(roomId: string) => void>(() => {});
   const activeCombatRoomIdRef = useRef<string | null>(null);
   const activeCombatKindRef = useRef<CombatKind>("normal");
   const pendingRoomEventResultRef = useRef<QuestionResult | null>(null);
@@ -308,13 +308,21 @@ export function DungeonScreen({
     getDungeonQuestionSet("normal-garlic-a"),
   );
   const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>(
-    createInitialRoomProgress(dungeonMap),
+    restoreRoomProgress(
+      dungeonMap,
+      savedFloorRun?.floorId === ACTIVE_FLOOR_ID
+        ? savedFloorRun.roomProgress
+        : undefined,
+    ),
   );
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
-    dungeonMap.startRoomId,
+    savedFloorRun?.floorId === ACTIVE_FLOOR_ID &&
+      dungeonMap.rooms.some((room) => room.id === savedFloorRun.currentRoomId)
+      ? savedFloorRun.currentRoomId
+      : dungeonMap.startRoomId,
   );
   const [previousRoomId, setPreviousRoomId] = useState<string | null>(null);
   const [activeCombatRoomId, setActiveCombatRoomId] = useState<string | null>(
@@ -372,6 +380,8 @@ export function DungeonScreen({
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [runActionBusy, setRunActionBusy] = useState(false);
   const [objectiveEvent, setObjectiveEvent] = useState<"first" | "retry" | null>(null);
+  const [finalGateDialogueStep, setFinalGateDialogueStep] =
+    useState<0 | 1 | null>(null);
 
   const combatQuestionCount =
     activeCombatKind === "elite" ? ELITE_COMBAT_QUESTION_COUNT : 2;
@@ -436,6 +446,29 @@ export function DungeonScreen({
   useEffect(() => {
     onDungeonEntered();
   }, []);
+
+  const minimapVisible =
+    (dungeonMode === "exploration" || dungeonMode === "moving") &&
+    failureState === "none" &&
+    !exitConfirmOpen &&
+    objectiveEvent === null &&
+    finalGateDialogueStep === null;
+
+  useEffect(() => {
+    onFloorRunChanged({
+      floorId: ACTIVE_FLOOR_ID,
+      seed: dungeonRun.seed,
+      currentRoomId,
+      roomProgress,
+      minimapVisible,
+    });
+  }, [
+    currentRoomId,
+    dungeonRun.seed,
+    minimapVisible,
+    onFloorRunChanged,
+    roomProgress,
+  ]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -514,9 +547,9 @@ export function DungeonScreen({
     scene.background = new THREE.Color(0x090b10);
 
     const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 100);
-    const startRoom = getDungeonRoom(dungeonMap.startRoomId);
-    camera.position.set(...startRoom.explorationCameraPose.position);
-    camera.lookAt(...startRoom.explorationCameraPose.lookAt);
+    const initialRoom = getDungeonRoom(currentRoomId);
+    camera.position.set(...initialRoom.explorationCameraPose.position);
+    camera.lookAt(...initialRoom.explorationCameraPose.lookAt);
     scene.add(camera);
     const dungeonCamera = new DungeonCameraController(camera);
 
@@ -594,7 +627,7 @@ export function DungeonScreen({
           corridorTemplate: FLOOR1_STANDARD_CORRIDOR,
           textures,
         });
-        visualAssembly.setActiveRoom(dungeonMap.startRoomId);
+        visualAssembly.setActiveRoom(currentRoomId);
         visualAssemblyRef.current = visualAssembly;
         scene.add(visualAssembly.root);
       })
@@ -651,6 +684,14 @@ export function DungeonScreen({
       camera,
       dungeonCamera,
     };
+    if (
+      savedFloorRun?.floorId === ACTIVE_FLOOR_ID &&
+      currentRoomId !== dungeonMap.startRoomId
+    ) {
+      window.setTimeout(() => {
+        if (mountedRef.current) resumeRoomEntryRef.current(currentRoomId);
+      }, 0);
+    }
 
     const updateViewport = () => {
       weapon.cancel();
@@ -1382,30 +1423,6 @@ export function DungeonScreen({
     );
   };
 
-  const tryCompleteDungeon = () => {
-    if (dungeonCompletionProcessingRef.current) {
-      return;
-    }
-    dungeonCompletionProcessingRef.current = true;
-    const completion = resolveDungeonCompletion(
-      dungeonMap,
-      roomProgressRef.current,
-    );
-    if (completion.canComplete) {
-      playerHpRef.current = maxHp;
-      setPlayerHp(maxHp);
-      onFloorCleared();
-      onNavigate("baseCamp");
-      return;
-    }
-    const remainingCount = completion.remainingCombatRoomIds.length;
-    continueExplorationAfterResult(
-      `아직 완료하지 않은 전투방이 ${remainingCount}곳 남아 있다. ` +
-        "던전의 몬스터를 모두 마주한 뒤 돌아오자.",
-    );
-    dungeonCompletionProcessingRef.current = false;
-  };
-
   const updateActiveRoomEvent = (event: ActiveRoomEvent | null) => {
     activeRoomEventRef.current = event;
     setActiveRoomEvent(event);
@@ -1421,12 +1438,10 @@ export function DungeonScreen({
       return;
     }
     eventInteractionLockRef.current = true;
-    const room = getDungeonRoom(roomId);
-    const config =
-      kind === "treasure"
-        ? requireTreasureConfig(room)
-        : requireTrapConfig(room);
-    const questions = getDungeonQuestionSet(config.questionSetId, 1);
+    const questions = runQuestionAssignments[roomId];
+    if (!questions || questions.length !== 1) {
+      throw new Error(`[DungeonScreen] No unique run question assignment for ${roomId}`);
+    }
     pendingRoomEventResultRef.current = null;
     updateActiveRoomEvent({ roomId, kind, phase: "question" });
     setActiveQuestions(questions);
@@ -1575,12 +1590,24 @@ export function DungeonScreen({
         });
         return;
       }
+      if (
+        (room.type === "empty" || room.type === "start") &&
+        !roomProgressRef.current[roomId]?.eventCompleted
+      ) {
+        const nextProgress = completeRoomEvent(
+          roomProgressRef.current,
+          roomId,
+        );
+        roomProgressRef.current = nextProgress;
+        setRoomProgress(nextProgress);
+      }
       setExplorationMessage(action.message);
       setDungeonMode("exploration");
     } finally {
       roomEventProcessingRef.current = false;
     }
   };
+  resumeRoomEntryRef.current = handleRoomEntered;
 
   const moveToConnectedRoom = (route: TraversableDungeonConnection) => {
     if (
@@ -1588,6 +1615,13 @@ export function DungeonScreen({
       movementProcessingRef.current ||
       activeCombatRoomIdRef.current
     ) {
+      return;
+    }
+    if (
+      isFinalRoom(dungeonMap, route.targetRoomId) &&
+      !canEnterFinalRoom(dungeonMap, roomProgressRef.current)
+    ) {
+      setFinalGateDialogueStep(0);
       return;
     }
     const controller = visualsRef.current?.dungeonCamera;
@@ -1637,10 +1671,9 @@ export function DungeonScreen({
     activeRoomEventRef.current = null;
     eventInteractionLockRef.current = false;
     eventResultProcessingRef.current = false;
-    dungeonCompletionProcessingRef.current = false;
     defeatProcessingRef.current = false;
     dungeonExitProcessingRef.current = false;
-    const nextProgress = createInitialRoomProgress(dungeonMap);
+    const nextProgress = restoreRoomProgress(dungeonMap, undefined);
     roomProgressRef.current = nextProgress;
     setRoomProgress(nextProgress);
     setActiveCombatRoomId(null);
@@ -1743,7 +1776,7 @@ export function DungeonScreen({
   const exitButtonState = resolveDungeonExitButtonState({
     failureState,
     isScreenTransitioning: runActionBusy && !exitConfirmOpen,
-    isFloorClearTransitioning: dungeonCompletionProcessingRef.current && runActionBusy,
+    isFloorClearTransitioning: false,
     exitConfirmOpen,
     isCameraMoving: dungeonMode === "moving",
     isEnemyAttackAnimating: animationInProgress,
@@ -1793,6 +1826,13 @@ export function DungeonScreen({
         <DungeonExitButton
           disabled={exitButtonState.disabled}
           onClick={openExitConfirm}
+        />
+      )}
+      {minimapVisible && (
+        <DungeonMinimap
+          map={dungeonMap}
+          currentRoomId={currentRoomId}
+          roomProgress={roomProgress}
         />
       )}
       <div className={`combat-damage-flash ${damageFlash ? "is-active" : ""}`} />
@@ -1910,6 +1950,29 @@ export function DungeonScreen({
               onClick={continueAfterRoomEvent}
             >
               다음
+            </button>
+          </div>
+        </CombatDialoguePanel>
+      )}
+
+      {finalGateDialogueStep !== null && (
+        <CombatDialoguePanel mode="message" busy={false} statusBar={playerStatusBar}>
+          <div className="combat-message-layout" role="dialog" aria-modal="true">
+            <p className="combat-message">
+              {finalGateDialogueStep === 0
+                ? "아직 살펴보지 않은 곳이 있다."
+                : "모두 살펴봐야 들어갈 수 있을 것 같다."}
+            </p>
+            <button
+              type="button"
+              className="combat-message-next"
+              onClick={() =>
+                setFinalGateDialogueStep((current) =>
+                  current === 0 ? 1 : null,
+                )
+              }
+            >
+              {finalGateDialogueStep === 0 ? "다음" : "확인"}
             </button>
           </div>
         </CombatDialoguePanel>
@@ -2119,9 +2182,6 @@ export function DungeonScreen({
               {import.meta.env.DEV && (
                 <button type="button" onClick={resetCombat}>이 전투 다시 테스트</button>
               )}
-              <button type="button" onClick={tryCompleteDungeon}>
-                던전 완료하고 베이스캠프로 돌아가기
-              </button>
               <button type="button" onClick={() => onNavigate("title")}>타이틀로 돌아가기</button>
             </div>
           </div>
@@ -2194,7 +2254,8 @@ export function DungeonScreen({
         onNavigate("baseCamp");
       }} />}
       {objectiveEvent === "retry" && <DungeonReturnPrompt onCancel={() => {
-        setObjectiveEvent(null);
+    setObjectiveEvent(null);
+    setFinalGateDialogueStep(null);
         setDungeonMode("exploration");
       }} onConfirm={() => {
         playerHpRef.current = maxHp;

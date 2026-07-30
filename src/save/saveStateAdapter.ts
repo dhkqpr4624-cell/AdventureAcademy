@@ -6,6 +6,7 @@ import type { QuestState } from "../game/quest/questTypes";
 import { INITIAL_STORY_ACTION_STATE, type StoryActionState } from "../game/story/storyActionTypes";
 import { CURRENT_SAVE_VERSION, type CurrentSaveData } from "./saveTypes";
 import { calculatePlayerMaxHp, INITIAL_INVENTORY_STATE, type InventoryState } from "../game/inventory/inventoryState";
+import type { DungeonFloorRunState } from "../game/dungeon/dungeonTypes";
 
 export type GameSaveState = {
   playerState: PlayerState; questState: QuestState; floorUnlockState: FloorUnlockState;
@@ -16,6 +17,7 @@ export type GameSaveState = {
   floorBestCorrect: Record<string, number>;
   firstObjectiveEventSeen: Record<string, boolean>;
   rewardClaimed: Record<string, boolean>;
+  currentFloorRun: DungeonFloorRunState | null;
 };
 export const createInitialGameSaveState = (): GameSaveState => ({
   playerState: { ...INITIAL_PLAYER_STATE }, questState: { ...INITIAL_QUEST_STATE },
@@ -24,6 +26,7 @@ export const createInitialGameSaveState = (): GameSaveState => ({
   playTimeSeconds: 0, completedStoryIds: [], checkpointByStoryId: {},
   currentFloorId: null, clearedFloorIds: [],
   floorBestCorrect: {}, firstObjectiveEventSeen: {}, rewardClaimed: {},
+  currentFloorRun: null,
   inventoryState: {
     items: { ...INITIAL_INVENTORY_STATE.items },
     equippedItemIds: { ...INITIAL_INVENTORY_STATE.equippedItemIds },
@@ -43,7 +46,20 @@ export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveDa
     quests: { statuses: { ...state.questState }, activeQuestId },
     floors: { unlockedFloorIds: [...state.floorUnlockState.unlockedFloorIds] },
     story: { completedStoryIds: [...state.completedStoryIds], checkpointByStoryId: { ...state.checkpointByStoryId }, executedActionIds: [...state.storyActionState.executedActionIds] },
-    dungeon: { currentFloorId: state.currentFloorId, clearedFloorIds: [...state.clearedFloorIds] },
+    dungeon: {
+      currentFloorId: state.currentFloorId,
+      clearedFloorIds: [...state.clearedFloorIds],
+      currentFloorRun: state.currentFloorRun
+        ? {
+            ...state.currentFloorRun,
+            roomProgress: Object.fromEntries(
+              Object.entries(state.currentFloorRun.roomProgress).map(
+                ([id, progress]) => [id, { ...progress }],
+              ),
+            ),
+          }
+        : null,
+    },
     inventory: {
       items: { ...state.inventoryState.items },
       equippedItemIds: { ...state.inventoryState.equippedItemIds },
@@ -74,6 +90,16 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
     playTimeSeconds: data.playTimeSeconds, completedStoryIds: [...data.story.completedStoryIds],
     checkpointByStoryId: { ...data.story.checkpointByStoryId },
     currentFloorId: data.dungeon.currentFloorId, clearedFloorIds: [...data.dungeon.clearedFloorIds],
+    currentFloorRun: data.dungeon.currentFloorRun
+      ? {
+          ...data.dungeon.currentFloorRun,
+          roomProgress: Object.fromEntries(
+            Object.entries(data.dungeon.currentFloorRun.roomProgress).map(
+              ([id, progress]) => [id, { ...progress }],
+            ),
+          ),
+        }
+      : null,
     inventoryState,
     floorBestCorrect: { ...data.questProgress.floorBestCorrect },
     firstObjectiveEventSeen: { ...data.questProgress.firstObjectiveEventSeen },

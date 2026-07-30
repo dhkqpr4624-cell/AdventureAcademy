@@ -22,10 +22,13 @@ export function runDungeonCompletionChecks(): void {
     !resolveDungeonCompletion(TEST_DUNGEON_MAP, oneCompleted).canComplete,
     "one completed combat room is insufficient",
   );
-  const allCompleted = combatRoomIds.reduce(completeRoomEvent, initial);
+  const requiredRoomIds = TEST_DUNGEON_MAP.rooms
+    .filter((room) => room.type !== "start" && !room.isFinalQuestRoom)
+    .map((room) => room.id);
+  const allCompleted = requiredRoomIds.reduce(completeRoomEvent, initial);
   check(
     resolveDungeonCompletion(TEST_DUNGEON_MAP, allCompleted).canComplete,
-    "all normal and elite combat rooms must allow completion",
+    "all non-final exploration rooms must allow completion",
   );
   check(
     !resolveDungeonCompletion(

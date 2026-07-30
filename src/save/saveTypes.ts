@@ -1,7 +1,8 @@
 import type { QuestStatus } from "../game/quest/questTypes";
 import type { InventoryState } from "../game/inventory/inventoryState";
+import type { DungeonFloorRunState } from "../game/dungeon/dungeonTypes";
 
-export const CURRENT_SAVE_VERSION = 6 as const;
+export const CURRENT_SAVE_VERSION = 7 as const;
 
 export type SaveReason =
   | "introCompleted" | "baseCampEntered" | "storyStarted"
@@ -61,7 +62,14 @@ export type SaveDataV6 = Omit<SaveDataV5, "version" | "player"> & {
   player: Omit<SaveDataV5["player"], "defense">;
 };
 
-export type CurrentSaveData = SaveDataV6;
+export type SaveDataV7 = Omit<SaveDataV6, "version" | "dungeon"> & {
+  version: 7;
+  dungeon: SaveDataV6["dungeon"] & {
+    currentFloorRun: DungeonFloorRunState | null;
+  };
+};
+
+export type CurrentSaveData = SaveDataV7;
 export type SaveSource = "main" | "backup-1" | "backup-2" | "backup-3";
 export type SaveResult =
   | { success: true; savedAt: string; skipped?: boolean }

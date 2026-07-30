@@ -670,6 +670,88 @@ button:focus-visible {
   background: #090b10;
 }
 
+.dungeon-minimap {
+  position: absolute;
+  z-index: 18;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  width: clamp(142px, 17vw, 190px);
+  padding: 7px;
+  border: 3px solid #c9a96e;
+  border-radius: 8px;
+  color: #f8efdc;
+  background: rgba(17, 17, 20, 0.9);
+  box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.dungeon-minimap-title {
+  padding: 1px 4px 5px;
+  color: #e9c978;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.dungeon-minimap svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(233, 201, 120, 0.35);
+  background: rgba(5, 7, 10, 0.7);
+}
+
+.dungeon-minimap-connections line {
+  stroke: #756b5e;
+  stroke-width: 3;
+  stroke-linecap: square;
+}
+
+.dungeon-minimap-room rect {
+  fill: #34343b;
+  stroke: #77716a;
+  stroke-width: 2;
+}
+
+.dungeon-minimap-room.is-resolved rect {
+  fill: #d9c38f;
+  stroke: #fff0bd;
+}
+
+.dungeon-minimap-room.is-current rect {
+  fill: #5fd5e8;
+  stroke: #e8fdff;
+  stroke-width: 3;
+}
+
+.dungeon-minimap-room.is-current {
+  filter: drop-shadow(0 0 5px #71e8fa);
+}
+
+.dungeon-minimap-room.is-final rect {
+  fill: #8f6737;
+  stroke: #ffd36e;
+}
+
+.dungeon-minimap-room.is-final.is-locked {
+  opacity: 0.52;
+  filter: grayscale(0.7);
+}
+
+.dungeon-minimap-room text {
+  fill: #fff4c4;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .dungeon-minimap {
+    width: 124px;
+    top: 10px;
+    right: 10px;
+  }
+}
+
 .dungeon-scene {
   width: 100%;
   height: 100vh;

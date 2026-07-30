@@ -20,9 +20,20 @@ export function runSaveChecks() {
   state.questState["quest-floor-1-memory-fragment"] = "active";
   state.floorUnlockState.unlockedFloorIds = ["floor-1"];
   state.storyActionState.executedActionIds = ["quest:quest-floor-1-memory-fragment:unlock:floor-1"];
+  state.currentFloorId = "floor-1";
+  state.currentFloorRun = {
+    floorId: "floor-1",
+    seed: "save-check-seed",
+    currentRoomId: "room-east",
+    minimapVisible: true,
+    roomProgress: {
+      start: { roomId: "start", eventCompleted: true },
+      "room-east": { roomId: "room-east", eventCompleted: true },
+    },
+  };
   const save = createSaveDataFromGameState(state);
   const validated = validateCurrentSave(JSON.parse(JSON.stringify(save)));
-  check(validated?.version === 6, "current version");
+  check(validated?.version === 7, "current version");
   check(validated?.player.currentHp === 31, "HP round trip");
   check(validated?.player.gold === 19, "gold round trip");
   check(validated?.inventory.items["potion-small"] === 3, "inventory round trip");
@@ -38,11 +49,17 @@ export function runSaveChecks() {
   check(validated?.quests.activeQuestId === "quest-floor-1-memory-fragment", "active quest");
   check(validated?.floors.unlockedFloorIds.includes("floor-1"), "floor unlock");
   check(validated?.story.executedActionIds.length === 1, "action id");
+  check(
+    validated?.dungeon.currentFloorRun?.seed === "save-check-seed" &&
+      validated.dungeon.currentFloorRun.currentRoomId === "room-east" &&
+      validated.dungeon.currentFloorRun.roomProgress["room-east"]?.eventCompleted,
+    "dungeon run and minimap state round trip",
+  );
 }
 
 export function runSaveMigrationChecks() {
   const migrated = migrateSaveData({ playerLevel: 2, hp: 17, activeQuestId: "quest-floor-1-memory-fragment", unlockedFloors: ["floor-1"] });
-  check(migrated.success && migrated.data.version === 6 && migrated.data.player.gold === 0 && migrated.data.player.maxHp === 50, "v0 migration");
+  check(migrated.success && migrated.data.version === 7 && migrated.data.player.gold === 0 && migrated.data.player.maxHp === 50, "v0 migration");
   const v1 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
   v1.version = 1;
   v1.player = { level: 3, currentHp: 28, maxHp: 50 };
@@ -84,6 +101,19 @@ export function runSaveMigrationChecks() {
       migratedV5.data.player.maxHp === 55 &&
       !("defense" in migratedV5.data.player),
     "v5 removes defense and derives armor max HP",
+  );
+  const v6 = createSaveDataFromGameState(createInitialGameSaveState()) as unknown as Record<string, unknown>;
+  v6.version = 6;
+  v6.dungeon = {
+    ...(v6.dungeon as Record<string, unknown>),
+  };
+  delete (v6.dungeon as Record<string, unknown>).currentFloorRun;
+  const migratedV6 = migrateSaveData(v6);
+  check(
+    migratedV6.success &&
+      migratedV6.migratedFromVersion === 6 &&
+      migratedV6.data.dungeon.currentFloorRun === null,
+    "v6 initializes dungeon run progress",
   );
   check(migrateSaveData({ version: 999 }).success === false, "future version rejected");
   check(migrateSaveData(null).success === false, "invalid schema rejected");

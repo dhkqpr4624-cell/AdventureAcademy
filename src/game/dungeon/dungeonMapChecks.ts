@@ -115,8 +115,11 @@ export function runDungeonMapChecks(): void {
 
   const initial = createInitialRoomProgress(TEST_DUNGEON_MAP);
   check(
-    Object.values(initial).every((progress) => !progress.eventCompleted),
-    "initial room progress must be false",
+    initial[TEST_DUNGEON_MAP.startRoomId]?.eventCompleted === true &&
+      Object.values(initial)
+        .filter((progress) => progress.roomId !== TEST_DUNGEON_MAP.startRoomId)
+        .every((progress) => !progress.eventCompleted),
+    "only the starting room begins completed",
   );
   for (const outcome of [
     "perfectVictory",
