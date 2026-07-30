@@ -2807,6 +2807,8 @@ button:focus-visible {
   bottom: max(2.2vh, env(safe-area-inset-bottom));
   left: max(3vw, env(safe-area-inset-left));
   z-index: 12;
+  width: 60%;
+  margin-inline: auto;
   min-height: clamp(7rem, 20vh, 10.5rem);
   padding: clamp(1rem, 2.4vw, 1.55rem)
     clamp(5.6rem, 12vw, 9rem) clamp(4.1rem, 9vw, 4.8rem)
@@ -3047,8 +3049,8 @@ button:focus-visible {
 }
 
 .story-dialogue-text {
-  width: 60%;
-  max-width: 60%;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   font-size: 18px;
   font-weight: 600;
