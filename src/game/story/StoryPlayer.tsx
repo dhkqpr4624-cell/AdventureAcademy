@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { ScreenId } from "../../app/routes";
 import { getBaseCampMap } from "../../data/baseCampMaps";
 import type {
@@ -20,6 +20,7 @@ import {
 } from "./storyPresentationTypes";
 import { StoryChoiceList } from "../../components/StoryChoiceList";
 import type { StoryChoiceOption } from "../../types/story";
+import { StoryNpcRenderer } from "./StoryNpcRenderer";
 
 type StoryPlayerProps = {
   sequence: StorySequence;
@@ -31,6 +32,7 @@ type StoryPlayerProps = {
   playerStatus?: PlayerState;
   presentationMode?: StoryPresentationMode;
   onChoiceAction?: (actionId: string) => void;
+  playerName?: string;
 };
 
 const INITIAL_RENDER_STATE: StoryRenderState = {
@@ -41,6 +43,12 @@ const INITIAL_RENDER_STATE: StoryRenderState = {
   dialogue: null,
   baseCampMapId: null,
   fade: { visible: false, color: "#000000", durationMs: 0 },
+  camera: {
+    x: 0, y: 0, zoom: 1, durationMs: 0,
+    shakeDurationMs: 0, shakeAmplitude: 0, shakeRevision: 0,
+  },
+  storyNpcs: {},
+  illust: { imageUrl: null, visible: false, fadeMs: 250 },
 };
 
 function collectImageUrls(sequence: StorySequence) {
@@ -101,6 +109,7 @@ export function StoryPlayer({
   playerStatus,
   presentationMode = DEFAULT_STORY_PRESENTATION_MODE,
   onChoiceAction,
+  playerName = "",
 }: StoryPlayerProps) {
   const steps = useMemo(
     () => sequence.scenes.flatMap((scene) => scene.steps),
@@ -238,6 +247,7 @@ export function StoryPlayer({
             await controller?.restore(durationMs, signal);
           },
           checkpoint: (checkpointId) => onCheckpointReached?.(sequence.id, checkpointId),
+          resolveText: (text) => text.replaceAll("(플레이어 이름)", playerName),
         },
         abortController.signal,
       )
@@ -315,6 +325,16 @@ export function StoryPlayer({
       aria-label={sequence.title}
       data-presentation-mode={presentationMode}
     >
+      <div
+        key={renderState.camera.shakeRevision}
+        className={`story-camera ${renderState.camera.shakeDurationMs > 0 ? "is-shaking" : ""}`}
+        style={{
+          transform: `translate(${renderState.camera.x}%, ${renderState.camera.y}%) scale(${renderState.camera.zoom})`,
+          transitionDuration: `${renderState.camera.durationMs}ms`,
+          "--story-shake-amplitude": `${renderState.camera.shakeAmplitude}px`,
+          "--story-shake-duration": `${renderState.camera.shakeDurationMs}ms`,
+        } as CSSProperties}
+      >
       {!isBaseCampOverlay && (
         <div
           key={renderState.backgroundRevision}
@@ -345,6 +365,17 @@ export function StoryPlayer({
         className="story-background-shade"
         aria-hidden="true"
       />
+      <StoryNpcRenderer npcs={renderState.storyNpcs} />
+      </div>
+
+      {renderState.illust.imageUrl && (
+        <div
+          className={`story-illust-overlay ${renderState.illust.visible ? "is-visible" : ""}`}
+          style={{ transitionDuration: `${renderState.illust.fadeMs}ms` }}
+        >
+          <img src={renderState.illust.imageUrl} alt="" draggable={false} />
+        </div>
+      )}
 
       <div className="story-portrait-layer" aria-live="polite">
         {Object.values(renderState.portraits).map((portrait) => {

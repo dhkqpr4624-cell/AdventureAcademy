@@ -22,6 +22,7 @@ export type StoryStepContext = {
     signal: AbortSignal,
   ) => Promise<void>;
   checkpoint: (checkpointId: string) => void;
+  resolveText: (text: string) => string;
 };
 
 function waitFor(durationMs: number, signal: AbortSignal) {
@@ -43,7 +44,13 @@ function waitFor(durationMs: number, signal: AbortSignal) {
 }
 
 function resolveDuration(step: StoryStep) {
-  if (step.type === "wait" || step.type === "fade") {
+  if (
+    step.type === "wait" ||
+    step.type === "fade" ||
+    step.type === "cameraPan" ||
+    step.type === "cameraZoom" ||
+    step.type === "shake"
+  ) {
     return step.durationMs;
   }
 
@@ -127,8 +134,8 @@ export class StoryStepRunner {
           ...state,
           dialogue: {
             kind: "dialogue",
-            speakerName: step.speakerName,
-            text: step.text,
+            speakerName: context.resolveText(step.speakerName),
+            text: context.resolveText(step.text),
             activeActorId: step.activeActorId,
           },
         }));
@@ -136,7 +143,7 @@ export class StoryStepRunner {
       case "narration":
         context.updateState((state) => ({
           ...state,
-          dialogue: { kind: "narration", text: step.text },
+          dialogue: { kind: "narration", text: context.resolveText(step.text) },
         }));
         break;
       case "choice":
@@ -151,6 +158,101 @@ export class StoryStepRunner {
             visible: step.direction === "out",
             color: step.color ?? "#000000",
             durationMs: step.durationMs,
+          },
+        }));
+        break;
+      case "cameraPan":
+        context.updateState((state) => ({
+          ...state,
+          camera: { ...state.camera, x: step.x, y: step.y, durationMs: step.durationMs },
+        }));
+        break;
+      case "cameraZoom":
+        context.updateState((state) => ({
+          ...state,
+          camera: { ...state.camera, zoom: step.zoom, durationMs: step.durationMs },
+        }));
+        break;
+      case "shake":
+        context.updateState((state) => ({
+          ...state,
+          camera: {
+            ...state.camera,
+            shakeDurationMs: step.durationMs,
+            shakeAmplitude: step.amplitude,
+            shakeRevision: state.camera.shakeRevision + 1,
+          },
+        }));
+        break;
+      case "npcWalk":
+        context.updateState((state) => ({
+          ...state,
+          storyNpcs: {
+            ...state.storyNpcs,
+            [step.actorId]: {
+              actorId: step.actorId,
+              pose: "Walking",
+              facing: step.facing,
+              x: step.fromX ?? state.storyNpcs[step.actorId]?.x ?? step.toX,
+              y: step.y ?? state.storyNpcs[step.actorId]?.y ?? 0,
+              durationMs: 0,
+            },
+          },
+        }));
+        await waitFor(16, signal);
+        context.updateState((state) => ({
+          ...state,
+          storyNpcs: {
+            ...state.storyNpcs,
+            [step.actorId]: {
+              ...state.storyNpcs[step.actorId],
+              x: step.toX,
+              durationMs: step.durationMs,
+            },
+          },
+        }));
+        await waitFor(step.durationMs, signal);
+        if (!signal.aborted) {
+          context.updateState((state) => ({
+            ...state,
+            storyNpcs: {
+              ...state.storyNpcs,
+              [step.actorId]: {
+                ...state.storyNpcs[step.actorId],
+                pose: "Standing",
+                facing: step.facing,
+                durationMs: 0,
+              },
+            },
+          }));
+        }
+        return;
+      case "npcPose":
+        context.updateState((state) => {
+          const current = state.storyNpcs[step.actorId];
+          return {
+            ...state,
+            storyNpcs: {
+              ...state.storyNpcs,
+              [step.actorId]: {
+                actorId: step.actorId,
+                pose: step.pose,
+                facing: step.facing ?? current?.facing ?? "Right",
+                x: step.x ?? current?.x ?? 50,
+                y: step.y ?? current?.y ?? 0,
+                durationMs: 0,
+              },
+            },
+          };
+        });
+        break;
+      case "illustOverlay":
+        context.updateState((state) => ({
+          ...state,
+          illust: {
+            imageUrl: step.imageUrl ?? state.illust.imageUrl,
+            visible: step.visible,
+            fadeMs: step.fadeMs ?? 250,
           },
         }));
         break;

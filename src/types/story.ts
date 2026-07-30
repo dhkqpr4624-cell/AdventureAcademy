@@ -2,6 +2,8 @@ import type { ScreenId } from "../app/routes";
 
 export type StoryPortraitPosition = "left" | "right";
 export type StoryTransition = "none" | "fade" | "slideLeft" | "slideRight";
+export type StoryFacing = "Left" | "Right";
+export type StoryNpcPose = "Standing" | "Walking" | "FallDown";
 
 export type StoryVisualAsset = {
   imageUrl?: string;
@@ -87,6 +89,57 @@ export type StoryStep =
       direction: "in" | "out";
       color?: string;
       durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "cameraPan";
+      x: number;
+      y: number;
+      durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "cameraZoom";
+      zoom: number;
+      durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "shake";
+      durationMs: number;
+      amplitude: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "npcWalk";
+      actorId: string;
+      fromX?: number;
+      toX: number;
+      y?: number;
+      facing: StoryFacing;
+      durationMs: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "npcPose";
+      actorId: string;
+      pose: Exclude<StoryNpcPose, "Walking">;
+      facing?: StoryFacing;
+      x?: number;
+      y?: number;
+      advanceMode: "auto";
+    }
+  | {
+      id: string;
+      type: "illustOverlay";
+      imageUrl?: string;
+      visible: boolean;
+      fadeMs?: number;
       advanceMode: "auto";
     }
   | {
@@ -183,4 +236,46 @@ export type StoryRenderState = {
     color: string;
     durationMs: number;
   };
+  camera: {
+    x: number;
+    y: number;
+    zoom: number;
+    durationMs: number;
+    shakeDurationMs: number;
+    shakeAmplitude: number;
+    shakeRevision: number;
+  };
+  storyNpcs: Record<string, {
+    actorId: string;
+    pose: StoryNpcPose;
+    facing: StoryFacing;
+    x: number;
+    y: number;
+    durationMs: number;
+  }>;
+  illust: {
+    imageUrl: string | null;
+    visible: boolean;
+    fadeMs: number;
+  };
+};
+
+export type IntroTextScene = {
+  id: string;
+  mode: "introText";
+  lines: string[];
+};
+
+export type StoryPlayerScene = {
+  id: string;
+  mode: "story";
+  sequence: StorySequence;
+};
+
+export type IntroScene = IntroTextScene | StoryPlayerScene;
+
+export type IntroSceneSequence = {
+  id: string;
+  scenes: IntroScene[];
+  onCompleteScreen: ScreenId;
 };

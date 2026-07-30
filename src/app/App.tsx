@@ -86,7 +86,7 @@ export function App() {
 
   const content = (() => {
     switch (currentScreen) {
-      case "story": return <StoryScreen onNavigate={navigate} onStoryStarted={() => requestSave("storyStarted")} onStoryCompleted={(id) => {
+      case "story": return <StoryScreen playerName={game.playerState.name ?? ""} onNavigate={navigate} onStoryStarted={() => requestSave("storyStarted")} onStoryCompleted={(id) => {
         setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] }));
         requestSave("storyCompleted");
         requestSave("introCompleted");
