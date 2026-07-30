@@ -2759,7 +2759,7 @@ button:focus-visible {
 
 .story-portrait {
   position: absolute;
-  bottom: max(2.2vh, env(safe-area-inset-bottom));
+  bottom: 0;
   width: clamp(101px, 11.7vw, 158px);
   height: clamp(6.3rem, 18vh, 9.45rem);
   overflow: visible;
@@ -2771,11 +2771,11 @@ button:focus-visible {
 }
 
 .story-portrait-left {
-  left: calc(max(3vw, env(safe-area-inset-left)) + 0.6rem);
+  left: clamp(0.75rem, 2vw, 1.2rem);
 }
 
 .story-portrait-right {
-  right: max(3vw, env(safe-area-inset-right));
+  right: clamp(0.75rem, 2vw, 1.2rem);
 }
 
 .story-portrait > img,
@@ -3195,7 +3195,6 @@ button:focus-visible {
 
 @media (max-aspect-ratio: 4 / 3) {
   .story-portrait {
-    bottom: max(2.2vh, env(safe-area-inset-bottom));
     width: clamp(94px, 16.2vw, 137px);
     height: clamp(6.3rem, 16.2vh, 8.1rem);
   }
@@ -3253,7 +3252,6 @@ button:focus-visible {
   }
 
   .story-portrait {
-    bottom: max(1.5vh, env(safe-area-inset-bottom));
     width: clamp(92px, 16vw, 128px);
     height: 5.8rem;
   }

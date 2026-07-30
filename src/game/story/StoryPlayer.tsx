@@ -524,37 +524,6 @@ export function StoryPlayer({
         </div>
       )}
 
-      <div className="story-portrait-layer" aria-live="polite">
-        {visiblePortraits.map((portrait) => {
-          const actor = sequence.actors[portrait.actorId];
-          const asset = actor?.portraits[portrait.portraitId];
-          const isDimmed = !isNarration && activeActorId !== portrait.actorId;
-
-          if (!actor || !asset) {
-            return null;
-          }
-
-          return (
-            <div
-              key={portrait.actorId}
-              className={[
-                "story-portrait",
-                `story-portrait-${portrait.position}`,
-                `story-transition-${portrait.transition}`,
-                isDimmed ? "is-dimmed" : "is-active",
-              ].join(" ")}
-            >
-              <StoryAsset
-                asset={asset}
-                alt={`${actor.name} ${portrait.portraitId}`}
-                failedUrls={failedUrls}
-                onImageError={markImageFailed}
-              />
-            </div>
-          );
-        })}
-      </div>
-
       {renderState.dialogue && (
         <section
           className={`story-dialogue-box ${
@@ -567,6 +536,36 @@ export function StoryPlayer({
               : undefined
           }
         >
+          <div className="story-portrait-layer" aria-live="polite">
+            {visiblePortraits.map((portrait) => {
+              const actor = sequence.actors[portrait.actorId];
+              const asset = actor?.portraits[portrait.portraitId];
+              const isDimmed = !isNarration && activeActorId !== portrait.actorId;
+
+              if (!actor || !asset) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={portrait.actorId}
+                  className={[
+                    "story-portrait",
+                    `story-portrait-${portrait.position}`,
+                    `story-transition-${portrait.transition}`,
+                    isDimmed ? "is-dimmed" : "is-active",
+                  ].join(" ")}
+                >
+                  <StoryAsset
+                    asset={asset}
+                    alt={`${actor.name} ${portrait.portraitId}`}
+                    failedUrls={failedUrls}
+                    onImageError={markImageFailed}
+                  />
+                </div>
+              );
+            })}
+          </div>
           {renderState.dialogue.kind === "dialogue" && (
             <p className="story-speaker-name">
               {renderState.dialogue.speakerName}
