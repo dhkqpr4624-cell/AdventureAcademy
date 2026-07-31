@@ -15,6 +15,12 @@ export const QUEST_RARE_REWARD_CONDITIONS: Record<
     requiredCorrect: 6,
     totalQuestions: 8,
   },
+  "quest-floor-2-torn-cloth": {
+    questId: "quest-floor-2-torn-cloth",
+    floorId: "floor-2",
+    requiredCorrect: 6,
+    totalQuestions: 8,
+  },
 };
 
 export function getQuestRareRewardCondition(

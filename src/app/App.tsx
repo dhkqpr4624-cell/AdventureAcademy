@@ -85,6 +85,12 @@ export function App() {
   }, []);
 
   const content = (() => {
+    const activeFloorId =
+      game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
+    const activeFloorQuestId =
+      activeFloorId === "floor-2"
+        ? "quest-floor-2-torn-cloth"
+        : "quest-floor-1-memory-fragment";
     switch (currentScreen) {
       case "story": return <StoryScreen playerName={game.playerState.name ?? ""} onNavigate={navigate} onStoryStarted={() => requestSave("storyStarted")} onStoryCompleted={(id) => {
         setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] }));
@@ -93,6 +99,10 @@ export function App() {
       }} onStoryCheckpoint={(id, checkpoint) => { setGame((current) => ({ ...current, checkpointByStoryId: { ...current.checkpointByStoryId, [id]: checkpoint } })); requestSave("storyCheckpoint"); }} />;
       case "baseCamp": return <BaseCampScreen
         onNavigate={navigate} playerState={game.playerState}
+        onEnterDungeon={(floorId) => {
+          setGame((current) => ({ ...current, currentFloorId: floorId }));
+          navigate("dungeon");
+        }}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
         inventoryState={game.inventoryState}
         setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
@@ -108,31 +118,31 @@ export function App() {
         achievementReceived={game.achievementReceived}
         setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
       />;
-      case "dungeon": return <DungeonScreen onNavigate={navigate} playerState={game.playerState}
+      case "dungeon": return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
         inventoryState={game.inventoryState}
         setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
         onInventoryChanged={() => requestSave("itemAcquired")}
         onGoldAwarded={() => requestSave("itemAcquired")}
-        onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: "floor-1" })); requestSave("dungeonEntered"); }}
+        onDungeonEntered={() => { setGame((current) => ({ ...current, currentFloorId: activeFloorId })); requestSave("dungeonEntered"); }}
         onDungeonAbandoned={() => setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null }))}
         savedFloorRun={game.currentFloorRun}
         onFloorRunChanged={updateFloorRun}
-        firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen["floor-1"])}
+        firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen[activeFloorId])}
         onObjectiveAcquired={(correctCount) => {
           setGame((current) => ({
             ...current,
             currentFloorId: null,
             currentFloorRun: null,
-            clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])],
-            firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, "floor-1": true },
-            floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) },
+            clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])],
+            firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, [activeFloorId]: true },
+            floorBestCorrect: { ...current.floorBestCorrect, [activeFloorId]: Math.max(current.floorBestCorrect[activeFloorId] ?? 0, correctCount) },
           }));
           requestSave("itemAcquired");
         }}
-        onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, "floor-1": Math.max(current.floorBestCorrect["floor-1"] ?? 0, correctCount) } }))}
-        floorQuestStarted={game.questState["quest-floor-1-memory-fragment"] !== "available"}
-        onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-1"])] })); requestSave("floorCleared"); }}
+        onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, [activeFloorId]: Math.max(current.floorBestCorrect[activeFloorId] ?? 0, correctCount) } }))}
+        floorQuestStarted={game.questState[activeFloorQuestId] === "active" || game.questState[activeFloorQuestId] === "completed"}
+        onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
       default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onNewGame={() => {

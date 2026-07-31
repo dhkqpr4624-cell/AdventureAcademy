@@ -28,7 +28,7 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     icon: `${import.meta.env.BASE_URL}assets/items/bipa-bronze-sword.png`, stackable: false,
   },
   "armor-gwanggaeto": {
-    id: "armor-gwanggaeto", name: "광개토대왕의 갑옷", type: "armor",
+    id: "armor-gwanggaeto", name: "광개토대왕 갑옷", type: "armor",
     rarity: "rare", description: "고구려의 위대한 정복 군주를 상징하는 갑옷.",
     icon: `${import.meta.env.BASE_URL}assets/items/gwanggaeto-armor.png`,
     stackable: false,
@@ -38,6 +38,11 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",
     icon: "🪨", stackable: false,
+  },
+  "quest-torn-cloth": {
+    id: "quest-torn-cloth", name: "천 조각", type: "misc",
+    rarity: "rare", description: "던전 2층에서 발견한, 시대와 어울리지 않는 찢어진 천 조각이다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/torn-cloth.png`, stackable: false,
   },
   "potion-small": {
     id: "potion-small", name: "소형 회복 포션", type: "consumable",

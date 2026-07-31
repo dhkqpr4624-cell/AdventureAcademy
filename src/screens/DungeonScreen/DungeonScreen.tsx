@@ -117,7 +117,9 @@ import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuesti
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { DungeonReturnPrompt, MemoryFragmentEvent } from "../../components/MemoryFragmentEvent";
+import { TornClothEvent } from "../../components/TornClothEvent";
 import memoryFoundUrl from "../../assets/quest/memory-fragment-found.png";
+import tornClothFoundUrl from "../../assets/quest/torn-cloth-found.png";
 import {
   getFloorNumber,
   getMonsterDamageForFloor,
@@ -130,8 +132,10 @@ import {
   canEnterFinalRoom,
   isFinalRoom,
 } from "../../game/dungeon/dungeonExplorationResolver";
+import type { FloorId } from "../../game/floor/floorTypes";
 
 type DungeonScreenProps = {
+  floorId: FloorId;
   onNavigate: (screen: ScreenId) => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
@@ -198,8 +202,6 @@ type ActiveRoomEvent = {
   message?: string;
 };
 
-const ACTIVE_FLOOR_ID = "floor-1";
-const ACTIVE_FLOOR_NUMBER = getFloorNumber(ACTIVE_FLOOR_ID);
 const DEFAULT_PLAYER_NAME = "플레이어";
 const MONSTER_QUESTION_Y_OFFSET = 0.34;
 const MONSTER_PLANE_HEIGHT = 2.05;
@@ -239,6 +241,7 @@ function dialogueModeForPhase(phase: NormalCombatPhase): CombatDialogueMode {
 }
 
 export function DungeonScreen({
+  floorId,
   onNavigate,
   playerState,
   setPlayerState,
@@ -256,9 +259,10 @@ export function DungeonScreen({
   savedFloorRun,
   onFloorRunChanged,
 }: DungeonScreenProps) {
+  const activeFloorNumber = getFloorNumber(floorId);
   const [dungeonRun] = useState(() =>
     createFloor1DungeonRun(
-      savedFloorRun?.floorId === ACTIVE_FLOOR_ID
+      savedFloorRun?.floorId === floorId
         ? savedFloorRun.seed
         : undefined,
     ),
@@ -311,7 +315,7 @@ export function DungeonScreen({
   const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>(
     restoreRoomProgress(
       dungeonMap,
-      savedFloorRun?.floorId === ACTIVE_FLOOR_ID
+      savedFloorRun?.floorId === floorId
         ? savedFloorRun.roomProgress
         : undefined,
     ),
@@ -321,7 +325,7 @@ export function DungeonScreen({
   const [floorIntroVisible, setFloorIntroVisible] = useState(true);
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
-    savedFloorRun?.floorId === ACTIVE_FLOOR_ID &&
+    savedFloorRun?.floorId === floorId &&
       dungeonMap.rooms.some((room) => room.id === savedFloorRun.currentRoomId)
       ? savedFloorRun.currentRoomId
       : dungeonMap.startRoomId,
@@ -406,15 +410,15 @@ export function DungeonScreen({
       answersRef.current.length > 0 &&
       answersRef.current[answersRef.current.length - 1] === false;
     if (lastAnswerWasWrong) {
-      return getWrongAnswerDamageForFloor(ACTIVE_FLOOR_NUMBER);
+      return getWrongAnswerDamageForFloor(activeFloorNumber);
     }
     const roomId = activeCombatRoomIdRef.current;
     if (!roomId) {
-      return getMonsterDamageForFloor(ACTIVE_FLOOR_NUMBER);
+      return getMonsterDamageForFloor(activeFloorNumber);
     }
     const room = getDungeonRoom(roomId);
     return getMonsterDamageForFloor(
-      ACTIVE_FLOOR_NUMBER,
+      activeFloorNumber,
       room.type === "elite" ? "elite" : "normal",
     );
   };
@@ -460,7 +464,7 @@ export function DungeonScreen({
 
   useEffect(() => {
     onFloorRunChanged({
-      floorId: ACTIVE_FLOOR_ID,
+      floorId,
       seed: dungeonRun.seed,
       currentRoomId,
       roomProgress,
@@ -689,7 +693,7 @@ export function DungeonScreen({
       dungeonCamera,
     };
     if (
-      savedFloorRun?.floorId === ACTIVE_FLOOR_ID &&
+      savedFloorRun?.floorId === floorId &&
       currentRoomId !== dungeonMap.startRoomId
     ) {
       window.setTimeout(() => {
@@ -894,7 +898,7 @@ export function DungeonScreen({
         dungeonRun.seed,
         combatRoomId,
         activeCombatKindRef.current,
-        ACTIVE_FLOOR_NUMBER,
+        activeFloorNumber,
       );
       rewardedCombatRoomIdsRef.current.add(combatRoomId);
       setGoldDrop(amount);
@@ -1486,7 +1490,7 @@ export function DungeonScreen({
     const resolution = resolveDungeonRoomEvent(room, result.isCorrect);
     const eventDamage =
       event.kind === "trap" && !result.isCorrect
-        ? getTrapDamageForFloor(ACTIVE_FLOOR_NUMBER)
+        ? getTrapDamageForFloor(activeFloorNumber)
         : resolution.damage;
     if (eventDamage > 0) {
       const damageResult = applyPlayerDamage(eventDamage);
@@ -1516,7 +1520,7 @@ export function DungeonScreen({
         dungeonRun.seed,
         event.roomId,
         "treasure",
-        ACTIVE_FLOOR_NUMBER,
+        activeFloorNumber,
       );
       setPlayerState((current) => ({ ...current, gold: current.gold + amount }));
       onGoldAwarded();
@@ -1810,7 +1814,7 @@ export function DungeonScreen({
         className="dungeon-scene"
         aria-label="고정 테스트 던전"
       />
-      {floorIntroVisible && <DungeonFloorIntro floorId={ACTIVE_FLOOR_ID} />}
+      {floorIntroVisible && <DungeonFloorIntro floorId={floorId} />}
       {exitButtonState.visible && (
         <DungeonExitButton
           disabled={exitButtonState.disabled}
@@ -2209,10 +2213,18 @@ export function DungeonScreen({
           onReturnToBaseCamp={returnAfterDefeat}
         />
       )}
-      {objectiveEvent === "first" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
+      {objectiveEvent === "first" && floorId === "floor-1" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
         playerHpRef.current = maxHp;
         setPlayerHp(maxHp);
         setInventoryState((current) => changeItemQuantity(current, "quest-memory-fragment", 1));
+        onObjectiveAcquired(runCorrectCountRef.current);
+        onInventoryChanged();
+        onNavigate("baseCamp");
+      }} />}
+      {objectiveEvent === "first" && floorId === "floor-2" && <TornClothEvent imageUrl={tornClothFoundUrl} onComplete={() => {
+        playerHpRef.current = maxHp;
+        setPlayerHp(maxHp);
+        setInventoryState((current) => changeItemQuantity(current, "quest-torn-cloth", 1));
         onObjectiveAcquired(runCorrectCountRef.current);
         onInventoryChanged();
         onNavigate("baseCamp");

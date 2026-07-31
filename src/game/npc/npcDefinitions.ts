@@ -35,8 +35,12 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       blinkFrameCount: 4,
     },
     portraits: { default: lunaPortrait, happy: lunaPortrait },
-    dialogue: { defaultStorySequenceId: "npc-luna-default" },
-    offeredQuestIds: [],
+    dialogue: {
+      defaultStorySequenceId: "npc-luna-default",
+      questAvailableStorySequenceId: "npc-luna-floor-2-quest-available",
+      questActiveStorySequenceId: "npc-luna-floor-2-quest-active",
+    },
+    offeredQuestIds: ["quest-floor-2-torn-cloth"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
   },
   {

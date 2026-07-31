@@ -16,6 +16,9 @@ export type AchievementDefinition = {
 const floor1RareRewardCondition = getQuestRareRewardCondition(
   "quest-floor-1-memory-fragment",
 );
+const floor2RareRewardCondition = getQuestRareRewardCondition(
+  "quest-floor-2-torn-cloth",
+);
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -29,5 +32,17 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     requiredCorrect: floor1RareRewardCondition.requiredCorrect,
     totalQuestions: floor1RareRewardCondition.totalQuestions,
     description: "던전 1층 정답",
+  },
+  {
+    id: "achievement-floor-2-rare-reward",
+    floorId: "floor-2",
+    floorTitle: "던전 2층",
+    title: "광개토대왕 갑옷",
+    rewardIcon: `${import.meta.env.BASE_URL}assets/items/gwanggaeto-armor.png`,
+    rewardItemId: "armor-gwanggaeto",
+    rewardStateId: "quest-floor-2-torn-cloth",
+    requiredCorrect: floor2RareRewardCondition.requiredCorrect,
+    totalQuestions: floor2RareRewardCondition.totalQuestions,
+    description: "던전 2층 정답",
   },
 ];
