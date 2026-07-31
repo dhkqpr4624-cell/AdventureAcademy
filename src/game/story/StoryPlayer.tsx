@@ -538,7 +538,7 @@ export function StoryPlayer({
         >
           <div className="story-dialogue-layout">
             {renderState.dialogue.kind === "dialogue" && (
-              <div className="story-dialogue-portrait-region">
+              <div className="story-dialogue-portrait-group">
                 <div className="story-portrait-layer" aria-live="polite">
                   {visiblePortraits.map((portrait) => {
                     const actor = sequence.actors[portrait.actorId];
@@ -569,14 +569,12 @@ export function StoryPlayer({
                     );
                   })}
                 </div>
-              </div>
-            )}
-            <div className="story-dialogue-content">
-              {renderState.dialogue.kind === "dialogue" && (
                 <p className="story-speaker-name">
                   {renderState.dialogue.speakerName}
                 </p>
-              )}
+              </div>
+            )}
+            <div className="story-dialogue-content">
               <p
                 className={`story-dialogue-text ${
                   renderState.dialogue.kind === "dialogue" &&

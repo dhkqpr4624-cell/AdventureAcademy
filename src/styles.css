@@ -2762,9 +2762,9 @@ button:focus-visible {
 
 .story-portrait {
   position: absolute;
-  bottom: clamp(0.75rem, 1.4vh, 1rem);
-  width: clamp(113px, 13.1vw, 177px);
-  height: clamp(7.05rem, 20.2vh, 10.6rem);
+  bottom: clamp(2.65rem, 5.2vh, 3.15rem);
+  width: clamp(141px, 16.4vw, 221px);
+  height: clamp(8.8rem, 25.25vh, 13.25rem);
   overflow: visible;
   transform-origin: bottom center;
   transition:
@@ -2826,21 +2826,23 @@ button:focus-visible {
 
 .story-dialogue-layout {
   display: grid;
-  grid-template-columns: clamp(7.8rem, 14vw, 10.5rem) minmax(0, 1fr);
+  grid-template-columns: clamp(9.5rem, 17vw, 13.5rem) minmax(0, 1fr);
   gap: clamp(1.875rem, 3vw, 2.5rem);
   width: 100%;
   min-height: clamp(6.6rem, 15vh, 9rem);
 }
 
-.story-dialogue-portrait-region {
+.story-dialogue-portrait-group {
   position: relative;
   min-width: 0;
+  min-height: clamp(7.25rem, 16vh, 9.5rem);
+  z-index: 1;
 }
 
 .story-dialogue-content {
   position: relative;
   min-width: 0;
-  padding-top: clamp(1rem, 2vh, 1.25rem);
+  padding-top: clamp(1.35rem, 2.6vh, 1.75rem);
 }
 
 .story-dialogue-box.is-narration .story-dialogue-layout {
@@ -3065,17 +3067,23 @@ button:focus-visible {
 
 .story-speaker-name {
   position: absolute;
-  top: clamp(-3.65rem, -6vh, -3.15rem);
-  left: 0;
-  width: fit-content;
+  right: 4%;
+  bottom: 0;
+  left: 4%;
+  z-index: 16;
+  display: grid;
+  place-items: center;
+  min-height: clamp(2.15rem, 4.5vh, 2.65rem);
   margin: 0;
-  padding: 0.38rem 1rem;
+  padding: 0.35rem 0.65rem;
   border: 1px solid rgba(247, 220, 162, 0.58);
   border-radius: 0.45rem;
   color: var(--story-speaker-accent, #f5d987);
   background: #222027;
   font-size: clamp(0.85rem, 1.6vw, 1.08rem);
   font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .story-dialogue-text {
@@ -3225,8 +3233,8 @@ button:focus-visible {
 
 @media (max-aspect-ratio: 4 / 3) {
   .story-portrait {
-    width: clamp(105px, 18.1vw, 153px);
-    height: clamp(7.05rem, 18.1vh, 9.1rem);
+    width: clamp(131px, 22.6vw, 191px);
+    height: clamp(8.8rem, 22.6vh, 11.4rem);
   }
 
   .story-dialogue-box {
@@ -3234,7 +3242,7 @@ button:focus-visible {
   }
 
   .story-dialogue-layout {
-    grid-template-columns: clamp(7rem, 19vw, 9rem) minmax(0, 1fr);
+    grid-template-columns: clamp(8.6rem, 23vw, 11.25rem) minmax(0, 1fr);
     gap: clamp(1.875rem, 4vw, 2.25rem);
   }
 }
@@ -3286,9 +3294,9 @@ button:focus-visible {
   }
 
   .story-portrait {
-    bottom: 0.35rem;
-    width: clamp(103px, 17.9vw, 143px);
-    height: 6.5rem;
+    bottom: 2.35rem;
+    width: clamp(129px, 22.4vw, 179px);
+    height: 8.1rem;
   }
 
   .story-dialogue-box {
@@ -3300,8 +3308,12 @@ button:focus-visible {
   }
 
   .story-dialogue-layout {
-    grid-template-columns: clamp(6.5rem, 18vw, 8rem) minmax(0, 1fr);
+    grid-template-columns: clamp(8rem, 22vw, 10rem) minmax(0, 1fr);
     gap: clamp(1.5rem, 4vw, 1.875rem);
+    min-height: 6.4rem;
+  }
+
+  .story-dialogue-portrait-group {
     min-height: 6.4rem;
   }
 
@@ -3310,7 +3322,10 @@ button:focus-visible {
   }
 
   .story-speaker-name {
-    top: -2.35rem;
+    right: 3%;
+    bottom: 0;
+    left: 3%;
+    min-height: 1.95rem;
     margin: 0;
     padding: 0.2rem 0.7rem;
     font-size: 0.78rem;
