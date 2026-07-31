@@ -436,13 +436,18 @@ export function StoryPlayer({
     >
       {fixedAirshipSky && (
         <div className="story-fixed-sky" aria-hidden="true">
-          <img
-            className="story-background-layer"
-            src={fixedAirshipSky.imageUrl}
-            alt=""
-            draggable={false}
-            onError={() => markImageFailed(fixedAirshipSky.imageUrl)}
-          />
+          <div className="story-sky-scroll-track">
+            {[0, 1].map((tileIndex) => (
+              <img
+                key={tileIndex}
+                className="story-sky-scroll-tile"
+                src={fixedAirshipSky.imageUrl}
+                alt=""
+                draggable={false}
+                onError={() => markImageFailed(fixedAirshipSky.imageUrl)}
+              />
+            ))}
+          </div>
         </div>
       )}
       <div

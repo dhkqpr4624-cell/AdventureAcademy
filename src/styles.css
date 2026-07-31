@@ -2474,6 +2474,36 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.story-sky-scroll-track {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  width: 200%;
+  height: 100%;
+  animation: story-sky-scroll 120s steps(600, end) infinite;
+  will-change: transform;
+}
+
+.story-sky-scroll-tile {
+  display: block;
+  flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+@keyframes story-sky-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 .story-camera {
   position: absolute;
   inset: 0;
