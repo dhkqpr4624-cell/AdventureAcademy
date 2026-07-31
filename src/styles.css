@@ -2753,13 +2753,16 @@ button:focus-visible {
 }
 
 .story-portrait-layer {
+  position: relative;
+  width: 100%;
+  height: 100%;
   z-index: 14;
   pointer-events: none;
 }
 
 .story-portrait {
   position: absolute;
-  bottom: clamp(0.45rem, 1vh, 0.7rem);
+  bottom: clamp(0.75rem, 1.4vh, 1rem);
   width: clamp(113px, 13.1vw, 177px);
   height: clamp(7.05rem, 20.2vh, 10.6rem);
   overflow: visible;
@@ -2771,11 +2774,13 @@ button:focus-visible {
 }
 
 .story-portrait-left {
-  left: clamp(1.15rem, 2.6vw, 1.65rem);
+  left: 50%;
+  translate: -50% 0;
 }
 
 .story-portrait-right {
-  right: clamp(1.15rem, 2.6vw, 1.65rem);
+  right: 50%;
+  translate: 50% 0;
 }
 
 .story-portrait > img,
@@ -2809,15 +2814,37 @@ button:focus-visible {
   z-index: 12;
   width: 60%;
   margin-inline: auto;
-  min-height: clamp(8.5rem, calc(20vh + 24px), 12rem);
-  padding: clamp(1.35rem, 2.8vw, 1.8rem)
-    clamp(5.6rem, 12vw, 9rem) clamp(4.1rem, 9vw, 4.8rem)
-    clamp(7.8rem, 15vw, 11.5rem);
+  min-height: clamp(10rem, calc(20vh + 44px), 13.25rem);
+  padding: clamp(1.55rem, 3vw, 2rem)
+    clamp(1.65rem, 3.4vw, 2.4rem) clamp(4.35rem, 9vw, 5rem);
   border: 1px solid rgba(247, 220, 162, 0.56);
   border-radius: 0.85rem;
   background: rgba(13, 16, 22, 0.9);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(9px);
+}
+
+.story-dialogue-layout {
+  display: grid;
+  grid-template-columns: clamp(7.8rem, 14vw, 10.5rem) minmax(0, 1fr);
+  gap: clamp(1.875rem, 3vw, 2.5rem);
+  width: 100%;
+  min-height: clamp(6.6rem, 15vh, 9rem);
+}
+
+.story-dialogue-portrait-region {
+  position: relative;
+  min-width: 0;
+}
+
+.story-dialogue-content {
+  position: relative;
+  min-width: 0;
+  padding-top: clamp(1rem, 2vh, 1.25rem);
+}
+
+.story-dialogue-box.is-narration .story-dialogue-layout {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .story-dialogue-box.is-after-walk {
@@ -2893,7 +2920,7 @@ button:focus-visible {
 }
 
 .story-player-baseCampOverlay .story-dialogue-box {
-  padding-bottom: clamp(1rem, 2.4vw, 1.55rem);
+  padding-bottom: clamp(1.35rem, 2.8vw, 1.8rem);
 }
 
 .current-quest-tracker {
@@ -3037,8 +3064,11 @@ button:focus-visible {
 }
 
 .story-speaker-name {
+  position: absolute;
+  top: clamp(-3.65rem, -6vh, -3.15rem);
+  left: 0;
   width: fit-content;
-  margin: -2.75rem 0 1rem;
+  margin: 0;
   padding: 0.38rem 1rem;
   border: 1px solid rgba(247, 220, 162, 0.58);
   border-radius: 0.45rem;
@@ -3049,8 +3079,8 @@ button:focus-visible {
 }
 
 .story-dialogue-text {
-  width: min(92%, 44rem);
-  max-width: 44rem;
+  width: min(100%, 44rem);
+  max-width: 100%;
   margin: 0;
   font-size: 20px;
   font-weight: 600;
@@ -3200,8 +3230,12 @@ button:focus-visible {
   }
 
   .story-dialogue-box {
-    min-height: clamp(8.5rem, calc(18vh + 24px), 10.5rem);
-    padding-left: clamp(7.2rem, 20vw, 10rem);
+    min-height: clamp(9.75rem, calc(18vh + 44px), 11.75rem);
+  }
+
+  .story-dialogue-layout {
+    grid-template-columns: clamp(7rem, 19vw, 9rem) minmax(0, 1fr);
+    gap: clamp(1.875rem, 4vw, 2.25rem);
   }
 }
 
@@ -3261,12 +3295,23 @@ button:focus-visible {
     right: max(2vw, env(safe-area-inset-right));
     bottom: max(1.5vh, env(safe-area-inset-bottom));
     left: max(2vw, env(safe-area-inset-left));
-    min-height: 7.3rem;
-    padding: 1rem 5.2rem 0.7rem clamp(7.2rem, 20vw, 9rem);
+    min-height: 8.55rem;
+    padding: 1rem 5.2rem 0.85rem 1rem;
+  }
+
+  .story-dialogue-layout {
+    grid-template-columns: clamp(6.5rem, 18vw, 8rem) minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 1.875rem);
+    min-height: 6.4rem;
+  }
+
+  .story-dialogue-content {
+    padding-top: 0.8rem;
   }
 
   .story-speaker-name {
-    margin: -1.75rem 0 0.6rem;
+    top: -2.35rem;
+    margin: 0;
     padding: 0.2rem 0.7rem;
     font-size: 0.78rem;
   }

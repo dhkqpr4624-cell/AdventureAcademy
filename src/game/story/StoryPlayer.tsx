@@ -536,54 +536,62 @@ export function StoryPlayer({
               : undefined
           }
         >
-          <div className="story-portrait-layer" aria-live="polite">
-            {visiblePortraits.map((portrait) => {
-              const actor = sequence.actors[portrait.actorId];
-              const asset = actor?.portraits[portrait.portraitId];
-              const isDimmed = !isNarration && activeActorId !== portrait.actorId;
+          <div className="story-dialogue-layout">
+            {renderState.dialogue.kind === "dialogue" && (
+              <div className="story-dialogue-portrait-region">
+                <div className="story-portrait-layer" aria-live="polite">
+                  {visiblePortraits.map((portrait) => {
+                    const actor = sequence.actors[portrait.actorId];
+                    const asset = actor?.portraits[portrait.portraitId];
+                    const isDimmed = !isNarration && activeActorId !== portrait.actorId;
 
-              if (!actor || !asset) {
-                return null;
-              }
+                    if (!actor || !asset) {
+                      return null;
+                    }
 
-              return (
-                <div
-                  key={portrait.actorId}
-                  className={[
-                    "story-portrait",
-                    `story-portrait-${portrait.position}`,
-                    `story-transition-${portrait.transition}`,
-                    isDimmed ? "is-dimmed" : "is-active",
-                  ].join(" ")}
-                >
-                  <StoryAsset
-                    asset={asset}
-                    alt={`${actor.name} ${portrait.portraitId}`}
-                    failedUrls={failedUrls}
-                    onImageError={markImageFailed}
-                  />
+                    return (
+                      <div
+                        key={portrait.actorId}
+                        className={[
+                          "story-portrait",
+                          `story-portrait-${portrait.position}`,
+                          `story-transition-${portrait.transition}`,
+                          isDimmed ? "is-dimmed" : "is-active",
+                        ].join(" ")}
+                      >
+                        <StoryAsset
+                          asset={asset}
+                          alt={`${actor.name} ${portrait.portraitId}`}
+                          failedUrls={failedUrls}
+                          onImageError={markImageFailed}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            )}
+            <div className="story-dialogue-content">
+              {renderState.dialogue.kind === "dialogue" && (
+                <p className="story-speaker-name">
+                  {renderState.dialogue.speakerName}
+                </p>
+              )}
+              <p
+                className={`story-dialogue-text ${
+                  renderState.dialogue.kind === "dialogue" &&
+                  renderState.dialogue.emphasis === "danger"
+                    ? "is-danger-emphasis"
+                    : ""
+                }`}
+              >
+                <DialogueText
+                  text={renderState.dialogue.text}
+                  playerName={playerName}
+                />
+              </p>
+            </div>
           </div>
-          {renderState.dialogue.kind === "dialogue" && (
-            <p className="story-speaker-name">
-              {renderState.dialogue.speakerName}
-            </p>
-          )}
-          <p
-            className={`story-dialogue-text ${
-              renderState.dialogue.kind === "dialogue" &&
-              renderState.dialogue.emphasis === "danger"
-                ? "is-danger-emphasis"
-                : ""
-            }`}
-          >
-            <DialogueText
-              text={renderState.dialogue.text}
-              playerName={playerName}
-            />
-          </p>
           {currentStep?.type === "choice" ? (
             <StoryChoiceList options={currentStep.options} disabled={isTransitioning} onChoose={choose} />
           ) : <button
