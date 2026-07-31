@@ -35,7 +35,7 @@ export function TornClothEvent({
         {
           id: "torn-cloth-line-3",
           type: "narration",
-          text: "베이스 캠프로 돌아가서\n루나에게 보여주자.",
+          text: "베이스 캠프로 돌아가서 루나에게 보여주자.",
           advanceMode: "click",
         },
       ],

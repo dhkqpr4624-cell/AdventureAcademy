@@ -29,13 +29,13 @@ export function MemoryFragmentEvent({
         {
           id: "memory-fragment-line-2",
           type: "narration",
-          text: "카이든 대장이 가지고 있는 조각과\n딱 맞을 것 같다.",
+          text: "카이든 대장이 가지고 있는 조각과 딱 맞을 것 같다.",
           advanceMode: "click",
         },
         {
           id: "memory-fragment-line-3",
           type: "narration",
-          text: "베이스 캠프로 돌아가서\n카이든에게 보고하자.",
+          text: "베이스 캠프로 돌아가서 카이든에게 보고하자.",
           advanceMode: "click",
         },
       ],

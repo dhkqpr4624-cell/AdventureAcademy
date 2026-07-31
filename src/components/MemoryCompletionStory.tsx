@@ -71,8 +71,8 @@ export function MemoryCompletionStory({
         { id: "kaiden-line", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "이건..", advanceMode: "click" },
         { id: "hide-kaiden", type: "hidePortrait", actorId: "kaiden" },
         { id: "show-theo", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
-        { id: "theo-reading", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "웅녀와 환웅의 아들\n단군왕검이\n고조선이라는 나라를 세우다.", advanceMode: "click" },
-        { id: "theo-explanation", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "저희가 찾은 것은\n우리나라 역사의 시작을\n보여주는 비석이었나 보군요.", advanceMode: "click" },
+        { id: "theo-reading", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "웅녀와 환웅의 아들 단군왕검이 고조선이라는 나라를 세우다.", advanceMode: "click" },
+        { id: "theo-explanation", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "저희가 찾은 것은 우리나라 역사의 시작을 보여주는 비석이었나 보군요.", advanceMode: "click" },
       ]),
     [],
   );
@@ -83,10 +83,10 @@ export function MemoryCompletionStory({
         { id: "theo-surprised", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "...!", advanceMode: "click" },
         { id: "hide-theo", type: "hidePortrait", actorId: "theo" },
         { id: "show-luna", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
-        { id: "luna-line", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "대장!\n던전 2층으로 가는 문이 열린 것 같아.", advanceMode: "click" },
+        { id: "luna-line", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "대장! 던전 2층으로 가는 문이 열린 것 같아.", advanceMode: "click" },
         { id: "hide-luna", type: "hidePortrait", actorId: "luna" },
         { id: "show-kaiden", type: "showPortrait", actorId: "kaiden", portraitId: "serious", position: "left", transition: "fade" },
-        { id: "kaiden-line", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "그래.\n이제 다음 계획을 세워야겠군.", advanceMode: "click" },
+        { id: "kaiden-line", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "그래. 이제 다음 계획을 세워야겠군.", advanceMode: "click" },
       ]),
     [],
   );
