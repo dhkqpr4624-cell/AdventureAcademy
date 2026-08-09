@@ -595,9 +595,7 @@ export function StoryPlayer({
               </p>
             </div>
           </div>
-          {currentStep?.type === "choice" ? (
-            <StoryChoiceList options={currentStep.options} disabled={isTransitioning} onChoose={choose} />
-          ) : <button
+          {currentStep?.type !== "choice" && <button
             type="button"
             className="story-next-button"
             disabled={!canAdvance}
@@ -611,6 +609,14 @@ export function StoryPlayer({
             </footer>
           )}
         </section>
+      )}
+
+      {renderState.dialogue && currentStep?.type === "choice" && (
+        <StoryChoiceList
+          options={currentStep.options}
+          disabled={isTransitioning}
+          onChoose={choose}
+        />
       )}
 
       <div

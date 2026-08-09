@@ -288,6 +288,10 @@ export function QuestionScreen({
         ? question.correctAnswers
         : [];
 
+  const promptLines = question.prompt.split("\n");
+  const firstQuoteLine = promptLines.findIndex((line) => line.trimStart().startsWith('"'));
+  const hasPromptQuote = firstQuoteLine > 0;
+
   const content = (
     <>
       <section className="question-card" aria-labelledby="question-prompt">
@@ -296,8 +300,20 @@ export function QuestionScreen({
             <p className="eyebrow">{eyebrow}</p>
             <span className="question-type">{questionTypeLabel(question)}</span>
           </div>
-          <h1 id="question-prompt" className="question-header-prompt">
-            {question.prompt}
+          <h1
+            id="question-prompt"
+            className={`question-header-prompt ${hasPromptQuote ? "has-quote" : ""}`}
+          >
+            {hasPromptQuote ? (
+              <>
+                <span className="question-prompt-instruction">
+                  {promptLines.slice(0, firstQuoteLine).join("\n")}
+                </span>
+                <span className="question-prompt-quote">
+                  {promptLines.slice(firstQuoteLine).join("\n")}
+                </span>
+              </>
+            ) : question.prompt}
           </h1>
           <strong className="question-progress">
             {questionIndex + 1} / {questions.length}

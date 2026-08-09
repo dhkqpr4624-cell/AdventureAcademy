@@ -1,6 +1,6 @@
 import { createDungeonRun, createFloor1DungeonRun } from "./generation/floor1DungeonRuntime";
 import { allocateDungeonRunQuestions } from "./dungeonRunQuestionAllocator";
-import { FLOOR1_PREHISTORY_QUESTIONS, FLOOR2_GOJOSEON_QUESTIONS } from "../../data/testQuestions";
+import { FLOOR1_PREHISTORY_QUESTIONS, FLOOR2_GOJOSEON_QUESTIONS, FLOOR3_THREE_KINGDOMS_QUESTIONS } from "../../data/testQuestions";
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`[dungeon run question allocator checks] ${message}`);
@@ -61,5 +61,34 @@ export function runDungeonRunQuestionAllocatorChecks() {
   check(JSON.stringify(floor2First) === JSON.stringify(floor2Repeated), "floor 2 same seed repeats");
   const floor2Different = allocateDungeonRunQuestions(floor2Run.map, "floor2-different-question-seed", "floor-2");
   check(JSON.stringify(floor2First) !== JSON.stringify(floor2Different), "floor 2 new seed reshuffles");
+
+  const floor3Run = createDungeonRun("floor-3", "floor3-question-allocation-seed");
+  const floor3RepeatedRun = createDungeonRun("floor-3", "floor3-question-allocation-seed");
+  const floor3DifferentRun = createDungeonRun("floor-3", "floor3-different-map-seed");
+  check(floor3Run.source === "generated", "floor 3 uses generated dungeon");
+  check(
+    JSON.stringify(floor3Run.map) === JSON.stringify(floor3RepeatedRun.map),
+    "floor 3 same seed reproduces the same dungeon",
+  );
+  check(
+    JSON.stringify(floor3Run.map) !== JSON.stringify(floor3DifferentRun.map),
+    "floor 3 different seed changes the dungeon",
+  );
+  const floor3First = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
+  const floor3Repeated = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
+  const floor3Assigned = Object.values(floor3First).flat();
+  check(FLOOR3_THREE_KINGDOMS_QUESTIONS.length === 12, "floor 3 pool contains 12 questions");
+  check(floor3Assigned.length === 12, "one floor 3 run assigns exactly 12 questions");
+  check(
+    floor3Assigned.every((question) => FLOOR3_THREE_KINGDOMS_QUESTIONS.some((candidate) => candidate.id === question.id)),
+    "floor 3 only assigns its registered question pool",
+  );
+  check(
+    new Set(floor3Assigned.map((question) => question.id)).size === 12,
+    "floor 3 questions do not repeat in one dungeon",
+  );
+  check(JSON.stringify(floor3First) === JSON.stringify(floor3Repeated), "floor 3 same seed repeats");
+  const floor3Different = allocateDungeonRunQuestions(floor3Run.map, "floor3-different-question-seed", "floor-3");
+  check(JSON.stringify(floor3First) !== JSON.stringify(floor3Different), "floor 3 new seed reshuffles");
   console.info("dungeon run question allocator checks: PASS");
 }

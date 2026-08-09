@@ -102,7 +102,19 @@ export const TEST_QUESTIONS: readonly Question[] = [
     explanation: "비파형 동검과 고인돌은 고조선의 문화 범위를 살펴보는 대표적인 유물과 유적입니다.",
     difficulty: 2,
   },
+  {
+    id: "floor3-three-kingdoms-mc-01",
+    lessonId: "floor3-three-kingdoms",
+    type: "multipleChoice",
+    prompt: "고구려를 세운 인물로 알맞은 사람은 누구인가요?",
+    options: ["주몽", "온조", "박혁거세", "단군왕검"],
+    correctAnswer: "주몽",
+    explanation: "주몽은 고구려를 세운 인물입니다.",
+    difficulty: 1,
+  },
 ];
+
+export const FLOOR3_THREE_KINGDOMS_QUESTIONS: readonly Question[] = TEST_QUESTIONS;
 
 export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
   {
@@ -251,21 +263,21 @@ export const FLOOR2_GOJOSEON_QUESTIONS: readonly Question[] = [
   },
   {
     id: "floor2-gojoseon-mc-12", lessonId: "floor2-gojoseon", type: "multipleChoice",
-    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로 가장 알맞은 것은?\n\"도둑질을 한 사람은 노비로 삼으며, 죄를 면하려면 50만 전을 낸다.\"",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로\n가장 알맞은 것은?\n\"도둑질을 한 사람은 노비로 삼으며,\n죄를 면하려면 50만 전을 낸다.\"",
     options: ["신분의 차이와 개인의 재산이 존재하였다.", "모든 사람이 같은 재산을 가지고 있었다.", "아직 지배자가 존재하지 않았다.", "살인죄를 엄격하게 다스렸다."],
     correctAnswer: "신분의 차이와 개인의 재산이 존재하였다.", explanation: "노비와 배상 규정을 통해 신분 차이와 개인 재산이 있었음을 알 수 있습니다.",
   },
   {
     id: "floor2-gojoseon-ms-13", lessonId: "floor2-gojoseon", type: "multipleSelect",
-    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습을 모두 고르시오.\n\"남을 다치게 한 사람은 곡식으로 갚는다.\"",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습을\n모두 고르시오.\n\"남을 다치게 한 사람은 곡식으로 갚는다.\"",
     options: ["농사를 지었다.", "곡식을 화폐처럼 사용하기도 했다.", "신분의 차이가 존재하였다.", "모든 사람이 같은 지위였다."],
     correctAnswers: ["농사를 지었다.", "곡식을 화폐처럼 사용하기도 했다."], explanation: "곡식으로 배상했다는 점에서 농경 생활과 곡식의 교환 가치를 알 수 있습니다.",
   },
   {
     id: "floor2-gojoseon-mc-14", lessonId: "floor2-gojoseon", type: "multipleChoice",
-    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로 가장 알맞은 것은?\n\"사람을 죽인 사람은 사형에 처한다.\"",
-    options: ["신분 차이와 개인 재산", "모두 같은 재산", "지배자 없음", "살인을 엄격하게 처벌"],
-    correctAnswer: "살인을 엄격하게 처벌", explanation: "살인한 사람을 사형에 처한 규정은 생명을 중시하고 살인을 엄격히 처벌했음을 보여 줍니다.",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로\n가장 알맞은 것은?\n\"사람을 죽인 사람은 사형에 처한다.\"",
+    options: ["신분 차이와 개인 재산이 있었다.", "모두 같은 재산을 가졌다.", "지배자가 없었다.", "살인을 엄격하게 처벌하였다."],
+    correctAnswer: "살인을 엄격하게 처벌하였다.", explanation: "살인한 사람을 사형에 처한 규정은 생명을 중시하고 살인을 엄격히 처벌했음을 보여 줍니다.",
   },
   {
     id: "floor2-gojoseon-mc-15", lessonId: "floor2-gojoseon", type: "multipleChoice",

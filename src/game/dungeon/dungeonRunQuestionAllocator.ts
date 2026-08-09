@@ -1,4 +1,4 @@
-import { FLOOR1_PREHISTORY_QUESTIONS, FLOOR2_GOJOSEON_QUESTIONS, TEST_QUESTIONS } from "../../data/testQuestions";
+import { FLOOR1_PREHISTORY_QUESTIONS, FLOOR2_GOJOSEON_QUESTIONS, FLOOR3_THREE_KINGDOMS_QUESTIONS, TEST_QUESTIONS } from "../../data/testQuestions";
 import type { Question } from "../../types/question";
 import type { DungeonMapDefinition } from "./dungeonTypes";
 import { createSeededRandom, deriveAttemptSeed } from "./generation/seededRandom";
@@ -40,7 +40,11 @@ export function allocateDungeonRunQuestions(
     deriveAttemptSeed(seed, 0, "combat-question-allocation"),
     floorId === "floor-1"
       ? FLOOR1_PREHISTORY_QUESTIONS
-      : floorId === "floor-2" ? FLOOR2_GOJOSEON_QUESTIONS : TEST_QUESTIONS,
+      : floorId === "floor-2"
+        ? FLOOR2_GOJOSEON_QUESTIONS
+        : floorId === "floor-3"
+          ? FLOOR3_THREE_KINGDOMS_QUESTIONS
+          : TEST_QUESTIONS,
   );
   if (requiredCount > pool.length) {
     throw new Error(

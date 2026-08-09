@@ -1124,6 +1124,12 @@ button:focus-visible {
   height: min(34vh, 22rem);
 }
 
+.combat-dialogue-panel.is-question:has(.question-header-prompt.has-quote),
+.combat-dialogue-panel.is-review:has(.question-header-prompt.has-quote) {
+  height: min(42vh, 27rem);
+  max-height: 42vh;
+}
+
 .combat-dialogue-panel.is-review {
   height: min(36vh, 23rem);
 }
@@ -1711,6 +1717,11 @@ button:focus-visible {
 }
 
 .question-screen.is-embedded .question-scroll-area {
+  overflow: visible;
+  scrollbar-gutter: auto;
+}
+
+.question-screen.is-embedded .question-scroll-area {
   padding: 0.65rem;
 }
 
@@ -2082,6 +2093,26 @@ button:focus-visible {
   line-height: 1.4;
   overflow-wrap: anywhere;
   scrollbar-width: thin;
+}
+
+.question-header-prompt.has-quote {
+  max-height: none;
+  overflow: visible;
+}
+
+.question-prompt-instruction,
+.question-prompt-quote {
+  display: block;
+  white-space: pre-line;
+}
+
+.question-prompt-quote {
+  margin-top: 0.28rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid rgba(233, 201, 120, 0.42);
+  color: #dfd4bd;
+  font-size: 0.94em;
+  font-weight: 550;
 }
 
 .question-progress {
@@ -3144,21 +3175,32 @@ button:focus-visible {
 
 .story-choice-list {
   position: absolute;
-  top: 50%;
-  right: clamp(0.8rem, 2vw, 1.4rem);
+  right: max(20%, env(safe-area-inset-right));
+  bottom: calc(max(2.2vh, env(safe-area-inset-bottom)) + clamp(10rem, calc(20vh + 44px), 13.25rem) + 0.7rem);
+  z-index: 13;
   display: grid;
-  width: min(12rem, 32vw);
+  grid-auto-rows: 1fr;
+  width: max-content;
+  min-width: 12rem;
+  max-width: min(30vw, 30rem);
   gap: 0.6rem;
-  transform: translateY(-50%);
 }
 
 .story-choice-list button {
   width: 100%;
+  min-height: 2.75rem;
+  white-space: normal;
   border: 1px solid #d8b66b;
   border-radius: 0.2rem;
   color: #fff3d3;
   background: linear-gradient(#6c492e, #49301f);
   box-shadow: inset 0 0 0 1px rgba(255, 224, 154, 0.14);
+}
+
+.story-choice-list.has-long-label button {
+  padding-block: 0.65rem;
+  font-size: 0.86rem;
+  line-height: 1.35;
 }
 
 .story-choice-list button:focus-visible {
@@ -3280,10 +3322,11 @@ button:focus-visible {
   }
 
   .story-choice-list {
-    position: static;
-    width: 100%;
-    margin-top: 0.7rem;
-    transform: none;
+    right: max(3vw, env(safe-area-inset-right));
+    bottom: calc(max(2.2vh, env(safe-area-inset-bottom)) + clamp(10rem, calc(20vh + 44px), 13.25rem) + 0.55rem);
+    width: max-content;
+    min-width: min(12rem, 70vw);
+    max-width: min(47vw, 22rem);
   }
 }
 

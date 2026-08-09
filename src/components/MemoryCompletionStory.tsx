@@ -72,7 +72,7 @@ export function MemoryCompletionStory({
         { id: "hide-kaiden", type: "hidePortrait", actorId: "kaiden" },
         { id: "show-theo", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
         { id: "theo-reading", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "웅녀와 환웅의 아들 단군왕검이 고조선이라는 나라를 세우다.", advanceMode: "click" },
-        { id: "theo-explanation", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "저희가 찾은 것은 우리나라 역사의 시작을 보여주는 비석이었나 보군요.", advanceMode: "click" },
+        { id: "theo-explanation", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "저희가 찾은 것은 한반도 최초의 국가에 대한 비석이었나 보군요.", advanceMode: "click" },
       ]),
     [],
   );
