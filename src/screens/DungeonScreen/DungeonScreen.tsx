@@ -41,9 +41,11 @@ import {
   getDungeonRoomFromMap,
 } from "../../game/dungeon/dungeonRuntimeMap";
 import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
+import { createSeededRandom } from "../../game/dungeon/generation/seededRandom";
 import type {
   DungeonDirection,
   DungeonFloorRunState,
+  DungeonMapDefinition,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
@@ -160,6 +162,34 @@ type DungeonScreenProps = {
   onFloorRunChanged: (run: DungeonFloorRunState) => void;
 };
 
+function applyFloor1MonsterData(
+  map: DungeonMapDefinition,
+  seed: string,
+): DungeonMapDefinition {
+  const random = createSeededRandom(`${seed}::floor1-monsters`);
+  return {
+    ...map,
+    rooms: map.rooms.map((room) => {
+      if (room.type === "combat" && room.combatConfig) {
+        return {
+          ...room,
+          combatConfig: {
+            ...room.combatConfig,
+            monsterId: random.next() < 0.5 ? "floor1-boar" : "floor1-cave-bear",
+          },
+        };
+      }
+      if (room.type === "elite" && room.eliteConfig) {
+        return {
+          ...room,
+          eliteConfig: { ...room.eliteConfig, monsterId: "floor1-mammoth" },
+        };
+      }
+      return room;
+    }),
+  };
+}
+
 type NormalCombatPhase =
   | "intro"
   | "playerCommand"
@@ -275,7 +305,7 @@ export function DungeonScreen({
         : undefined,
     ),
   );
-  const dungeonMap = floorId === "floor-1" ? dungeonRun.map : {
+  const dungeonMap = floorId === "floor-1" ? applyFloor1MonsterData(dungeonRun.map, dungeonRun.seed) : {
     ...dungeonRun.map,
     rooms: dungeonRun.map.rooms.filter((room) => !room.id.startsWith("room-story-")),
     connections: dungeonRun.map.connections.filter((connection) =>
@@ -285,7 +315,7 @@ export function DungeonScreen({
   };
   const maxHp = playerState.maxHp;
   const [runQuestionAssignments] = useState(() =>
-    allocateDungeonRunQuestions(dungeonRun.map, dungeonRun.seed),
+    allocateDungeonRunQuestions(dungeonMap, dungeonRun.seed, floorId),
   );
   const getDungeonRoom = (roomId: string) =>
     getDungeonRoomFromMap(dungeonMap, roomId);
@@ -384,7 +414,7 @@ export function DungeonScreen({
   const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
   const [mustAttackNextTurn, setMustAttackNextTurn] = useState(false);
   const [combatMessage, setCombatMessage] = useState(
-    "마늘킹이 나타났다!",
+    floorId === "floor-1" ? "몬스터가 나타났다!" : "마늘킹이 나타났다!",
   );
   const [floatingText, setFloatingText] = useState<string | null>(null);
   const [damageFlash, setDamageFlash] = useState(false);
@@ -410,14 +440,9 @@ export function DungeonScreen({
   const activeMonsterDefinition = (): MonsterVisualDefinition => {
     const roomId = activeCombatRoomIdRef.current;
     if (!roomId) {
-      return getMonsterVisualDefinition("garlic-king");
+      return getMonsterVisualDefinition(floorId === "floor-1" ? "floor1-boar" : "garlic-king");
     }
     const room = getDungeonRoom(roomId);
-    if (floorId === "floor-1") {
-      if (room.type === "elite") return getMonsterVisualDefinition("floor1-mammoth");
-      const normalId = room.id.includes("west") ? "floor1-cave-bear" : "floor1-boar";
-      return getMonsterVisualDefinition(normalId);
-    }
     return getMonsterVisualDefinition(room.type === "elite" ? room.eliteConfig!.monsterId : room.combatConfig!.monsterId);
   };
   const activeMonsterName = () => activeMonsterDefinition().name;
@@ -1345,9 +1370,7 @@ export function DungeonScreen({
     setFloatingText(null);
     setDamageFlash(false);
     setCombatMessage(
-      activeCombatKindRef.current === "elite"
-        ? "정예 몬스터, 고인돌 골렘이 나타났다!"
-        : "마늘킹이 나타났다!",
+      `${activeCombatKindRef.current === "elite" ? "정예 몬스터, " : ""}${activeMonsterName()}이 나타났다!`,
     );
     setPhase("intro");
   };

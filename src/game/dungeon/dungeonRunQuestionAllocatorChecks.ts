@@ -1,5 +1,6 @@
 import { createFloor1DungeonRun } from "./generation/floor1DungeonRuntime";
 import { allocateDungeonRunQuestions } from "./dungeonRunQuestionAllocator";
+import { FLOOR1_PREHISTORY_QUESTIONS } from "../../data/testQuestions";
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`[dungeon run question allocator checks] ${message}`);
@@ -12,6 +13,12 @@ export function runDungeonRunQuestionAllocatorChecks() {
   check(JSON.stringify(first) === JSON.stringify(repeated), "same seed repeats");
 
   const assigned = Object.values(first).flat();
+  check(FLOOR1_PREHISTORY_QUESTIONS.length === 15, "floor 1 pool contains 15 questions");
+  check(assigned.length === 10, "one floor 1 run assigns exactly 10 questions");
+  check(
+    assigned.every((question) => FLOOR1_PREHISTORY_QUESTIONS.some((candidate) => candidate.id === question.id)),
+    "floor 1 only assigns prehistory questions",
+  );
   check(
     new Set(assigned.map((question) => question.id)).size === assigned.length,
     "questions do not repeat in one dungeon",

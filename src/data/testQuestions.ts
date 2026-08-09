@@ -103,3 +103,85 @@ export const TEST_QUESTIONS: readonly Question[] = [
     difficulty: 2,
   },
 ];
+
+export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
+  {
+    id: "floor1-prehistory-short-01", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "선사시대 중 돌을 깨뜨리거나 떼어서 만든 도구를 사용하던 시기를 OOO 시대라고 한다.",
+    acceptedAnswers: ["구석기"], explanation: "돌을 깨뜨리거나 떼어서 만든 뗀석기를 사용하던 시기를 구석기 시대라고 합니다.",
+  },
+  {
+    id: "floor1-prehistory-tf-02", lessonId: "floor1-prehistory", type: "trueFalse",
+    prompt: "구석기 시대 사람들은 집을 짓지 않았다.", correctAnswer: false,
+    explanation: "구석기 시대 사람들은 동굴에서 살거나 막집을 짓고 살기도 하였습니다.",
+  },
+  {
+    id: "floor1-prehistory-ms-03", lessonId: "floor1-prehistory", type: "multipleSelect",
+    prompt: "구석기 시대 사람들의 생활 모습으로 옳은 것을 모두 고르시오.",
+    options: ["동굴에서 살기도 했다.", "불을 사용하지는 못했다.", "동물 가죽으로 옷을 만들어 입었다.", "돌을 깨뜨려서 도구로 사용했다."],
+    correctAnswers: ["동굴에서 살기도 했다.", "동물 가죽으로 옷을 만들어 입었다.", "돌을 깨뜨려서 도구로 사용했다."],
+    explanation: "구석기 시대 사람들은 동굴이나 막집에서 살았고, 불을 사용했으며, 동물 가죽으로 옷을 만들고 뗀석기를 사용했습니다.",
+  },
+  {
+    id: "floor1-prehistory-tf-04", lessonId: "floor1-prehistory", type: "trueFalse",
+    prompt: "구석기 시대에는 농사를 지을 수 있었다.", correctAnswer: false,
+    explanation: "구석기 시대에는 사냥과 채집으로 먹을 것을 구했으며, 농사는 신석기 시대에 시작되었습니다.",
+  },
+  {
+    id: "floor1-prehistory-tf-05", lessonId: "floor1-prehistory", type: "trueFalse",
+    prompt: "구석기 시대 사람들은 동물을 사냥하거나 열매를 채집하여 먹을 것을 구했다.", correctAnswer: true,
+    explanation: "구석기 시대 사람들은 사냥과 채집으로 먹을 것을 구했습니다.",
+  },
+  {
+    id: "floor1-prehistory-ms-06", lessonId: "floor1-prehistory", type: "multipleSelect",
+    prompt: "다음 중 구석기 시대 유물로 옳은 것을 모두 고르시오.",
+    options: ["주먹도끼", "슴베찌르개", "가락바퀴", "돌괭이"], correctAnswers: ["주먹도끼", "슴베찌르개"],
+    explanation: "주먹도끼와 슴베찌르개는 구석기 시대의 대표적인 뗀석기입니다.",
+  },
+  {
+    id: "floor1-prehistory-short-07", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "돌을 갈아 만들어 도구로 사용하던 시기를 OOO 시대라고 한다.", acceptedAnswers: ["신석기"],
+    explanation: "돌을 갈아 만든 간석기를 사용하던 시기를 신석기 시대라고 합니다.",
+  },
+  {
+    id: "floor1-prehistory-short-08", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "신석기 시대 사람들은 강가나 바닷가에 OO을 짓고 모여 살았다.", acceptedAnswers: ["움집"],
+    explanation: "신석기 시대 사람들은 강가나 바닷가에 움집을 짓고 정착 생활을 했습니다.",
+  },
+  {
+    id: "floor1-prehistory-short-09", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "신석기 시대 사람들은 사냥이나 채집뿐 아니라 OO를 지어 먹을 것을 얻기 시작했다.", acceptedAnswers: ["농사"],
+    explanation: "신석기 시대에는 농사를 짓기 시작하면서 정착 생활이 발달했습니다.",
+  },
+  {
+    id: "floor1-prehistory-tf-10", lessonId: "floor1-prehistory", type: "trueFalse",
+    prompt: "신석기 시대에는 흙으로 그릇을 만들기도 했다.", correctAnswer: true,
+    explanation: "신석기 시대 사람들은 빗살무늬 토기와 같은 토기를 만들어 사용했습니다.",
+  },
+  {
+    id: "floor1-prehistory-short-11", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "신석기 시대 대표 유물로 겉면에 점과 선 무늬가 있는 그릇의 이름은?", acceptedAnswers: ["빗살무늬토기", "빗살무늬 토기"],
+    explanation: "겉면에 점과 선으로 무늬를 새긴 빗살무늬 토기는 신석기 시대의 대표 유물입니다.",
+  },
+  {
+    id: "floor1-prehistory-tf-12", lessonId: "floor1-prehistory", type: "trueFalse",
+    prompt: "신석기 시대 사람들은 실로 옷을 만들어 입었다.", correctAnswer: true,
+    explanation: "신석기 시대 사람들은 가락바퀴로 실을 뽑아 옷을 만들어 입었습니다.",
+  },
+  {
+    id: "floor1-prehistory-ms-13", lessonId: "floor1-prehistory", type: "multipleSelect",
+    prompt: "다음 중 신석기 시대 유물로 옳은 것을 모두 고르시오.",
+    options: ["가락바퀴", "빗살무늬토기", "돌괭이", "갈판과 갈돌"], correctAnswers: ["가락바퀴", "빗살무늬토기", "돌괭이", "갈판과 갈돌"],
+    explanation: "가락바퀴, 빗살무늬 토기, 돌괭이, 갈판과 갈돌은 모두 신석기 시대의 생활 모습을 보여 주는 유물입니다.",
+  },
+  {
+    id: "floor1-prehistory-short-14", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "돌을 깨뜨려 필요한 모양으로 만든 도구를 OOO라고 한다.", acceptedAnswers: ["뗀석기"],
+    explanation: "돌을 깨뜨리거나 떼어서 필요한 모양으로 만든 도구를 뗀석기라고 합니다.",
+  },
+  {
+    id: "floor1-prehistory-short-15", lessonId: "floor1-prehistory", type: "shortAnswer",
+    prompt: "돌을 갈아서 필요한 모양으로 만든 도구를 OOO라고 한다.", acceptedAnswers: ["간석기"],
+    explanation: "돌을 갈아서 필요한 모양으로 만든 도구를 간석기라고 합니다.",
+  },
+];

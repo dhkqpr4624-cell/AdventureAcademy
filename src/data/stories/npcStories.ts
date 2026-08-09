@@ -7,7 +7,7 @@ function sequence(
   id: string,
   npcId: NpcId,
   portraitId: string,
-  lines: string[],
+  lines: Array<string | { text: string; emphasis: "danger" }>,
 ): StorySequence {
   const npc = resolveNpcPresentation(npcId);
   const steps: StoryStep[] = [
@@ -19,13 +19,14 @@ function sequence(
       position: "left",
       transition: "fade",
     },
-    ...lines.map((text, index): StoryStep => ({
+    ...lines.map((entry, index): StoryStep => ({
       id: `${id}-line-${index + 1}`,
       type: "dialogue",
       speakerId: npcId,
       speakerName: npc.displayName,
       activeActorId: npcId,
-      text,
+      text: typeof entry === "string" ? entry : entry.text,
+      ...(typeof entry === "string" ? {} : { emphasis: entry.emphasis }),
       advanceMode: "click",
     })),
   ];
@@ -127,7 +128,7 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     "serious",
     [
       "좋다. 준비가 된다면 던전 입구를 클릭하여 던전 1층에 다녀오도록.",
-      "던전에서 오답을 선택하면 큰 피해를 입게 되니 조심하는 것도 명심해라.",
+      { text: "던전에서 오답을 선택하면 큰 피해를 입게 되니 조심하는 것도 명심해라.", emphasis: "danger" },
     ],
   ),
   "npc-kaiden-floor-2-quest-available": sequence("npc-kaiden-floor-2-quest-available", "kaiden", "serious", [

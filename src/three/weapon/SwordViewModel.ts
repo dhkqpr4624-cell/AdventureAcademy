@@ -61,17 +61,17 @@ export const GOJOSEON_BRONZE_SWORD_DEFINITION: SwordDefinition = {
   id: "gojoseon-bronze-sword",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/bipa-bronze-sword.png`,
 };
-export const TANGED_POINT_DEFINITION: SwordDefinition = {
+export const HAND_AXE_DEFINITION: SwordDefinition = {
   ...BASIC_SWORD_DEFINITION,
-  id: "tanged-point",
-  textureUrl: `${import.meta.env.BASE_URL}assets/swords/tanged-point.png`,
+  id: "hand-axe",
+  textureUrl: `${import.meta.env.BASE_URL}assets/items/hand-axe.png`,
 };
 
 export function getSwordDefinitionForEquippedItem(
   equippedItemId: string | null | undefined,
 ): SwordDefinition {
   if (equippedItemId === "weapon-gojoseon-bronze-dagger") return GOJOSEON_BRONZE_SWORD_DEFINITION;
-  if (equippedItemId === "weapon-tanged-point") return TANGED_POINT_DEFINITION;
+  if (equippedItemId === "weapon-hand-axe") return HAND_AXE_DEFINITION;
   return BASIC_SWORD_DEFINITION;
 }
 

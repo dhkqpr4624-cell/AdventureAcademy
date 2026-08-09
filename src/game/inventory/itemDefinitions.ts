@@ -27,10 +27,10 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     rarity: "rare", description: "고조선의 비파형 동검을 본뜬 희귀 무기 스킨이다.",
     icon: `${import.meta.env.BASE_URL}assets/items/bipa-bronze-sword.png`, stackable: false,
   },
-  "weapon-tanged-point": {
-    id: "weapon-tanged-point", name: "슴베찌르개", type: "weaponSkin",
-    rarity: "rare", description: "선사시대의 슴베찌르개를 본뜬 희귀 무기 스킨이다.",
-    icon: `${import.meta.env.BASE_URL}assets/items/tanged-point.png`, stackable: false,
+  "weapon-hand-axe": {
+    id: "weapon-hand-axe", name: "주먹도끼", type: "weaponSkin",
+    rarity: "rare", description: "구석기 시대의 주먹도끼를 본뜬 희귀 무기 스킨이다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/hand-axe.png`, stackable: false,
   },
   "armor-gwanggaeto": {
     id: "armor-gwanggaeto", name: "광개토대왕 갑옷", type: "armor",

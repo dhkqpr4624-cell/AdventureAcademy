@@ -1,4 +1,4 @@
-import { TEST_QUESTIONS } from "../../data/testQuestions";
+import { FLOOR1_PREHISTORY_QUESTIONS, TEST_QUESTIONS } from "../../data/testQuestions";
 import type { Question } from "../../types/question";
 import type { DungeonMapDefinition } from "./dungeonTypes";
 import { createSeededRandom, deriveAttemptSeed } from "./generation/seededRandom";
@@ -7,9 +7,9 @@ export type DungeonRunQuestionAssignments = Readonly<
   Record<string, readonly Question[]>
 >;
 
-function shuffledQuestions(seed: string): Question[] {
+function shuffledQuestions(seed: string, questions: readonly Question[]): Question[] {
   const random = createSeededRandom(seed);
-  const result = [...TEST_QUESTIONS];
+  const result = [...questions];
   for (let index = result.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random.next() * (index + 1));
     [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
@@ -20,6 +20,7 @@ function shuffledQuestions(seed: string): Question[] {
 export function allocateDungeonRunQuestions(
   map: DungeonMapDefinition,
   seed: string,
+  floorId = map.rooms.some((room) => room.id.startsWith("room-story-")) ? "floor-1" : "other",
 ): DungeonRunQuestionAssignments {
   const questionRooms = map.rooms
     .filter((room) =>
@@ -37,6 +38,7 @@ export function allocateDungeonRunQuestions(
   );
   const pool = shuffledQuestions(
     deriveAttemptSeed(seed, 0, "combat-question-allocation"),
+    floorId === "floor-1" ? FLOOR1_PREHISTORY_QUESTIONS : TEST_QUESTIONS,
   );
   if (requiredCount > pool.length) {
     throw new Error(

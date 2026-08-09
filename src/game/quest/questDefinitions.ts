@@ -14,7 +14,7 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     activeStorySequenceId: "npc-kaiden-quest-active",
     targetFloorId: "floor-1",
     completeStorySequenceId: "npc-kaiden-quest-complete",
-    rewards: { description: "5 Gold · 슴베찌르개 무기 스킨(희귀)" },
+    rewards: { description: "5 Gold · 주먹도끼 무기 스킨(희귀)" },
   },
   {
     id: "quest-floor-2-memory-fragment",

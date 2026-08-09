@@ -191,10 +191,13 @@ export function BaseCampScreen({
     dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
+    if (npc.id === "kaiden" && hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active") {
+      setPrehistoryCompletionOpen(true);
+      interactionLockRef.current = false;
+      return;
+    }
     const sequenceId =
-      npc.id === "kaiden" && hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active"
-        ? "npc-kaiden-quest-complete"
-        : npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
+      npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
           ? "npc-kaiden-floor-2-quest-complete"
         : npc.id === "luna" &&
             hasTornCloth &&
@@ -558,7 +561,7 @@ export function BaseCampScreen({
         bestCorrect={floorBestCorrect["floor-1"] ?? 0}
         claimed={Boolean(rewardClaimed[prehistoryQuestId])}
         questTitle="던전 1층 조사 완료"
-        rareRewardItemId="weapon-tanged-point"
+        rareRewardItemId="weapon-hand-axe"
         requiredCorrect={prehistoryQuestRareRewardCondition.requiredCorrect}
         onCancel={() => setPrehistoryRewardOpen(false)}
         onClaim={() => {
@@ -568,7 +571,7 @@ export function BaseCampScreen({
           setInventoryState((current) => {
             let next = current;
             for (const id of ["quest-hand-axe", "quest-tanged-point", "quest-comb-pattern-pottery"]) next = changeItemQuantity(next, id, -1);
-            if (rareUnlocked) next = changeItemQuantity(next, "weapon-tanged-point", 1);
+            if (rareUnlocked) next = changeItemQuantity(next, "weapon-hand-axe", 1);
             return next;
           });
           setQuestState((current) => ({ ...current, [prehistoryQuestId]: "completed", [memoryQuestId]: current[memoryQuestId] === "completed" ? "completed" : "available" }));
