@@ -140,7 +140,11 @@ import {
 } from "../../game/dungeon/dungeonExplorationResolver";
 import type { FloorId } from "../../game/floor/floorTypes";
 import { dungeonDialogue } from "../../game/dungeon/dungeonDialogue";
-import { getItemCollectionQuestRuleForFloor } from "../../game/quest/itemCollectionQuestRules";
+import {
+  getItemCollectionQuestRuleForFloor,
+  shouldRunItemCollectionQuestEvent,
+} from "../../game/quest/itemCollectionQuestRules";
+import type { QuestStatus } from "../../game/quest/questTypes";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -160,6 +164,7 @@ type DungeonScreenProps = {
   onObjectiveAcquired: (correctCount: number) => void;
   onBestCorrect: (correctCount: number) => void;
   floorQuestStarted: boolean;
+  floorQuestStatus: QuestStatus;
   savedFloorRun: DungeonFloorRunState | null;
   onFloorRunChanged: (run: DungeonFloorRunState) => void;
 };
@@ -296,6 +301,7 @@ export function DungeonScreen({
   onObjectiveAcquired,
   onBestCorrect,
   floorQuestStarted,
+  floorQuestStatus,
   savedFloorRun,
   onFloorRunChanged,
 }: DungeonScreenProps) {
@@ -1605,9 +1611,9 @@ export function DungeonScreen({
         "room-story-pottery": "comb-pattern-pottery",
       };
       const artifactId = floorId === "floor-1" ? artifactByRoomId[roomId] : undefined;
-      if (artifactId && !roomProgressRef.current[roomId]?.eventCompleted) {
-        const itemId = artifactId === "hand-axe" ? "quest-hand-axe" : artifactId === "tanged-point" ? "quest-tanged-point" : "quest-comb-pattern-pottery";
-        if (getItemQuantity(inventoryState, itemId) === 0) {
+      const collectionRule = getItemCollectionQuestRuleForFloor(floorId);
+      if (artifactId && collectionRule && !roomProgressRef.current[roomId]?.eventCompleted) {
+        if (shouldRunItemCollectionQuestEvent(inventoryState, floorQuestStatus, collectionRule, roomId)) {
           setActiveArtifactEvent(artifactId);
           return;
         }

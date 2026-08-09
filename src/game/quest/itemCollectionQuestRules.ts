@@ -4,6 +4,7 @@ import {
   getItemQuantity,
   type InventoryState,
 } from "../inventory/inventoryState";
+import type { QuestStatus } from "./questTypes";
 
 export type ItemCollectionQuestRule = {
   questId: string;
@@ -37,6 +38,17 @@ export function getItemCollectionQuestRuleForFloor(floorId: FloorId) {
 
 export function hasAllCollectionItems(inventory: InventoryState, rule: ItemCollectionQuestRule): boolean {
   return rule.itemIds.every((itemId) => getItemQuantity(inventory, itemId) > 0);
+}
+
+export function shouldRunItemCollectionQuestEvent(
+  inventory: InventoryState,
+  questStatus: QuestStatus,
+  rule: ItemCollectionQuestRule,
+  roomId: string,
+): boolean {
+  if (questStatus === "completed") return false;
+  const itemId = Object.entries(rule.roomByItemId).find(([, eventRoomId]) => eventRoomId === roomId)?.[0];
+  return Boolean(itemId && getItemQuantity(inventory, itemId) === 0);
 }
 
 export function canCompleteItemCollectionQuest(

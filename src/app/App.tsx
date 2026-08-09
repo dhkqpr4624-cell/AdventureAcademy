@@ -164,6 +164,7 @@ export function App() {
         }}
         onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, [activeFloorId]: Math.max(current.floorBestCorrect[activeFloorId] ?? 0, correctCount) } }))}
         floorQuestStarted={game.questState[activeFloorQuestId] === "active" || game.questState[activeFloorQuestId] === "completed"}
+        floorQuestStatus={game.questState[activeFloorQuestId]}
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
