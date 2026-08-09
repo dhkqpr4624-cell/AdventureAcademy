@@ -33,6 +33,7 @@ import { purchaseShopItem } from "../../game/inventory/shopResolver";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { MemoryCompletionStory } from "../../components/MemoryCompletionStory";
 import { TornClothCompletionStory } from "../../components/TornClothCompletionStory";
+import { PrehistoryCompletionStory } from "../../components/PrehistoryCompletionStory";
 import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
 import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
@@ -41,15 +42,16 @@ import { AchievementPopup } from "../../components/AchievementPopup";
 import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
 
 const memoryQuestRareRewardCondition = getQuestRareRewardCondition(
-  "quest-floor-1-memory-fragment",
+  "quest-floor-2-memory-fragment",
 );
 const tornClothQuestRareRewardCondition = getQuestRareRewardCondition(
-  "quest-floor-2-torn-cloth",
+  "quest-floor-3-torn-cloth",
 );
+const prehistoryQuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-1-prehistory");
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
-  onEnterDungeon: (floorId: "floor-1" | "floor-2") => void;
+  onEnterDungeon: (floorId: "floor-1" | "floor-2" | "floor-3") => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
   inventoryState: InventoryState;
@@ -108,20 +110,25 @@ export function BaseCampScreen({
   const [shopOpen, setShopOpen] = useState(false);
   const [shopMessage, setShopMessage] = useState("");
   const [memoryCompletionOpen, setMemoryCompletionOpen] = useState(false);
+  const [prehistoryCompletionOpen, setPrehistoryCompletionOpen] = useState(false);
   const [tornClothCompletionOpen, setTornClothCompletionOpen] = useState(false);
   const [rewardOpen, setRewardOpen] = useState(false);
+  const [prehistoryRewardOpen, setPrehistoryRewardOpen] = useState(false);
   const [tornClothRewardOpen, setTornClothRewardOpen] = useState(false);
-  const memoryQuestId = "quest-floor-1-memory-fragment";
-  const tornClothQuestId = "quest-floor-2-torn-cloth";
-  const effectiveQuestState: QuestState =
-    questState[tornClothQuestId] === undefined &&
-    questState[memoryQuestId] === "completed"
-      ? { ...questState, [tornClothQuestId]: "available" }
-      : questState;
+  const prehistoryQuestId = "quest-floor-1-prehistory";
+  const memoryQuestId = "quest-floor-2-memory-fragment";
+  const tornClothQuestId = "quest-floor-3-torn-cloth";
+  const effectiveQuestState: QuestState = {
+    ...questState,
+    ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
+    ...(questState[memoryQuestId] === "completed" && questState[tornClothQuestId] === "locked" ? { [tornClothQuestId]: "available" as const } : {}),
+  };
+  const hasPrehistoryArtifacts = ["quest-hand-axe", "quest-tanged-point", "quest-comb-pattern-pottery"].every((id) => getItemQuantity(inventoryState, id) > 0);
   const hasMemoryFragment = getItemQuantity(inventoryState, "quest-memory-fragment") > 0;
   const hasTornCloth = getItemQuantity(inventoryState, "quest-torn-cloth") > 0;
   const markerQuestState = {
     ...effectiveQuestState,
+    ...(hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
     ...(hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
       ? { [memoryQuestId]: "readyToComplete" as const }
       : {}),
@@ -185,14 +192,14 @@ export function BaseCampScreen({
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
     const sequenceId =
-      npc.id === "kaiden" &&
-      hasMemoryFragment &&
-      effectiveQuestState[memoryQuestId] === "active"
+      npc.id === "kaiden" && hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active"
         ? "npc-kaiden-quest-complete"
+        : npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
+          ? "npc-kaiden-floor-2-quest-complete"
         : npc.id === "luna" &&
             hasTornCloth &&
             effectiveQuestState[tornClothQuestId] === "active"
-          ? "npc-luna-floor-2-quest-complete"
+          ? "npc-luna-floor-3-quest-complete"
           : resolveNpcStorySequence(npc.id, effectiveQuestState);
     setStorySequenceId(sequenceId);
     interactionLockRef.current = false;
@@ -207,15 +214,19 @@ export function BaseCampScreen({
     onAutoSave("npcDialogueCompleted");
     if (!npc) return;
     if (finishedSequenceId === "npc-kaiden-quest-complete") {
+      setPrehistoryCompletionOpen(true);
+      return;
+    }
+    if (finishedSequenceId === "npc-kaiden-floor-2-quest-complete") {
       setMemoryCompletionOpen(true);
       return;
     }
-    if (finishedSequenceId === "npc-luna-floor-2-quest-complete") {
+    if (finishedSequenceId === "npc-luna-floor-3-quest-complete") {
       setTornClothCompletionOpen(true);
       return;
     }
-    const quest = QUEST_DEFINITIONS.find(
-      (candidate) => npc.offeredQuestIds.includes(candidate.id),
+    const quest = QUEST_DEFINITIONS.find((candidate) =>
+      npc.offeredQuestIds.includes(candidate.id) && effectiveQuestState[candidate.id] === "available"
     );
     if (
       quest &&
@@ -474,6 +485,10 @@ export function BaseCampScreen({
         setMemoryCompletionOpen(false);
         setRewardOpen(true);
       }} />}
+      {prehistoryCompletionOpen && <PrehistoryCompletionStory playerName={playerState.name || "플레이어"} onComplete={() => {
+        setPrehistoryCompletionOpen(false);
+        setPrehistoryRewardOpen(true);
+      }} />}
       {tornClothCompletionOpen && <TornClothCompletionStory
         playerName={playerState.name || "플레이어"}
         onComplete={() => {
@@ -482,14 +497,14 @@ export function BaseCampScreen({
         }}
       />}
       {rewardOpen && <QuestRewardPopup
-        bestCorrect={floorBestCorrect["floor-1"] ?? 0}
+        bestCorrect={floorBestCorrect["floor-2"] ?? 0}
         claimed={Boolean(rewardClaimed[memoryQuestId])}
         requiredCorrect={memoryQuestRareRewardCondition.requiredCorrect}
         onCancel={() => setRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[memoryQuestId]) return;
           const rareUnlocked =
-            (floorBestCorrect["floor-1"] ?? 0) >=
+            (floorBestCorrect["floor-2"] ?? 0) >=
             memoryQuestRareRewardCondition.requiredCorrect;
           setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
           setInventoryState((current) => {
@@ -500,21 +515,20 @@ export function BaseCampScreen({
           setQuestState((current) => ({
             ...current,
             [memoryQuestId]: "completed",
-            [tornClothQuestId]:
-              current[tornClothQuestId] === "completed"
+            [tornClothQuestId]: current[tornClothQuestId] === "completed"
                 ? "completed"
                 : "available",
           }));
           setRewardClaimed(memoryQuestId);
           if (rareUnlocked) {
-            setAchievementReceived("achievement-floor-1-rare-reward");
+            setAchievementReceived("achievement-floor-2-rare-reward");
           }
           onAutoSave("questCompleted");
           setRewardOpen(false);
         }}
       />}
       {tornClothRewardOpen && <QuestRewardPopup
-        bestCorrect={floorBestCorrect["floor-2"] ?? 0}
+        bestCorrect={floorBestCorrect["floor-3"] ?? 0}
         claimed={Boolean(rewardClaimed[tornClothQuestId])}
         questTitle="던전 2층 조사 완료"
         rareRewardItemId="armor-gwanggaeto"
@@ -523,7 +537,7 @@ export function BaseCampScreen({
         onClaim={() => {
           if (rewardClaimed[tornClothQuestId]) return;
           const rareUnlocked =
-            (floorBestCorrect["floor-2"] ?? 0) >=
+            (floorBestCorrect["floor-3"] ?? 0) >=
             tornClothQuestRareRewardCondition.requiredCorrect;
           setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
           setInventoryState((current) => {
@@ -534,10 +548,34 @@ export function BaseCampScreen({
           setQuestState((current) => ({ ...current, [tornClothQuestId]: "completed" }));
           setRewardClaimed(tornClothQuestId);
           if (rareUnlocked) {
-            setAchievementReceived("achievement-floor-2-rare-reward");
+            setAchievementReceived("achievement-floor-3-rare-reward");
           }
           onAutoSave("questCompleted");
           setTornClothRewardOpen(false);
+        }}
+      />}
+      {prehistoryRewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-1"] ?? 0}
+        claimed={Boolean(rewardClaimed[prehistoryQuestId])}
+        questTitle="던전 1층 조사 완료"
+        rareRewardItemId="weapon-tanged-point"
+        requiredCorrect={prehistoryQuestRareRewardCondition.requiredCorrect}
+        onCancel={() => setPrehistoryRewardOpen(false)}
+        onClaim={() => {
+          if (rewardClaimed[prehistoryQuestId]) return;
+          const rareUnlocked = (floorBestCorrect["floor-1"] ?? 0) >= prehistoryQuestRareRewardCondition.requiredCorrect;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          setInventoryState((current) => {
+            let next = current;
+            for (const id of ["quest-hand-axe", "quest-tanged-point", "quest-comb-pattern-pottery"]) next = changeItemQuantity(next, id, -1);
+            if (rareUnlocked) next = changeItemQuantity(next, "weapon-tanged-point", 1);
+            return next;
+          });
+          setQuestState((current) => ({ ...current, [prehistoryQuestId]: "completed", [memoryQuestId]: current[memoryQuestId] === "completed" ? "completed" : "available" }));
+          setRewardClaimed(prehistoryQuestId);
+          if (rareUnlocked) setAchievementReceived("achievement-floor-1-rare-reward");
+          onAutoSave("questCompleted");
+          setPrehistoryRewardOpen(false);
         }}
       />}
     </main>

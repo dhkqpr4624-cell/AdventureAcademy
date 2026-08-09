@@ -5,13 +5,19 @@ export const FLOOR_DEFINITIONS: readonly FloorDefinition[] = [
     id: "floor-1",
     order: 1,
     title: "1층",
-    questId: "quest-floor-1-memory-fragment",
+    questId: "quest-floor-1-prehistory",
   },
   {
     id: "floor-2",
     order: 2,
     title: "2층",
-    questId: "quest-floor-2-torn-cloth",
+    questId: "quest-floor-2-memory-fragment",
+  },
+  {
+    id: "floor-3",
+    order: 3,
+    title: "3층",
+    questId: "quest-floor-3-torn-cloth",
   },
 ];
 

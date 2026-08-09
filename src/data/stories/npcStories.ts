@@ -63,31 +63,31 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
   "npc-luna-default": sequence("npc-luna-default", "luna", "happy", [
     "{{playerName}}! 던전은 항상 내가 먼저 정찰하고 있어. 필요한 게 있으면 언제든지 말해!",
   ]),
-  "npc-luna-floor-2-quest-available": sequence(
-    "npc-luna-floor-2-quest-available",
+  "npc-luna-floor-3-quest-available": sequence(
+    "npc-luna-floor-3-quest-available",
     "luna",
     "happy",
     [
       "{{playerName}}, 왔구나!",
-      "던전 1층에서의 활약은 역시 멋지던걸~",
-      "사실... 던전 2층을 조사해 봤는데, 던전 너머에서 뭔가의 기운이 느껴진단 말이지...",
+      "던전 2층에서의 활약은 역시 멋지던걸~",
+      "사실... 던전 3층을 조사해 봤는데, 던전 너머에서 뭔가의 기운이 느껴진단 말이지...",
       "나는 전투 능력이 거의 없어서 가 볼 수 없으니, 네가 나 대신 조사해주었으면 해.",
     ],
   ),
-  "npc-luna-floor-2-quest-accepted": sequence(
-    "npc-luna-floor-2-quest-accepted",
+  "npc-luna-floor-3-quest-accepted": sequence(
+    "npc-luna-floor-3-quest-accepted",
     "luna",
     "happy",
     ["좋아. 뭔가 있으면 알려줘!"],
   ),
-  "npc-luna-floor-2-quest-active": sequence(
-    "npc-luna-floor-2-quest-active",
+  "npc-luna-floor-3-quest-active": sequence(
+    "npc-luna-floor-3-quest-active",
     "luna",
     "happy",
-    ["던전 2층 너머에서 느껴진 기운이 신경 쓰여. 조심해서 조사해줘!"],
+    ["던전 3층 너머에서 느껴진 기운이 신경 쓰여. 조심해서 조사해줘!"],
   ),
-  "npc-luna-floor-2-quest-complete": sequence(
-    "npc-luna-floor-2-quest-complete",
+  "npc-luna-floor-3-quest-complete": sequence(
+    "npc-luna-floor-3-quest-complete",
     "luna",
     "happy",
     ["아, {{playerName}}! 왔구나!"],
@@ -103,42 +103,43 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     "kaiden",
     "serious",
     [
-      "포탈에 빠져 이 던전에 갇힌 이상, 이 던전을 클리어해서 나가는 방법밖에는 없다.",
-      "루나의 조사에 따르면, 던전 근처에서 뒤틀린 기억의 조각이 발견되었다고 한다.",
-      "분명 던전 1층 안에, 이 조각과 딱 맞는 조각이 1개 더 있을 것으로 보인다.",
-      "{{playerName}}, 던전 1층으로 내려가서 뒤틀린 기억의 조각을 찾아 오도록.",
+      "왔나, {{playerName}}.",
+      "이 던전에서 빠져나가려면, 우선 이 던전이 어떤 던전인지부터 파악해야겠지.",
+      "루나가 정찰하려 했지만, 몬스터가 많아 접근이 어렵다는군.",
+      "{{playerName}}. 네가 던전 1층을 살펴보고, 이 던전을 파악할 수 있는 물건들을 가져와주겠나?",
     ],
   ),
   "npc-kaiden-quest-complete": sequence(
     "npc-kaiden-quest-complete",
     "kaiden",
     "serious",
-    ["기억의 조각을 가져왔군. 바로 확인해 보겠다."],
+    ["{{playerName}}. 돌아왔군. 그것은..?"],
   ),
   "npc-kaiden-quest-active": sequence(
     "npc-kaiden-quest-active",
     "kaiden",
     "serious",
-    ["기억 조각은 던전 1층에 있다. 서두르되, 주변을 꼼꼼히 살펴."],
+    ["던전 1층에서 이 던전의 정체를 알려 줄 물건들을 찾아오도록."],
   ),
   "npc-kaiden-quest-accepted": sequence(
     "npc-kaiden-quest-accepted",
     "kaiden",
     "serious",
-    ["좋다. 던전을 조사한 후 바로 보고하도록."],
+    [
+      "좋다. 준비가 된다면 던전 입구를 클릭하여 던전 1층에 다녀오도록.",
+      "던전에서 오답을 선택하면 큰 피해를 입게 되니 조심하는 것도 명심해라.",
+    ],
   ),
+  "npc-kaiden-floor-2-quest-available": sequence("npc-kaiden-floor-2-quest-available", "kaiden", "serious", [
+    "포탈에 빠져 이 던전에 갇힌 이상, 이 던전을 클리어해서 나가는 방법밖에는 없다.",
+    "루나의 조사에 따르면, 던전 근처에서 뒤틀린 기억의 조각이 발견되었다고 한다.",
+    "분명 던전 2층 안에, 이 조각과 딱 맞는 조각이 1개 더 있을 것으로 보인다.",
+    "{{playerName}}, 던전 2층으로 내려가서 뒤틀린 기억의 조각을 찾아 오도록.",
+  ]),
+  "npc-kaiden-floor-2-quest-accepted": sequence("npc-kaiden-floor-2-quest-accepted", "kaiden", "serious", ["좋다. 던전을 조사한 후 바로 보고하도록."]),
+  "npc-kaiden-floor-2-quest-active": sequence("npc-kaiden-floor-2-quest-active", "kaiden", "serious", ["기억 조각은 던전 2층에 있다. 서두르되, 주변을 꼼꼼히 살펴."]),
+  "npc-kaiden-floor-2-quest-complete": sequence("npc-kaiden-floor-2-quest-complete", "kaiden", "serious", ["기억의 조각을 가져왔군. 바로 확인해 보겠다."]),
 };
-
-NPC_STORY_SEQUENCES["npc-kaiden-quest-accepted"].scenes[0].steps.push({
-  id: "npc-kaiden-quest-accepted-danger-warning",
-  type: "dialogue",
-  speakerId: "kaiden",
-  speakerName: "카이든",
-  activeActorId: "kaiden",
-  text: "던전 안에서 오답을 선택할 경우 마물들이 강해지니 조심해야 한다는 점도 잊지 말게.",
-  emphasis: "danger",
-  advanceMode: "click",
-});
 
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(

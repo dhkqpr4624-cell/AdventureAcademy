@@ -118,8 +118,12 @@ import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolv
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { DungeonReturnPrompt, MemoryFragmentEvent } from "../../components/MemoryFragmentEvent";
 import { TornClothEvent } from "../../components/TornClothEvent";
+import { PrehistoryArtifactEvent, type PrehistoryArtifactId } from "../../components/PrehistoryArtifactEvent";
 import memoryFoundUrl from "../../assets/quest/memory-fragment-found.png";
 import tornClothFoundUrl from "../../assets/quest/torn-cloth-found.png";
+import handAxeFoundUrl from "../../assets/quest/hand-axe-found.png";
+import tangedPointFoundUrl from "../../assets/quest/tanged-point-found.png";
+import potteryFoundUrl from "../../assets/quest/comb-pattern-pottery-found.png";
 import {
   getFloorNumber,
   getMonsterDamageForFloor,
@@ -147,6 +151,8 @@ type DungeonScreenProps = {
   setInventoryState: Dispatch<SetStateAction<InventoryState>>;
   onInventoryChanged: () => void;
   firstObjectiveEventSeen: boolean;
+  seenObjectiveEventIds: Record<string, boolean>;
+  onStoryEventSeen: (eventId: string) => void;
   onObjectiveAcquired: (correctCount: number) => void;
   onBestCorrect: (correctCount: number) => void;
   floorQuestStarted: boolean;
@@ -253,6 +259,8 @@ export function DungeonScreen({
   setInventoryState,
   onInventoryChanged,
   firstObjectiveEventSeen,
+  seenObjectiveEventIds,
+  onStoryEventSeen,
   onObjectiveAcquired,
   onBestCorrect,
   floorQuestStarted,
@@ -267,7 +275,14 @@ export function DungeonScreen({
         : undefined,
     ),
   );
-  const dungeonMap = dungeonRun.map;
+  const dungeonMap = floorId === "floor-1" ? dungeonRun.map : {
+    ...dungeonRun.map,
+    rooms: dungeonRun.map.rooms.filter((room) => !room.id.startsWith("room-story-")),
+    connections: dungeonRun.map.connections.filter((connection) =>
+      !connection.fromRoomId.startsWith("room-story-") &&
+      !connection.toRoomId.startsWith("room-story-")
+    ),
+  };
   const maxHp = playerState.maxHp;
   const [runQuestionAssignments] = useState(() =>
     allocateDungeonRunQuestions(dungeonRun.map, dungeonRun.seed),
@@ -386,6 +401,7 @@ export function DungeonScreen({
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [runActionBusy, setRunActionBusy] = useState(false);
   const [objectiveEvent, setObjectiveEvent] = useState<"first" | "retry" | null>(null);
+  const [activeArtifactEvent, setActiveArtifactEvent] = useState<PrehistoryArtifactId | null>(null);
   const [finalGateDialogueStep, setFinalGateDialogueStep] =
     useState<0 | 1 | null>(null);
 
@@ -397,11 +413,12 @@ export function DungeonScreen({
       return getMonsterVisualDefinition("garlic-king");
     }
     const room = getDungeonRoom(roomId);
-    return getMonsterVisualDefinition(
-      room.type === "elite"
-        ? room.eliteConfig!.monsterId
-        : room.combatConfig!.monsterId,
-    );
+    if (floorId === "floor-1") {
+      if (room.type === "elite") return getMonsterVisualDefinition("floor1-mammoth");
+      const normalId = room.id.includes("west") ? "floor1-cave-bear" : "floor1-boar";
+      return getMonsterVisualDefinition(normalId);
+    }
+    return getMonsterVisualDefinition(room.type === "elite" ? room.eliteConfig!.monsterId : room.combatConfig!.monsterId);
   };
   const activeMonsterName = () => activeMonsterDefinition().name;
   const activeEnemyAttackDamage = () => {
@@ -1552,8 +1569,26 @@ export function DungeonScreen({
     roomEventProcessingRef.current = true;
     setDungeonMode("roomEvent");
     try {
+      const artifactByRoomId: Record<string, PrehistoryArtifactId> = {
+        "room-story-hand-axe": "hand-axe",
+        "room-story-tanged-point": "tanged-point",
+        "room-story-pottery": "comb-pattern-pottery",
+      };
+      const artifactId = floorId === "floor-1" ? artifactByRoomId[roomId] : undefined;
+      if (artifactId && !roomProgressRef.current[roomId]?.eventCompleted) {
+        const eventSaveId = `floor-1:${artifactId}`;
+        if (!seenObjectiveEventIds[eventSaveId]) {
+          setActiveArtifactEvent(artifactId);
+          return;
+        }
+        const nextProgress = completeRoomEvent(roomProgressRef.current, roomId);
+        roomProgressRef.current = nextProgress;
+        setRoomProgress(nextProgress);
+        setDungeonMode("exploration");
+        return;
+      }
       if (floorQuestStarted && (roomId === dungeonRun.generatedDungeon?.finalQuestRoomId || getDungeonRoom(roomId).type === "quest")) {
-        setObjectiveEvent(firstObjectiveEventSeen ? "retry" : "first");
+        setObjectiveEvent(floorId === "floor-1" || firstObjectiveEventSeen ? "retry" : "first");
         return;
       }
       const room = getDungeonRoom(roomId);
@@ -2213,7 +2248,7 @@ export function DungeonScreen({
           onReturnToBaseCamp={returnAfterDefeat}
         />
       )}
-      {objectiveEvent === "first" && floorId === "floor-1" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
+      {objectiveEvent === "first" && floorId === "floor-2" && <MemoryFragmentEvent imageUrl={memoryFoundUrl} onComplete={() => {
         playerHpRef.current = maxHp;
         setPlayerHp(maxHp);
         setInventoryState((current) => changeItemQuantity(current, "quest-memory-fragment", 1));
@@ -2221,7 +2256,7 @@ export function DungeonScreen({
         onInventoryChanged();
         onNavigate("baseCamp");
       }} />}
-      {objectiveEvent === "first" && floorId === "floor-2" && <TornClothEvent imageUrl={tornClothFoundUrl} onComplete={() => {
+      {objectiveEvent === "first" && floorId === "floor-3" && <TornClothEvent imageUrl={tornClothFoundUrl} onComplete={() => {
         playerHpRef.current = maxHp;
         setPlayerHp(maxHp);
         setInventoryState((current) => changeItemQuantity(current, "quest-torn-cloth", 1));
@@ -2229,6 +2264,22 @@ export function DungeonScreen({
         onInventoryChanged();
         onNavigate("baseCamp");
       }} />}
+      {activeArtifactEvent && <PrehistoryArtifactEvent
+        artifactId={activeArtifactEvent}
+        imageUrl={activeArtifactEvent === "hand-axe" ? handAxeFoundUrl : activeArtifactEvent === "tanged-point" ? tangedPointFoundUrl : potteryFoundUrl}
+        onComplete={() => {
+          const itemId = activeArtifactEvent === "hand-axe" ? "quest-hand-axe" : activeArtifactEvent === "tanged-point" ? "quest-tanged-point" : "quest-comb-pattern-pottery";
+          const roomId = activeArtifactEvent === "hand-axe" ? "room-story-hand-axe" : activeArtifactEvent === "tanged-point" ? "room-story-tanged-point" : "room-story-pottery";
+          setInventoryState((current) => changeItemQuantity(current, itemId, 1));
+          onStoryEventSeen(`floor-1:${activeArtifactEvent}`);
+          const nextProgress = completeRoomEvent(roomProgressRef.current, roomId);
+          roomProgressRef.current = nextProgress;
+          setRoomProgress(nextProgress);
+          setActiveArtifactEvent(null);
+          setDungeonMode("exploration");
+          onInventoryChanged();
+        }}
+      />}
       {objectiveEvent === "retry" && <DungeonReturnPrompt onCancel={() => {
     setObjectiveEvent(null);
     setFinalGateDialogueStep(null);

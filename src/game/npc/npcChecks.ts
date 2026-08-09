@@ -158,16 +158,16 @@ export function runNpcChecks() {
   }
   assert(
     resolveNpcStorySequence("kaiden", {
-      "quest-floor-1-memory-fragment": "available",
+      "quest-floor-1-prehistory": "available",
     }) === "npc-kaiden-quest-available",
     "Kaiden must retain the available quest story",
   );
   assert(
     resolveNpcStorySequence("luna", {
-      "quest-floor-1-memory-fragment": "available",
+      "quest-floor-1-prehistory": "available",
     }) === "npc-luna-default" &&
       resolveNpcStorySequence("theo", {
-        "quest-floor-1-memory-fragment": "available",
+        "quest-floor-1-prehistory": "available",
       }) === "npc-theo-default",
     "Kaiden's slot or quest status must not leak into Luna or Theo stories",
   );

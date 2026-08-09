@@ -64,8 +64,8 @@ export function TornClothCompletionStory({
   onComplete: () => void;
 }) {
   const sequence = useMemo<StorySequence>(() => ({
-    id: "floor-2-torn-cloth-completion",
-    title: "던전 2층 조사 완료",
+    id: "floor-3-torn-cloth-completion",
+    title: "던전 3층 조사 완료",
     replayable: false,
     skippable: false,
     onCompleteScreen: "baseCamp",
@@ -75,14 +75,14 @@ export function TornClothCompletionStory({
       theo: createActor("theo", "default"),
     },
     scenes: [{
-      id: "floor-2-torn-cloth-completion-scene",
+      id: "floor-3-torn-cloth-completion-scene",
       steps: [
         show("show-luna-1", "luna", "happy"),
         dialogue("luna-line-2", "luna", "루나", "음? 그건..?"),
         dialogue("luna-line-3", "luna", "루나", "옷에 쓰이는 천 조각이잖아! 그런데 이건 좀 이상한걸.."),
         hide("hide-luna-1", "luna"),
         show("show-theo-1", "theo", "default"),
-        dialogue("theo-line-1", "theo", "테오", "던전 2층은 분명 고구려, 백제, 신라로 대표되는 삼국시대였죠."),
+        dialogue("theo-line-1", "theo", "테오", "던전 3층은 분명 고구려, 백제, 신라로 대표되는 삼국시대였죠."),
         dialogue("theo-line-2", "theo", "테오", "그런데 이건... 삼국시대의 천이 아닌 것 같습니다."),
         hide("hide-theo-1", "theo"),
         show("show-luna-2", "luna", "happy"),

@@ -15,15 +15,16 @@ const check = (condition: unknown, message: string) => {
 };
 
 export function runFloorBalanceChecks() {
-  check(getFloorRewardKind(1) === "weaponSkin", "odd floors reward weapon skins");
-  check(getFloorRewardKind(2) === "armor", "even floors reward armor");
-  check(getArmorMaxHpBonusForFloor(2) === 5, "floor 2 armor is +5 HP");
-  check(getArmorMaxHpBonusForFloor(4) === 10, "floor 4 armor is +10 HP");
-  check(getArmorMaxHpBonusForFloor(8) === 20, "floor 8 armor is +20 HP");
+  check(getFloorRewardKind(1) === "weaponSkin", "floor 1 rewards a weapon skin");
+  check(getFloorRewardKind(2) === "weaponSkin", "floor 2 rewards a weapon skin");
+  check(getFloorRewardKind(3) === "armor", "floor 3 rewards armor");
+  check(getArmorMaxHpBonusForFloor(3) === 5, "floor 3 armor is +5 HP");
+  check(getArmorMaxHpBonusForFloor(5) === 10, "floor 5 armor is +10 HP");
+  check(getArmorMaxHpBonusForFloor(9) === 20, "floor 9 armor is +20 HP");
   check(getExpectedMaxHpForFloor(1) === 50, "floor 1 expected HP");
-  check(getExpectedMaxHpForFloor(2) === 55, "floor 2 expected HP");
+  check(getExpectedMaxHpForFloor(2) === 50, "floor 2 expected HP");
   check(getExpectedMaxHpForFloor(3) === 55, "floor 3 expected HP");
-  check(getExpectedMaxHpForFloor(6) === 65, "floor 6 expected HP");
+  check(getExpectedMaxHpForFloor(6) === 60, "floor 6 expected HP");
   check(
     getMonsterDamageForFloor(6) > getMonsterDamageForFloor(1),
     "monster damage grows with floor HP",

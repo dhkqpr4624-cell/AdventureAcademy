@@ -23,19 +23,19 @@ export function getFloorNumber(floorId: string): number {
 }
 
 export function getFloorRewardKind(floorNumber: number): FloorRewardKind {
-  return asFloorNumber(floorNumber) % 2 === 0 ? "armor" : "weaponSkin";
+  const floor = asFloorNumber(floorNumber);
+  return floor >= 3 && floor % 2 === 1 ? "armor" : "weaponSkin";
 }
 
 export function getArmorMaxHpBonusForFloor(floorNumber: number): number {
   const floor = asFloorNumber(floorNumber);
-  return getFloorRewardKind(floor) === "armor"
-    ? Math.floor(floor / 2) * ARMOR_MAX_HP_PER_TIER
-    : 0;
+  if (getFloorRewardKind(floor) !== "armor") return 0;
+  return Math.floor((floor - 1) / 2) * ARMOR_MAX_HP_PER_TIER;
 }
 
 export function getExpectedMaxHpForFloor(floorNumber: number): number {
-  return BASE_PLAYER_MAX_HP +
-    Math.floor(asFloorNumber(floorNumber) / 2) * ARMOR_MAX_HP_PER_TIER;
+  const floor = asFloorNumber(floorNumber);
+  return BASE_PLAYER_MAX_HP + Math.max(0, Math.floor((floor - 1) / 2)) * ARMOR_MAX_HP_PER_TIER;
 }
 
 export function getExpectedPotionHealing(): number {

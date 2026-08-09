@@ -10,7 +10,7 @@ export function MemoryFragmentEvent({
   onComplete: () => void;
 }) {
   const sequence = useMemo<StorySequence>(() => ({
-    id: "floor-1-memory-fragment-found",
+    id: "floor-2-memory-fragment-found",
     title: "뒤틀린 기억의 조각 발견",
     replayable: false,
     skippable: false,
@@ -18,7 +18,7 @@ export function MemoryFragmentEvent({
     backgrounds: {},
     actors: {},
     scenes: [{
-      id: "floor-1-memory-fragment-found-scene",
+      id: "floor-2-memory-fragment-found-scene",
       steps: [
         {
           id: "memory-fragment-line-1",

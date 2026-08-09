@@ -5,6 +5,7 @@ import type { DungeonMapDefinition } from "./dungeonTypes";
 export const DUNGEON_QUESTION_SETS: Readonly<Record<string, readonly Question[]>> = {
   "normal-garlic-a": [TEST_QUESTIONS[0], TEST_QUESTIONS[1]],
   "normal-garlic-b": [TEST_QUESTIONS[2], TEST_QUESTIONS[3]],
+  "normal-garlic-c": [TEST_QUESTIONS[9], TEST_QUESTIONS[10]],
   "treasure-test-a": [TEST_QUESTIONS[4]],
   "trap-test-a": [TEST_QUESTIONS[5]],
   "floor1-elite-a": [TEST_QUESTIONS[6], TEST_QUESTIONS[7], TEST_QUESTIONS[8]],

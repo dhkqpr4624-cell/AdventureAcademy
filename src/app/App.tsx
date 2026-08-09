@@ -85,12 +85,14 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId =
-      game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId =
-      activeFloorId === "floor-2"
-        ? "quest-floor-2-torn-cloth"
-        : "quest-floor-1-memory-fragment";
+    const activeFloorId = game.currentFloorId === "floor-3"
+      ? "floor-3"
+      : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
+    const activeFloorQuestId = activeFloorId === "floor-3"
+      ? "quest-floor-3-torn-cloth"
+      : activeFloorId === "floor-2"
+        ? "quest-floor-2-memory-fragment"
+        : "quest-floor-1-prehistory";
     switch (currentScreen) {
       case "story": return <StoryScreen playerName={game.playerState.name ?? ""} onNavigate={navigate} onStoryStarted={() => requestSave("storyStarted")} onStoryCompleted={(id) => {
         setGame((current) => ({ ...current, completedStoryIds: [...new Set([...current.completedStoryIds, id])] }));
@@ -129,6 +131,11 @@ export function App() {
         savedFloorRun={game.currentFloorRun}
         onFloorRunChanged={updateFloorRun}
         firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen[activeFloorId])}
+        seenObjectiveEventIds={game.firstObjectiveEventSeen}
+        onStoryEventSeen={(eventId) => {
+          setGame((current) => ({ ...current, firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, [eventId]: true } }));
+          requestSave("itemAcquired");
+        }}
         onObjectiveAcquired={(correctCount) => {
           setGame((current) => ({
             ...current,

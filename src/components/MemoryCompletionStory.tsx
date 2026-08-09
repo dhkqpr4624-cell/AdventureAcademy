@@ -66,7 +66,7 @@ export function MemoryCompletionStory({
 
   const firstSequence = useMemo(
     () =>
-      createDialogueSequence("floor-1-memory-completion-first", [
+      createDialogueSequence("floor-2-memory-completion-first", [
         { id: "show-kaiden", type: "showPortrait", actorId: "kaiden", portraitId: "serious", position: "left", transition: "fade" },
         { id: "kaiden-line", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "이건..", advanceMode: "click" },
         { id: "hide-kaiden", type: "hidePortrait", actorId: "kaiden" },
@@ -78,12 +78,12 @@ export function MemoryCompletionStory({
   );
   const secondSequence = useMemo(
     () =>
-      createDialogueSequence("floor-1-memory-completion-second", [
+      createDialogueSequence("floor-2-memory-completion-second", [
         { id: "show-theo", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
         { id: "theo-surprised", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "...!", advanceMode: "click" },
         { id: "hide-theo", type: "hidePortrait", actorId: "theo" },
         { id: "show-luna", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
-        { id: "luna-line", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "대장! 던전 2층으로 가는 문이 열린 것 같아.", advanceMode: "click" },
+        { id: "luna-line", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "대장! 던전 3층으로 가는 문이 열린 것 같아.", advanceMode: "click" },
         { id: "hide-luna", type: "hidePortrait", actorId: "luna" },
         { id: "show-kaiden", type: "showPortrait", actorId: "kaiden", portraitId: "serious", position: "left", transition: "fade" },
         { id: "kaiden-line", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "그래. 이제 다음 계획을 세워야겠군.", advanceMode: "click" },

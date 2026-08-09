@@ -10,7 +10,7 @@ export function TornClothEvent({
   onComplete: () => void;
 }) {
   const sequence = useMemo<StorySequence>(() => ({
-    id: "floor-2-torn-cloth-found",
+    id: "floor-3-torn-cloth-found",
     title: "천 조각 발견",
     replayable: false,
     skippable: false,
@@ -18,7 +18,7 @@ export function TornClothEvent({
     backgrounds: {},
     actors: {},
     scenes: [{
-      id: "floor-2-torn-cloth-found-scene",
+      id: "floor-3-torn-cloth-found-scene",
       steps: [
         {
           id: "torn-cloth-line-1",
@@ -48,7 +48,7 @@ export function TornClothEvent({
         <img
           className="is-revealing"
           src={imageUrl}
-          alt="던전 2층에서 발견한 찢어진 천 조각"
+          alt="던전 3층에서 발견한 찢어진 천 조각"
         />
       </div>
       <div className="base-camp-story-overlay">

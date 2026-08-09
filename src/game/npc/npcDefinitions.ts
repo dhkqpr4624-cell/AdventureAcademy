@@ -37,10 +37,10 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     portraits: { default: lunaPortrait, happy: lunaPortrait },
     dialogue: {
       defaultStorySequenceId: "npc-luna-default",
-      questAvailableStorySequenceId: "npc-luna-floor-2-quest-available",
-      questActiveStorySequenceId: "npc-luna-floor-2-quest-active",
+      questAvailableStorySequenceId: "npc-luna-floor-3-quest-available",
+      questActiveStorySequenceId: "npc-luna-floor-3-quest-active",
     },
-    offeredQuestIds: ["quest-floor-2-torn-cloth"],
+    offeredQuestIds: ["quest-floor-3-torn-cloth"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
   },
   {
@@ -80,7 +80,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       questAvailableStorySequenceId: "npc-kaiden-quest-available",
       questActiveStorySequenceId: "npc-kaiden-quest-active",
     },
-    offeredQuestIds: ["quest-floor-1-memory-fragment"],
+    offeredQuestIds: ["quest-floor-1-prehistory", "quest-floor-2-memory-fragment"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden),
   },
 ];
