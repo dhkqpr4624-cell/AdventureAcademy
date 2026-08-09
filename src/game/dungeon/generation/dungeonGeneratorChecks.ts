@@ -1,6 +1,6 @@
 import { createInitialRoomProgress, completeRoomEvent } from "../dungeonRoomProgress";
 import { resolveRoomEntry } from "../RoomEventController";
-import { generateDungeon } from "./DungeonGenerator";
+import { calculateQuestionRoomPlan, generateDungeon } from "./DungeonGenerator";
 import {
   FLOOR1_GENERATION_CONFIG,
   FLOOR1_MAP_TEMPLATES,
@@ -22,6 +22,14 @@ function generate(seed: string) {
 }
 
 export function runDungeonGeneratorChecks(): void {
+  for (const questionCount of [10, 11, 12, 13, 14]) {
+    const plan = calculateQuestionRoomPlan(questionCount, 6);
+    check(Boolean(plan), `${questionCount} questions must have a room plan`);
+    check(
+      Boolean(plan && plan.combat * 2 + plan.elite * 3 + plan.event === questionCount),
+      `${questionCount} question plan must use the exact budget`,
+    );
+  }
   const first = generate("generator-check");
   const repeated = generate("generator-check");
   check(first.success && repeated.success, "valid floor 1 generation must succeed");
@@ -36,6 +44,29 @@ export function runDungeonGeneratorChecks(): void {
       JSON.stringify(different.dungeon) !== JSON.stringify(first.dungeon),
     "different seed should change a supported layout",
   );
+  for (const questionCount of [10, 11, 12, 13, 14]) {
+    const result = generateDungeon({
+      templates: FLOOR1_MAP_TEMPLATES,
+      config: {
+        ...FLOOR1_GENERATION_CONFIG,
+        questionCount,
+        questionBudget: { min: questionCount, max: questionCount },
+        maximumRoomCounts: {
+          ...FLOOR1_GENERATION_CONFIG.maximumRoomCounts,
+          elite: Number.POSITIVE_INFINITY,
+        },
+      },
+      seed: `generalized-${questionCount}`,
+      questionSetPool: FLOOR1_QUESTION_SET_POOL,
+    });
+    check(result.success, `${questionCount} question generation must succeed`);
+    if (result.success) {
+      check(
+        result.dungeon.metadata.questionBudgetUsed === questionCount,
+        `${questionCount} question dungeon must use the exact budget`,
+      );
+    }
+  }
   const rooms = first.dungeon.rooms;
   check(rooms.filter((room) => room.type === "start").length === 1, "one start");
   check(rooms.filter((room) => room.type === "quest").length === 1, "one final");

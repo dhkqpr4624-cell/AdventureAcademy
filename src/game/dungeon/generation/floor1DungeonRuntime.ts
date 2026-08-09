@@ -1,4 +1,6 @@
 import type { DungeonMapDefinition } from "../dungeonTypes";
+import { FLOOR_DEFINITIONS } from "../../floor/floorDefinitions";
+import type { FloorId } from "../../floor/floorTypes";
 import { TEST_DUNGEON_MAP } from "../testDungeonMap";
 import { generateDungeon } from "./DungeonGenerator";
 import {
@@ -24,9 +26,28 @@ export function createFloor1RunSeed(): string {
 }
 
 export function createFloor1DungeonRun(seed = createFloor1RunSeed()): Floor1DungeonRun {
+  return createDungeonRun("floor-1", seed);
+}
+
+export function createDungeonRun(
+  floorId: FloorId,
+  seed = `${floorId}-${Date.now()}-${++productionSeedCounter}`,
+): Floor1DungeonRun {
+  const floor = FLOOR_DEFINITIONS.find((candidate) => candidate.id === floorId);
+  if (!floor) throw new Error(`[dungeonRuntime] Unknown floor: ${floorId}`);
+  const config = {
+    ...FLOOR1_GENERATION_CONFIG,
+    floorId,
+    questionCount: floor.questionCount,
+    questionBudget: { min: floor.questionCount, max: floor.questionCount },
+    maximumRoomCounts: {
+      ...FLOOR1_GENERATION_CONFIG.maximumRoomCounts,
+      elite: Number.POSITIVE_INFINITY,
+    },
+  };
   const generationResult = generateDungeon({
     templates: FLOOR1_MAP_TEMPLATES,
-    config: FLOOR1_GENERATION_CONFIG,
+    config,
     seed,
     questionSetPool: FLOOR1_QUESTION_SET_POOL,
   });
@@ -40,7 +61,7 @@ export function createFloor1DungeonRun(seed = createFloor1RunSeed()): Floor1Dung
     };
   }
   if (import.meta.env.DEV) {
-    console.warn("[floor1DungeonRuntime] generation failed; using fixed fallback", {
+    console.warn("[dungeonRuntime] generation failed; using fixed fallback", {
       seed,
       validationErrors: generationResult.validationErrors,
     });

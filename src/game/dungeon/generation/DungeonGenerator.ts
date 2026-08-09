@@ -24,6 +24,42 @@ import type {
 } from "./dungeonGenerationTypes";
 
 const CAMERA_Y = 0.2;
+const QUESTION_COST = { combat: 2, elite: 3, event: 1 } as const;
+
+export type DungeonQuestionRoomPlan = {
+  combat: number;
+  elite: number;
+  event: number;
+  roomCount: number;
+};
+
+export function calculateQuestionRoomPlan(
+  questionCount: number,
+  availableSlots = Number.POSITIVE_INFINITY,
+): DungeonQuestionRoomPlan | null {
+  if (!Number.isInteger(questionCount) || questionCount <= 0) return null;
+  let best: DungeonQuestionRoomPlan | null = null;
+  for (let event = 1; event <= questionCount; event += 1) {
+    for (let elite = 1; elite * QUESTION_COST.elite < questionCount; elite += 1) {
+      const remaining = questionCount -
+        event * QUESTION_COST.event -
+        elite * QUESTION_COST.elite;
+      if (remaining < QUESTION_COST.combat || remaining % QUESTION_COST.combat !== 0) {
+        continue;
+      }
+      const combat = remaining / QUESTION_COST.combat;
+      const candidate = { combat, elite, event, roomCount: combat + elite + event };
+      if (candidate.roomCount > availableSlots) continue;
+      if (!best ||
+        candidate.event < best.event ||
+        (candidate.event === best.event && candidate.elite < best.elite) ||
+        (candidate.event === best.event && candidate.elite === best.elite && candidate.roomCount < best.roomCount)) {
+        best = candidate;
+      }
+    }
+  }
+  return best;
+}
 
 function facingFor(_slot: MapTemplateRoomSlot): DungeonFacing {
   return "north";
@@ -157,28 +193,19 @@ function generateAttempt(
   for (const slot of template.slots) {
     if (slot.fixedRoomType) assignments.set(slot.id, slot.fixedRoomType);
   }
-
-  const eliteSlot = takeTypeSlot(remaining, "elite", random);
-  assignments.set(eliteSlot.id, "elite");
-  const combatSlot = takeTypeSlot(remaining, "combat", random);
-  assignments.set(combatSlot.id, "combat");
-  const purposeType = random.next() < 0.5 ? "treasure" : "trap";
-  const purposeSlot = takeTypeSlot(remaining, purposeType, random);
-  assignments.set(purposeSlot.id, purposeType);
-
-  let combatCount = 1;
-  for (const slot of remaining) {
-    const allowedFill = slot.allowedRoomTypes.filter(
-      (type) => type === "empty" || type === "combat",
-    );
-    const type = allowedFill.includes("combat") &&
-      combatCount < input.questionSetPool.normalCombat.length &&
-      random.next() < 0.35
-      ? "combat"
-      : allowedFill.includes("empty") ? "empty" : allowedFill[0];
-    if (type === "combat") combatCount += 1;
-    assignments.set(slot.id, type ?? "empty");
+  const plan = calculateQuestionRoomPlan(input.config.questionCount, remaining.length);
+  if (plan) {
+    const purposeType = random.next() < 0.5 ? "treasure" : "trap";
+    for (const type of [
+      ...Array<DungeonRoomType>(plan.event).fill(purposeType),
+      ...Array<DungeonRoomType>(plan.elite).fill("elite"),
+      ...Array<DungeonRoomType>(plan.combat).fill("combat"),
+    ]) {
+      const slot = takeTypeSlot(remaining, type, random);
+      assignments.set(slot.id, type);
+    }
   }
+  for (const slot of remaining) assignments.set(slot.id, "empty");
 
   const usedQuestionSets = new Set<string>();
   const rooms = template.slots.map((slot) =>

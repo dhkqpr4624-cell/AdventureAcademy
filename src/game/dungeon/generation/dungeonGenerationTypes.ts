@@ -48,6 +48,7 @@ export type MapTemplate = {
 
 export type DungeonGenerationConfig = {
   floorId: string;
+  questionCount: number;
   minRoomCount: number;
   maxRoomCount: number;
   requiredRoomCounts: Partial<Record<DungeonRoomType, number>>;

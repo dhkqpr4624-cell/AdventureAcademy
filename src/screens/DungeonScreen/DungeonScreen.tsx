@@ -40,7 +40,7 @@ import {
   getConnectionsForRoomFromMap,
   getDungeonRoomFromMap,
 } from "../../game/dungeon/dungeonRuntimeMap";
-import { createFloor1DungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
+import { createDungeonRun } from "../../game/dungeon/generation/floor1DungeonRuntime";
 import { createSeededRandom } from "../../game/dungeon/generation/seededRandom";
 import type {
   DungeonDirection,
@@ -307,7 +307,8 @@ export function DungeonScreen({
 }: DungeonScreenProps) {
   const activeFloorNumber = getFloorNumber(floorId);
   const [dungeonRun] = useState(() =>
-    createFloor1DungeonRun(
+    createDungeonRun(
+      floorId,
       savedFloorRun?.floorId === floorId
         ? savedFloorRun.seed
         : undefined,

@@ -5,6 +5,7 @@ export type FloorDefinition = {
   order: number;
   title: string;
   questId: string;
+  questionCount: number;
 };
 
 export type FloorUnlockState = {

@@ -185,3 +185,97 @@ export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
     explanation: "돌을 갈아서 필요한 모양으로 만든 도구를 간석기라고 합니다.",
   },
 ];
+
+export const FLOOR2_GOJOSEON_QUESTIONS: readonly Question[] = [
+  {
+    id: "floor2-gojoseon-short-01", lessonId: "floor2-gojoseon", type: "shortAnswer",
+    prompt: "구리, 주석, 납 따위를 녹여 만든 금속을 주로 사용하던 시대를 OOO시대라고 한다.",
+    acceptedAnswers: ["청동기", "청동 기"], explanation: "청동을 주로 사용한 시대를 청동기 시대라고 합니다.",
+  },
+  {
+    id: "floor2-gojoseon-tf-02", lessonId: "floor2-gojoseon", type: "trueFalse",
+    prompt: "청동기 시대에는 농사도구가 주로 청동기로 만들어져서 곡식을 많이 수확할 수 있었다.",
+    correctAnswer: false, explanation: "청동은 귀해 주로 지배층의 무기와 제사 도구로 쓰였고, 농기구는 주로 돌이나 나무로 만들었습니다.",
+  },
+  {
+    id: "floor2-gojoseon-ms-03", lessonId: "floor2-gojoseon", type: "multipleSelect",
+    prompt: "다음 중 청동기 시대의 생활 모습으로 옳은 것을 모두 고르시오.",
+    options: ["농사 기술이 발달하였다.", "농사를 짓지 않고 사냥과 채집만 하였다.", "마을 주변에 도랑을 파거나 울타리를 세우기도 하였다.", "집단 사이에 싸움이 일어나기도 하였다."],
+    correctAnswers: ["농사 기술이 발달하였다.", "마을 주변에 도랑을 파거나 울타리를 세우기도 하였다.", "집단 사이에 싸움이 일어나기도 하였다."],
+    explanation: "청동기 시대에는 농사가 발달하고 마을을 보호하는 시설이 생겼으며 집단 사이의 싸움도 일어났습니다.",
+  },
+  {
+    id: "floor2-gojoseon-mc-04", lessonId: "floor2-gojoseon", type: "multipleChoice",
+    prompt: "다음 중 청동기의 주된 쓰임새로 가장 알맞은 것은?",
+    options: ["농사를 짓는 농기구", "지배층의 무기와 제사 도구", "집을 짓기 위한 건축 도구", "음식을 조리하기 위한 그릇"],
+    correctAnswer: "지배층의 무기와 제사 도구", explanation: "청동기는 귀해 지배층의 무기와 제사 도구로 주로 사용되었습니다.",
+  },
+  {
+    id: "floor2-gojoseon-tf-05", lessonId: "floor2-gojoseon", type: "trueFalse",
+    prompt: "청동기 시대에는 농사가 발달하면서 사람들 사이의 재산과 힘의 차이가 나타나기 시작하였다.",
+    correctAnswer: true, explanation: "농업 생산이 늘면서 재산과 힘의 차이가 생기고 지배자가 등장했습니다.",
+  },
+  {
+    id: "floor2-gojoseon-tf-06", lessonId: "floor2-gojoseon", type: "trueFalse",
+    prompt: "고조선의 건국 이야기에서 곰과 호랑이는 모두 환웅과의 약속을 끝까지 지켜 사람이 되었다.",
+    correctAnswer: false, explanation: "곰은 약속을 지켜 웅녀가 되었지만 호랑이는 끝까지 견디지 못했습니다.",
+  },
+  {
+    id: "floor2-gojoseon-mc-07", lessonId: "floor2-gojoseon", type: "multipleChoice",
+    prompt: "고조선의 건국 이야기를 바르게 설명한 것은?",
+    options: ["환웅이 단군왕검을 낳았다.", "곰이 사람이 되어 웅녀가 되었고, 환웅과 혼인하여 단군왕검을 낳았다.", "호랑이가 사람이 되어 단군왕검을 낳았다.", "환인이 직접 고조선을 세웠다."],
+    correctAnswer: "곰이 사람이 되어 웅녀가 되었고, 환웅과 혼인하여 단군왕검을 낳았다.", explanation: "웅녀와 환웅 사이에서 태어난 단군왕검이 고조선을 세웠다고 전해집니다.",
+  },
+  {
+    id: "floor2-gojoseon-short-08", lessonId: "floor2-gojoseon", type: "shortAnswer",
+    prompt: "고조선을 세우고 나라 이름을 조선이라고 한 인물의 이름은?",
+    acceptedAnswers: ["단군왕검", "단군 왕검"], explanation: "단군왕검이 고조선을 세웠습니다.",
+  },
+  {
+    id: "floor2-gojoseon-ms-09", lessonId: "floor2-gojoseon", type: "multipleSelect",
+    prompt: "다음 중 고조선의 대표적인 문화유산으로, 고조선의 문화 범위를 짐작하는 데 이용되는 것을 모두 고르시오.",
+    options: ["비파형 동검", "탁자식 고인돌", "빗살무늬토기", "슴베찌르개"],
+    correctAnswers: ["비파형 동검", "탁자식 고인돌"], explanation: "비파형 동검과 탁자식 고인돌의 분포를 통해 고조선의 문화 범위를 짐작합니다.",
+  },
+  {
+    id: "floor2-gojoseon-short-10", lessonId: "floor2-gojoseon", type: "shortAnswer",
+    prompt: "고조선에는 사회 질서를 지키기 위해 O개의 법 조항이 있었다고 전해진다.",
+    acceptedAnswers: ["8", "여덟"], explanation: "고조선에는 8개의 법 조항이 있었다고 전해집니다.",
+  },
+  {
+    id: "floor2-gojoseon-ms-11", lessonId: "floor2-gojoseon", type: "multipleSelect",
+    prompt: "다음 중 현재까지 전해져 내려오는 고조선의 법 조항을 모두 고르시오.",
+    options: ["사람을 죽인 사람은 사형에 처한다.", "남을 다치게 한 사람은 곡식으로 갚는다.", "도둑질을 한 사람은 노비로 삼으며, 죄를 면하려면 50만 전을 낸다.", "거짓말을 한 사람은 마을에서 쫓아낸다.", "농사를 짓지 않은 사람은 곡식을 빼앗는다."],
+    correctAnswers: ["사람을 죽인 사람은 사형에 처한다.", "남을 다치게 한 사람은 곡식으로 갚는다.", "도둑질을 한 사람은 노비로 삼으며, 죄를 면하려면 50만 전을 낸다."],
+    explanation: "8조법 가운데 살인, 상해, 도둑질에 관한 세 조항이 전해집니다.",
+  },
+  {
+    id: "floor2-gojoseon-mc-12", lessonId: "floor2-gojoseon", type: "multipleChoice",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로 가장 알맞은 것은?\n\"도둑질을 한 사람은 노비로 삼으며, 죄를 면하려면 50만 전을 낸다.\"",
+    options: ["신분의 차이와 개인의 재산이 존재하였다.", "모든 사람이 같은 재산을 가지고 있었다.", "아직 지배자가 존재하지 않았다.", "살인죄를 엄격하게 다스렸다."],
+    correctAnswer: "신분의 차이와 개인의 재산이 존재하였다.", explanation: "노비와 배상 규정을 통해 신분 차이와 개인 재산이 있었음을 알 수 있습니다.",
+  },
+  {
+    id: "floor2-gojoseon-ms-13", lessonId: "floor2-gojoseon", type: "multipleSelect",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습을 모두 고르시오.\n\"남을 다치게 한 사람은 곡식으로 갚는다.\"",
+    options: ["농사를 지었다.", "곡식을 화폐처럼 사용하기도 했다.", "신분의 차이가 존재하였다.", "모든 사람이 같은 지위였다."],
+    correctAnswers: ["농사를 지었다.", "곡식을 화폐처럼 사용하기도 했다."], explanation: "곡식으로 배상했다는 점에서 농경 생활과 곡식의 교환 가치를 알 수 있습니다.",
+  },
+  {
+    id: "floor2-gojoseon-mc-14", lessonId: "floor2-gojoseon", type: "multipleChoice",
+    prompt: "다음 법 조항을 통해 알 수 있는 당시 사회의 모습으로 가장 알맞은 것은?\n\"사람을 죽인 사람은 사형에 처한다.\"",
+    options: ["신분 차이와 개인 재산", "모두 같은 재산", "지배자 없음", "살인을 엄격하게 처벌"],
+    correctAnswer: "살인을 엄격하게 처벌", explanation: "살인한 사람을 사형에 처한 규정은 생명을 중시하고 살인을 엄격히 처벌했음을 보여 줍니다.",
+  },
+  {
+    id: "floor2-gojoseon-mc-15", lessonId: "floor2-gojoseon", type: "multipleChoice",
+    prompt: "철로 만든 도구가 널리 퍼지면서 나타난 변화로 옳지 않은 것은?",
+    options: ["다양한 농기구 제작", "농업 생산력 향상", "철제 무기 사용", "청동 농기구만 사용"],
+    correctAnswer: "청동 농기구만 사용", explanation: "철제 농기구가 널리 쓰이며 농업 생산력이 향상되었습니다.",
+  },
+  {
+    id: "floor2-gojoseon-short-16", lessonId: "floor2-gojoseon", type: "shortAnswer",
+    prompt: "청동기 문화를 바탕으로 성장한 우리 역사상 최초의 국가는 OOO이다.",
+    acceptedAnswers: ["고조선"], explanation: "청동기 문화를 바탕으로 성장한 우리 역사상 최초의 국가는 고조선입니다.",
+  },
+];
