@@ -124,7 +124,7 @@ export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
   },
   {
     id: "floor1-prehistory-tf-04", lessonId: "floor1-prehistory", type: "trueFalse",
-    prompt: "구석기 시대에는 농사를 지을 수 있었다.", correctAnswer: false,
+    prompt: "구석기 시대 사람들은 농사를 지었다.", correctAnswer: false,
     explanation: "구석기 시대에는 사냥과 채집으로 먹을 것을 구했으며, 농사는 신석기 시대에 시작되었습니다.",
   },
   {
@@ -140,7 +140,7 @@ export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
   },
   {
     id: "floor1-prehistory-short-07", lessonId: "floor1-prehistory", type: "shortAnswer",
-    prompt: "돌을 갈아 만들어 도구로 사용하던 시기를 OOO 시대라고 한다.", acceptedAnswers: ["신석기"],
+    prompt: "선사시대 중 돌을 갈아 만들어 도구로 사용하던 시기를 OOO 시대라고 한다.", acceptedAnswers: ["신석기"],
     explanation: "돌을 갈아 만든 간석기를 사용하던 시기를 신석기 시대라고 합니다.",
   },
   {

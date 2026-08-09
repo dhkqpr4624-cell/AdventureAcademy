@@ -40,6 +40,11 @@ import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { AchievementPopup } from "../../components/AchievementPopup";
 import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
+import {
+  ITEM_COLLECTION_QUEST_RULES,
+  canCompleteItemCollectionQuest,
+  removeCollectionQuestItems,
+} from "../../game/quest/itemCollectionQuestRules";
 
 const memoryQuestRareRewardCondition = getQuestRareRewardCondition(
   "quest-floor-2-memory-fragment",
@@ -70,6 +75,7 @@ type BaseCampScreenProps = {
   setRewardClaimed: (questId: string) => void;
   achievementReceived: Record<string, boolean>;
   setAchievementReceived: (achievementId: string) => void;
+  clearedFloorIds: readonly string[];
 };
 
 export function BaseCampScreen({
@@ -93,6 +99,7 @@ export function BaseCampScreen({
   setRewardClaimed,
   achievementReceived,
   setAchievementReceived,
+  clearedFloorIds,
 }: BaseCampScreenProps) {
   const viewportRef = useRef<BaseCampViewportController>(null);
   const interactionLockRef = useRef(false);
@@ -123,12 +130,17 @@ export function BaseCampScreen({
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
     ...(questState[memoryQuestId] === "completed" && questState[tornClothQuestId] === "locked" ? { [tornClothQuestId]: "available" as const } : {}),
   };
-  const hasPrehistoryArtifacts = ["quest-hand-axe", "quest-tanged-point", "quest-comb-pattern-pottery"].every((id) => getItemQuantity(inventoryState, id) > 0);
+  const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
+  const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(
+    inventoryState,
+    clearedFloorIds,
+    prehistoryCollectionRule,
+  );
   const hasMemoryFragment = getItemQuantity(inventoryState, "quest-memory-fragment") > 0;
   const hasTornCloth = getItemQuantity(inventoryState, "quest-torn-cloth") > 0;
   const markerQuestState = {
     ...effectiveQuestState,
-    ...(hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
+    ...(canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
     ...(hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
       ? { [memoryQuestId]: "readyToComplete" as const }
       : {}),
@@ -191,7 +203,7 @@ export function BaseCampScreen({
     dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
-    if (npc.id === "kaiden" && hasPrehistoryArtifacts && effectiveQuestState[prehistoryQuestId] === "active") {
+    if (npc.id === "kaiden" && canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active") {
       setPrehistoryCompletionOpen(true);
       interactionLockRef.current = false;
       return;
@@ -569,8 +581,7 @@ export function BaseCampScreen({
           const rareUnlocked = (floorBestCorrect["floor-1"] ?? 0) >= prehistoryQuestRareRewardCondition.requiredCorrect;
           setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
           setInventoryState((current) => {
-            let next = current;
-            for (const id of ["quest-hand-axe", "quest-tanged-point", "quest-comb-pattern-pottery"]) next = changeItemQuantity(next, id, -1);
+            let next = removeCollectionQuestItems(current, prehistoryCollectionRule);
             if (rareUnlocked) next = changeItemQuantity(next, "weapon-hand-axe", 1);
             return next;
           });

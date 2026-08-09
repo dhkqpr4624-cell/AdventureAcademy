@@ -139,6 +139,8 @@ import {
   isFinalRoom,
 } from "../../game/dungeon/dungeonExplorationResolver";
 import type { FloorId } from "../../game/floor/floorTypes";
+import { dungeonDialogue } from "../../game/dungeon/dungeonDialogue";
+import { getItemCollectionQuestRuleForFloor } from "../../game/quest/itemCollectionQuestRules";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -153,8 +155,8 @@ type DungeonScreenProps = {
   setInventoryState: Dispatch<SetStateAction<InventoryState>>;
   onInventoryChanged: () => void;
   firstObjectiveEventSeen: boolean;
-  seenObjectiveEventIds: Record<string, boolean>;
   onStoryEventSeen: (eventId: string) => void;
+  onCollectionRunReset: () => void;
   onObjectiveAcquired: (correctCount: number) => void;
   onBestCorrect: (correctCount: number) => void;
   floorQuestStarted: boolean;
@@ -220,7 +222,7 @@ type CombatVisuals = {
   monster: MonsterAnimationController;
   monsterRoot: THREE.Group;
   monsterMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  monsterTexture: THREE.Texture;
+  monsterTexture: THREE.Texture | null;
   camera: THREE.PerspectiveCamera;
   dungeonCamera: DungeonCameraController;
 };
@@ -289,8 +291,8 @@ export function DungeonScreen({
   setInventoryState,
   onInventoryChanged,
   firstObjectiveEventSeen,
-  seenObjectiveEventIds,
   onStoryEventSeen,
+  onCollectionRunReset,
   onObjectiveAcquired,
   onBestCorrect,
   floorQuestStarted,
@@ -336,6 +338,7 @@ export function DungeonScreen({
   const runCorrectCountRef = useRef(0);
   const questionIndexRef = useRef(0);
   const monsterPositionTargetRef = useRef(new THREE.Vector3(0, 0.05, -5));
+  const monsterVisualRevisionRef = useRef(0);
   const criticalStateRef = useRef<CriticalCombatState>(INITIAL_CRITICAL_STATE);
   const forceCriticalNextAttackRef = useRef(false);
   const itemProcessingRef = useRef(false);
@@ -357,14 +360,24 @@ export function DungeonScreen({
   const activeQuestionsRef = useRef(
     getDungeonQuestionSet("normal-garlic-a"),
   );
-  const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>(
-    restoreRoomProgress(
+  const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>((() => {
+    const restored = restoreRoomProgress(
       dungeonMap,
       savedFloorRun?.floorId === floorId
         ? savedFloorRun.roomProgress
         : undefined,
-    ),
-  );
+    );
+    const collectionRule = getItemCollectionQuestRuleForFloor(floorId);
+    if (collectionRule) {
+      collectionRule.itemIds.forEach((itemId) => {
+        if (getItemQuantity(inventoryState, itemId) === 0) {
+          const roomId = collectionRule.roomByItemId[itemId];
+          if (restored[roomId]) restored[roomId] = { roomId, eventCompleted: false };
+        }
+      });
+    }
+    return restored;
+  })());
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [floorIntroVisible, setFloorIntroVisible] = useState(true);
@@ -413,8 +426,8 @@ export function DungeonScreen({
   );
   const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
   const [mustAttackNextTurn, setMustAttackNextTurn] = useState(false);
-  const [combatMessage, setCombatMessage] = useState(
-    floorId === "floor-1" ? "몬스터가 나타났다!" : "마늘킹이 나타났다!",
+  const [combatMessage, setCombatMessage] = useState(() =>
+    dungeonDialogue.encounter(floorId === "floor-1" ? "멧돼지" : "마늘킹"),
   );
   const [floatingText, setFloatingText] = useState<string | null>(null);
   const [damageFlash, setDamageFlash] = useState(false);
@@ -478,6 +491,7 @@ export function DungeonScreen({
   const enterDefeatedState = () => {
     if (defeatProcessingRef.current) return;
     defeatProcessingRef.current = true;
+    onCollectionRunReset();
     interactionLockRef.current = true;
     setInteractionLocked(true);
     setExitConfirmOpen(false);
@@ -709,19 +723,6 @@ export function DungeonScreen({
     scene.add(monsterBillboard);
 
     const monsterAnimation = new MonsterAnimationController(monster);
-    const monsterTexture = new THREE.TextureLoader().load(
-      `${import.meta.env.BASE_URL}assets/monsters/test-monster.png`,
-      (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.magFilter = THREE.NearestFilter;
-        texture.minFilter = THREE.NearestFilter;
-        texture.generateMipmaps = false;
-        texture.needsUpdate = true;
-        monsterMaterial.map = texture;
-        monsterMaterial.needsUpdate = true;
-      },
-    );
-
     const sword = new SwordViewModel(camera);
     const weapon = new WeaponAnimationController(sword, camera);
     visualsRef.current = {
@@ -730,7 +731,7 @@ export function DungeonScreen({
       monster: monsterAnimation,
       monsterRoot: monsterBillboard,
       monsterMesh: monster,
-      monsterTexture,
+      monsterTexture: null,
       camera,
       dungeonCamera,
     };
@@ -790,10 +791,7 @@ export function DungeonScreen({
       monsterAnimation.dispose();
       weapon.dispose();
       sword.dispose();
-      monsterTexture.dispose();
-      if (activeMonsterTexture && activeMonsterTexture !== monsterTexture) {
-        activeMonsterTexture.dispose();
-      }
+      activeMonsterTexture?.dispose();
       monsterBillboard.removeFromParent();
       monster.removeFromParent();
       monsterGeometry.dispose();
@@ -816,11 +814,15 @@ export function DungeonScreen({
     if (!visuals) {
       return Promise.resolve();
     }
+    const revision = ++monsterVisualRevisionRef.current;
+    visuals.monsterRoot.visible = false;
+    visuals.monsterMesh.material.map = null;
+    visuals.monsterMesh.material.needsUpdate = true;
     return new Promise((resolve) => {
       new THREE.TextureLoader().load(
         definition.image,
         (texture) => {
-          if (!visualsRef.current) {
+          if (!visualsRef.current || revision !== monsterVisualRevisionRef.current) {
             texture.dispose();
             resolve();
             return;
@@ -840,13 +842,17 @@ export function DungeonScreen({
             1,
           );
           visuals.monsterMesh.position.set(...definition.anchor);
-          if (previousTexture !== texture) {
-            previousTexture.dispose();
-          }
+          if (previousTexture && previousTexture !== texture) previousTexture.dispose();
           resolve();
         },
         undefined,
-        () => resolve(),
+        () => {
+          if (revision === monsterVisualRevisionRef.current) {
+            visuals.monsterMesh.material.map = null;
+            visuals.monsterMesh.material.needsUpdate = true;
+          }
+          resolve();
+        },
       );
     });
   };
@@ -882,7 +888,7 @@ export function DungeonScreen({
       setPhase("enemyTurn");
       const enemyName = activeMonsterName();
       const attackDamage = activeEnemyAttackDamage();
-      setCombatMessage(`${enemyName}의 공격!`);
+      setCombatMessage(dungeonDialogue.attackTitle(enemyName));
       await visualsRef.current?.monster.play("attack", () => {
         if (!mountedRef.current) {
           return;
@@ -970,7 +976,7 @@ export function DungeonScreen({
   const playVictory = async () => {
     const finalResolution = resolveCurrentCombat();
     setPhase("victory");
-    setCombatMessage(`${activeMonsterName()}을 쓰러뜨렸다!`);
+    setCombatMessage(dungeonDialogue.defeatedMonster(activeMonsterName()));
     await visualsRef.current?.monster.play("defeat");
     if (!mountedRef.current) {
       return;
@@ -987,13 +993,13 @@ export function DungeonScreen({
       visualsRef.current.sword.root.visible = true;
     }
     setPhase("awaitPlayerAttack");
-    setCombatMessage(`${playerState.name || DEFAULT_PLAYER_NAME}의 공격!`);
+    setCombatMessage(dungeonDialogue.attackTitle(playerState.name || DEFAULT_PLAYER_NAME));
     setFloatingText(null);
   };
 
   const playPlayerAttack = async (isCorrect: boolean) => {
     setPhase("playerAttack");
-    setCombatMessage(`${playerState.name || DEFAULT_PLAYER_NAME}가 검을 휘두른다!`);
+    setCombatMessage(dungeonDialogue.swingSword(playerState.name || DEFAULT_PLAYER_NAME));
     const randomValue =
       isCorrect && forceCriticalNextAttackRef.current ? 0 : Math.random();
     const criticalResult = resolveCritical(
@@ -1060,10 +1066,10 @@ export function DungeonScreen({
     if (questionIndexRef.current < combatQuestionCount - 1) {
       if (criticalStateRef.current.pendingSkipEnemyTurn) {
         setPhase("awaitStunSkip");
-        setCombatMessage(`${activeMonsterName()}은 기절해서 움직일 수 없다!`);
+        setCombatMessage(dungeonDialogue.stunned(activeMonsterName()));
       } else {
         setPhase("awaitEnemyTurn");
-        setCombatMessage(`${activeMonsterName()}의 턴!`);
+        setCombatMessage(dungeonDialogue.turn(activeMonsterName()));
       }
       return;
     }
@@ -1079,10 +1085,10 @@ export function DungeonScreen({
       await playVictory();
     } else if (criticalStateRef.current.pendingSkipEnemyTurn) {
       setPhase("awaitStunSkip");
-      setCombatMessage(`${activeMonsterName()}은 기절해서 움직일 수 없다!`);
+      setCombatMessage(dungeonDialogue.stunned(activeMonsterName()));
     } else {
       setPhase("awaitEnemyTurn");
-      setCombatMessage(`${activeMonsterName()}의 턴!`);
+      setCombatMessage(dungeonDialogue.turn(activeMonsterName()));
     }
   };
 
@@ -1117,7 +1123,7 @@ export function DungeonScreen({
     selectedPotionRef.current = kind;
     setSelectedPotion(kind);
     setPhase("awaitItemUse");
-    setCombatMessage(`${potionName(kind)}을 사용할까?`);
+    setCombatMessage(dungeonDialogue.askUseItem(potionName(kind)));
   };
 
   const cancelItemSelect = () => {
@@ -1174,9 +1180,10 @@ export function DungeonScreen({
     onInventoryChanged();
     setMustAttackNextTurn(true);
     setPhase("itemUse");
-    setCombatMessage(
-      `${playerState.name || DEFAULT_PLAYER_NAME}는 ${potionName(kind)}을 사용했다.`,
-    );
+    setCombatMessage(dungeonDialogue.usedItem(
+      playerState.name || DEFAULT_PLAYER_NAME,
+      potionName(kind),
+    ));
   };
 
   const applyPotionHealing = () => {
@@ -1223,7 +1230,7 @@ export function DungeonScreen({
         setSelectedPotion(null);
         itemProcessingRef.current = false;
         setPhase("awaitEnemyTurn");
-        setCombatMessage(`${activeMonsterName()}의 턴!`);
+        setCombatMessage(dungeonDialogue.turn(activeMonsterName()));
         return;
       }
 
@@ -1245,7 +1252,7 @@ export function DungeonScreen({
         if (questionIndexRef.current >= combatQuestionCount - 1) {
           pendingResultRef.current = null;
           setPhase("awaitEscape");
-          setCombatMessage(`${activeMonsterName()}이 경계하며 뒤로 물러난다.`);
+          setCombatMessage(dungeonDialogue.waryRetreat(activeMonsterName()));
           processingRef.current = false;
           return;
         }
@@ -1281,7 +1288,7 @@ export function DungeonScreen({
           processingRef.current = false;
         } else {
           setPhase("awaitEscape");
-          setCombatMessage(`${activeMonsterName()}이 경계하며 뒤로 물러난다.`);
+          setCombatMessage(dungeonDialogue.waryRetreat(activeMonsterName()));
         }
         itemProcessingRef.current = false;
         return;
@@ -1369,9 +1376,10 @@ export function DungeonScreen({
     setGoldDrop(0);
     setFloatingText(null);
     setDamageFlash(false);
-    setCombatMessage(
-      `${activeCombatKindRef.current === "elite" ? "정예 몬스터, " : ""}${activeMonsterName()}이 나타났다!`,
-    );
+    setCombatMessage(dungeonDialogue.encounter(
+      activeMonsterName(),
+      activeCombatKindRef.current === "elite",
+    ));
     setPhase("intro");
   };
 
@@ -1396,28 +1404,27 @@ export function DungeonScreen({
     activeQuestionsRef.current = questions;
     setActiveQuestions(questions);
     activeCombatKindRef.current = combatKind;
-    setActiveCombatKind(combatKind);
     activeCombatRoomIdRef.current = roomId;
-    setActiveCombatRoomId(roomId);
-    void applyMonsterVisual(getMonsterVisualDefinition(config.monsterId));
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    visualsRef.current?.dungeonCamera.transitionToPose(
-      config.combatCameraPose,
-      reducedMotion,
-      () => {
-        if (
-          !mountedRef.current ||
-          activeCombatRoomIdRef.current !== roomId ||
-          roomProgressRef.current[roomId]?.eventCompleted
-        ) {
-          return;
-        }
-        initializeCombatEncounterState();
-        setDungeonMode("combat");
-      },
-    );
+    void (async () => {
+      await applyMonsterVisual(getMonsterVisualDefinition(config.monsterId));
+      if (!mountedRef.current || activeCombatRoomIdRef.current !== roomId) return;
+      setActiveCombatKind(combatKind);
+      setActiveCombatRoomId(roomId);
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      visualsRef.current?.dungeonCamera.transitionToPose(
+        config.combatCameraPose,
+        reducedMotion,
+        () => {
+          if (
+            !mountedRef.current ||
+            activeCombatRoomIdRef.current !== roomId ||
+            roomProgressRef.current[roomId]?.eventCompleted
+          ) return;
+          initializeCombatEncounterState();
+          setDungeonMode("combat");
+        },
+      );
+    })();
   };
 
   const continueExplorationAfterResult = (
@@ -1599,8 +1606,8 @@ export function DungeonScreen({
       };
       const artifactId = floorId === "floor-1" ? artifactByRoomId[roomId] : undefined;
       if (artifactId && !roomProgressRef.current[roomId]?.eventCompleted) {
-        const eventSaveId = `floor-1:${artifactId}`;
-        if (!seenObjectiveEventIds[eventSaveId]) {
+        const itemId = artifactId === "hand-axe" ? "quest-hand-axe" : artifactId === "tanged-point" ? "quest-tanged-point" : "quest-comb-pattern-pottery";
+        if (getItemQuantity(inventoryState, itemId) === 0) {
           setActiveArtifactEvent(artifactId);
           return;
         }
@@ -1789,6 +1796,7 @@ export function DungeonScreen({
     if (dungeonExitProcessingRef.current) return;
     dungeonExitProcessingRef.current = true;
     setRunActionBusy(true);
+    onCollectionRunReset();
     restartTestDungeon(false);
     onDungeonAbandoned();
     onNavigate("baseCamp");
@@ -2185,7 +2193,6 @@ export function DungeonScreen({
               >
                 이동 계속하기
               </button>
-              <button type="button" onClick={() => onNavigate("title")}>타이틀로 돌아가기</button>
             </div>
           </div>
         )}
@@ -2213,14 +2220,6 @@ export function DungeonScreen({
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                className="dungeon-reset-button"
-                disabled={dungeonMode === "moving"}
-                onClick={() => restartTestDungeon()}
-              >
-                던전 처음부터 다시 시작
-              </button>
               {import.meta.env.DEV && (
                 <small className="dungeon-debug">
                   current: {currentRoomId} · previous: {previousRoomId ?? "none"} ·

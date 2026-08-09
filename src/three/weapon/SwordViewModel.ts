@@ -64,7 +64,7 @@ export const GOJOSEON_BRONZE_SWORD_DEFINITION: SwordDefinition = {
 export const HAND_AXE_DEFINITION: SwordDefinition = {
   ...BASIC_SWORD_DEFINITION,
   id: "hand-axe",
-  textureUrl: `${import.meta.env.BASE_URL}assets/items/hand-axe.png`,
+  textureUrl: `${import.meta.env.BASE_URL}assets/swords/hand-axe.png`,
 };
 
 export function getSwordDefinitionForEquippedItem(

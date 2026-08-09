@@ -132,7 +132,6 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     ],
   ),
   "npc-kaiden-floor-2-quest-available": sequence("npc-kaiden-floor-2-quest-available", "kaiden", "serious", [
-    "포탈에 빠져 이 던전에 갇힌 이상, 이 던전을 클리어해서 나가는 방법밖에는 없다.",
     "루나의 조사에 따르면, 던전 근처에서 뒤틀린 기억의 조각이 발견되었다고 한다.",
     "분명 던전 2층 안에, 이 조각과 딱 맞는 조각이 1개 더 있을 것으로 보인다.",
     "{{playerName}}, 던전 2층으로 내려가서 뒤틀린 기억의 조각을 찾아 오도록.",

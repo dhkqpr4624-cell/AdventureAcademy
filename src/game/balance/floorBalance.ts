@@ -11,7 +11,7 @@ export const POTION_HEALING = {
   medium: 35,
 } as const;
 
-export type FloorRewardKind = "weaponSkin" | "armor";
+export type FloorRewardKind = "weaponSkin" | "armor" | "finalBoss";
 export type CombatDifficultyKind = "normal" | "elite";
 
 const asFloorNumber = (floorNumber: number) =>
@@ -24,6 +24,7 @@ export function getFloorNumber(floorId: string): number {
 
 export function getFloorRewardKind(floorNumber: number): FloorRewardKind {
   const floor = asFloorNumber(floorNumber);
+  if (floor === 10) return "finalBoss";
   return floor >= 3 && floor % 2 === 1 ? "armor" : "weaponSkin";
 }
 

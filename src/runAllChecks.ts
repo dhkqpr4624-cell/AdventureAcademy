@@ -43,6 +43,8 @@ import { runInventoryChecks } from "./game/inventory/inventoryChecks";
 import { runPhase21ArmorDebugChecks } from "./debug/Phase21ArmorDebug";
 import { runFloorBalanceChecks } from "./game/balance/floorBalanceChecks";
 import { runDungeonExplorationChecks } from "./game/dungeon/dungeonExplorationChecks";
+import { runDungeonDialogueChecks } from "./game/dungeon/dungeonDialogueChecks";
+import { runItemCollectionQuestRulesChecks } from "./game/quest/itemCollectionQuestRulesChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -93,6 +95,8 @@ const checks = [
   ["inventory/shop checks", runInventoryChecks],
   ["phase21 armor/debug checks", runPhase21ArmorDebugChecks],
   ["phase22 floor balance checks", runFloorBalanceChecks],
+  ["dungeon dialogue checks", runDungeonDialogueChecks],
+  ["item collection quest rule checks", runItemCollectionQuestRulesChecks],
 ] as const;
 
 for (const [label, run] of checks) {

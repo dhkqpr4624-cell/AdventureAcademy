@@ -18,6 +18,11 @@ import { AutoSaveCoordinator } from "../save/AutoSaveCoordinator";
 import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState, type GameSaveState } from "../save/saveStateAdapter";
 import type { SaveReason } from "../save/saveTypes";
 import { PlayerNamePopup } from "../components/PlayerNamePopup";
+import {
+  clearCollectionQuestEventFlags,
+  getItemCollectionQuestRuleForFloor,
+  removeCollectionQuestItems,
+} from "../game/quest/itemCollectionQuestRules";
 
 export function App() {
   const loaded = useRef(SaveManager.load());
@@ -119,6 +124,7 @@ export function App() {
         setRewardClaimed={(questId) => setGame((current) => ({ ...current, rewardClaimed: { ...current.rewardClaimed, [questId]: true } }))}
         achievementReceived={game.achievementReceived}
         setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
+        clearedFloorIds={game.clearedFloorIds}
       />;
       case "dungeon": return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
@@ -131,9 +137,18 @@ export function App() {
         savedFloorRun={game.currentFloorRun}
         onFloorRunChanged={updateFloorRun}
         firstObjectiveEventSeen={Boolean(game.firstObjectiveEventSeen[activeFloorId])}
-        seenObjectiveEventIds={game.firstObjectiveEventSeen}
         onStoryEventSeen={(eventId) => {
           setGame((current) => ({ ...current, firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, [eventId]: true } }));
+          requestSave("itemAcquired");
+        }}
+        onCollectionRunReset={() => {
+          const rule = getItemCollectionQuestRuleForFloor(activeFloorId);
+          if (!rule) return;
+          setGame((current) => ({
+            ...current,
+            inventoryState: removeCollectionQuestItems(current.inventoryState, rule),
+            firstObjectiveEventSeen: clearCollectionQuestEventFlags(current.firstObjectiveEventSeen, rule),
+          }));
           requestSave("itemAcquired");
         }}
         onObjectiveAcquired={(correctCount) => {
