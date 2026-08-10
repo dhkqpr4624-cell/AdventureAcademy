@@ -20,7 +20,7 @@ import { runStoryPresentationChecks } from "./game/story/storyPresentationChecks
 import { runFloorUnlockChecks } from "./game/floor/floorUnlockChecks";
 import { runQuestMarkerChecks } from "./game/quest/questMarkerChecks";
 import { runBaseCampInteractionChecks } from "./game/baseCamp/baseCampInteractionChecks";
-import { runAutoSaveChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
+import { runAutoSaveChecks, runRewardRevealCompatibilityChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
 import { runStoryChoiceChecks } from "./game/story/storyChoiceChecks";
 import { runEliteCombatChecks } from "./game/combat/eliteCombatChecks";
 import { runEliteRoomChecks } from "./game/dungeon/eliteRoomChecks";
@@ -89,6 +89,7 @@ const checks = [
   ["dungeon validator checks", runDungeonValidatorChecks],
   ["save checks", runSaveChecks],
   ["save migration checks", runSaveMigrationChecks],
+  ["reward reveal compatibility checks", runRewardRevealCompatibilityChecks],
   ["save backup checks", runSaveBackupChecks],
   ["autosave checks", runAutoSaveChecks],
   ["story choice checks", runStoryChoiceChecks],

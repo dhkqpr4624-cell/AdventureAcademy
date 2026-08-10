@@ -1,10 +1,11 @@
-import { runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
+import { runRewardRevealCompatibilityChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
 import { changeItemQuantity, getItemQuantity } from "./game/inventory/inventoryState";
 import { createInitialGameSaveState, createSaveDataFromGameState } from "./save/saveStateAdapter";
 import { validateCurrentSave } from "./save/saveSchema";
 
 runSaveChecks();
 runSaveMigrationChecks();
+runRewardRevealCompatibilityChecks();
 const state = createInitialGameSaveState();
 state.playerState.name = "아라";
 state.floorBestCorrect["floor-1"] = 7;
