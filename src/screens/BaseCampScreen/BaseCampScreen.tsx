@@ -73,6 +73,8 @@ type BaseCampScreenProps = {
   floorBestCorrect: Record<string, number>;
   rewardClaimed: Record<string, boolean>;
   setRewardClaimed: (questId: string) => void;
+  rewardRevealed: Record<string, boolean>;
+  setRewardRevealed: (questId: string) => void;
   achievementReceived: Record<string, boolean>;
   setAchievementReceived: (achievementId: string) => void;
   clearedFloorIds: readonly string[];
@@ -97,6 +99,8 @@ export function BaseCampScreen({
   floorBestCorrect,
   rewardClaimed,
   setRewardClaimed,
+  rewardRevealed,
+  setRewardRevealed,
   achievementReceived,
   setAchievementReceived,
   clearedFloorIds,
@@ -303,6 +307,21 @@ export function BaseCampScreen({
     void viewportRef.current?.restore(450);
   };
 
+  const revealRewardAndCompleteQuest = (questId: string) => {
+    setRewardRevealed(questId);
+    setQuestState((current) => ({
+      ...current,
+      [questId]: "completed",
+      ...(questId === prehistoryQuestId && current[memoryQuestId] !== "completed"
+        ? { [memoryQuestId]: "available" as const }
+        : {}),
+      ...(questId === memoryQuestId && current[tornClothQuestId] !== "completed"
+        ? { [tornClothQuestId]: "available" as const }
+        : {}),
+    }));
+    onAutoSave("questCompleted");
+  };
+
   return (
     <main className="game-screen base-camp-screen">
       <BaseCampViewport
@@ -481,6 +500,7 @@ export function BaseCampScreen({
       {achievementOpen && <AchievementPopup
         floorBestCorrect={floorBestCorrect}
         achievementReceived={achievementReceived}
+        rewardRevealed={rewardRevealed}
         onClose={() => setAchievementOpen(false)}
         onClaim={(achievementId) => {
           const achievement = ACHIEVEMENT_DEFINITIONS.find((entry) => entry.id === achievementId);
@@ -498,16 +518,19 @@ export function BaseCampScreen({
       }} />}
       {memoryCompletionOpen && <MemoryCompletionStory beforeUrl={memoryBeforeUrl} afterUrl={memoryAfterUrl} onComplete={() => {
         setMemoryCompletionOpen(false);
+        revealRewardAndCompleteQuest(memoryQuestId);
         setRewardOpen(true);
       }} />}
       {prehistoryCompletionOpen && <PrehistoryCompletionStory playerName={playerState.name || "플레이어"} onComplete={() => {
         setPrehistoryCompletionOpen(false);
+        revealRewardAndCompleteQuest(prehistoryQuestId);
         setPrehistoryRewardOpen(true);
       }} />}
       {tornClothCompletionOpen && <TornClothCompletionStory
         playerName={playerState.name || "플레이어"}
         onComplete={() => {
           setTornClothCompletionOpen(false);
+          revealRewardAndCompleteQuest(tornClothQuestId);
           setTornClothRewardOpen(true);
         }}
       />}
@@ -527,13 +550,6 @@ export function BaseCampScreen({
             if (rareUnlocked) next = changeItemQuantity(next, "weapon-gojoseon-bronze-dagger", 1);
             return next;
           });
-          setQuestState((current) => ({
-            ...current,
-            [memoryQuestId]: "completed",
-            [tornClothQuestId]: current[tornClothQuestId] === "completed"
-                ? "completed"
-                : "available",
-          }));
           setRewardClaimed(memoryQuestId);
           if (rareUnlocked) {
             setAchievementReceived("achievement-floor-2-rare-reward");
@@ -560,7 +576,6 @@ export function BaseCampScreen({
             if (rareUnlocked) next = changeItemQuantity(next, "armor-gwanggaeto", 1);
             return next;
           });
-          setQuestState((current) => ({ ...current, [tornClothQuestId]: "completed" }));
           setRewardClaimed(tornClothQuestId);
           if (rareUnlocked) {
             setAchievementReceived("achievement-floor-3-rare-reward");
@@ -585,7 +600,6 @@ export function BaseCampScreen({
             if (rareUnlocked) next = changeItemQuantity(next, "weapon-hand-axe", 1);
             return next;
           });
-          setQuestState((current) => ({ ...current, [prehistoryQuestId]: "completed", [memoryQuestId]: current[memoryQuestId] === "completed" ? "completed" : "available" }));
           setRewardClaimed(prehistoryQuestId);
           if (rareUnlocked) setAchievementReceived("achievement-floor-1-rare-reward");
           onAutoSave("questCompleted");

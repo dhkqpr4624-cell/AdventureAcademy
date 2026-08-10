@@ -163,6 +163,28 @@ export function runNpcChecks() {
     "Kaiden must retain the available quest story",
   );
   assert(
+    resolveNpcStorySequence("kaiden", {
+      "quest-floor-1-prehistory": "completed",
+      "quest-floor-2-memory-fragment": "completed",
+      "quest-floor-3-torn-cloth": "active",
+    }) === "npc-kaiden-default",
+    "completed Kaiden quests must resolve to daily dialogue",
+  );
+  assert(
+    resolveNpcStorySequence("luna", {
+      "quest-floor-3-torn-cloth": "completed",
+    }) === "npc-luna-default",
+    "completed Luna quest must resolve to daily dialogue",
+  );
+  const lunaDailyDialogue = NPC_STORY_SEQUENCES["npc-luna-default"].scenes[0]?.steps.find(
+    (step) => step.type === "dialogue",
+  );
+  assert(
+    lunaDailyDialogue?.type === "dialogue" &&
+      lunaDailyDialogue.text.startsWith("{{playerName}}!"),
+    "Luna daily dialogue must address the player by name",
+  );
+  assert(
     resolveNpcStorySequence("luna", {
       "quest-floor-1-prehistory": "available",
     }) === "npc-luna-default" &&

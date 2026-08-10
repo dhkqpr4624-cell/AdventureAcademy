@@ -122,6 +122,8 @@ export function App() {
         floorBestCorrect={game.floorBestCorrect}
         rewardClaimed={game.rewardClaimed}
         setRewardClaimed={(questId) => setGame((current) => ({ ...current, rewardClaimed: { ...current.rewardClaimed, [questId]: true } }))}
+        rewardRevealed={game.firstObjectiveEventSeen}
+        setRewardRevealed={(questId) => setGame((current) => ({ ...current, firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, [`reward-revealed:${questId}`]: true } }))}
         achievementReceived={game.achievementReceived}
         setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
         clearedFloorIds={game.clearedFloorIds}

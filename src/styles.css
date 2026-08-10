@@ -1349,6 +1349,19 @@ button:focus-visible {
   width: 54px; height: 54px; padding: 3px; object-fit: contain;
   border: 2px solid #b38342; background: #241e20; image-rendering: pixelated;
 }
+.achievement-reward-unknown {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid rgba(232, 199, 121, .55);
+  border-radius: 8px;
+  background: rgba(15, 13, 10, .72);
+  color: #e8c779;
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.65rem;
+  line-height: 1;
+}
 .achievement-card-action { display: grid; gap: 8px; text-align: center; }
 .achievement-state { color: #e2cfb2; font-size: .75rem; font-weight: 900; }
 .achievement-card-action button,

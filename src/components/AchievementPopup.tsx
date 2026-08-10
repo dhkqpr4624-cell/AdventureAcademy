@@ -3,11 +3,13 @@ import { ACHIEVEMENT_DEFINITIONS } from "../data/achievementDefinitions";
 export function AchievementPopup({
   floorBestCorrect,
   achievementReceived,
+  rewardRevealed,
   onClaim,
   onClose,
 }: {
   floorBestCorrect: Record<string, number>;
   achievementReceived: Record<string, boolean>;
+  rewardRevealed: Record<string, boolean>;
   onClaim: (achievementId: string) => void;
   onClose: () => void;
 }) {
@@ -29,6 +31,7 @@ export function AchievementPopup({
             );
             const received = Boolean(achievementReceived[achievement.id]);
             const completed = progress >= achievement.requiredCorrect;
+            const revealed = Boolean(rewardRevealed[`reward-revealed:${achievement.rewardStateId}`]);
             return (
               <article className={`achievement-card ${received ? "is-received" : completed ? "is-completed" : "is-progress"}`} key={achievement.id}>
                 <div className="achievement-floor-medal" aria-hidden="true">★</div>
@@ -40,7 +43,11 @@ export function AchievementPopup({
                 </div>
                 <div className="achievement-reward">
                   <span>희귀 보상</span>
-                  <img src={achievement.rewardIcon} alt={achievement.title} draggable={false} />
+                  {revealed ? (
+                    <img src={achievement.rewardIcon} alt={achievement.title} draggable={false} />
+                  ) : (
+                    <span className="achievement-reward-unknown" aria-label="미공개 보상">?</span>
+                  )}
                 </div>
                 <div className="achievement-card-action">
                   <span className="achievement-state">{received ? "완료" : completed ? "달성" : "진행 중"}</span>
