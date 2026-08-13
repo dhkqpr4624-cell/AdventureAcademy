@@ -58,6 +58,9 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
     aspectRatio: 2 / 3,
     anchor: [0, -0.04, 0],
   },
+  "gold-crown-wraith": { id: "gold-crown-wraith", name: "금관의 원혼", image: `${import.meta.env.BASE_URL}assets/monsters/gold-crown-wraith.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
+  "corrupted-gaya-pottery": { id: "corrupted-gaya-pottery", name: "오염된 가야 토기", image: `${import.meta.env.BASE_URL}assets/monsters/corrupted-gaya-pottery.png`, displayScale: 1.08, aspectRatio: 2 / 3, anchor: [0, -0.03, 0] },
+  "silla-cheonma": { id: "silla-cheonma", name: "신라의 천마", image: `${import.meta.env.BASE_URL}assets/monsters/silla-cheonma.png`, displayScale: 1.14, aspectRatio: 3 / 2, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(
