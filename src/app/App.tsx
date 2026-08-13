@@ -90,10 +90,14 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-3"
+    const activeFloorId = game.currentFloorId === "floor-4"
+      ? "floor-4"
+      : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-3"
+    const activeFloorQuestId = activeFloorId === "floor-4"
+      ? "quest-floor-4-jeon-rescue"
+      : activeFloorId === "floor-3"
       ? "quest-floor-3-torn-cloth"
       : activeFloorId === "floor-2"
         ? "quest-floor-2-memory-fragment"
