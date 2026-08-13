@@ -39,6 +39,15 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     stackable: false,
     equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(3) },
   },
+  "weapon-chiljido": {
+    id: "weapon-chiljido",
+    name: "칠지도",
+    type: "weaponSkin",
+    rarity: "rare",
+    description: "백제의 칠지도를 본뜬 희귀 무기 스킨이다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/chiljido.png`,
+    stackable: false,
+  },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",

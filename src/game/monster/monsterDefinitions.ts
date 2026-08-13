@@ -34,6 +34,30 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "floor1-boar": { id: "floor1-boar", name: "멧돼지", image: floor1BoarImage, displayScale: 1.08, aspectRatio: 3 / 2, anchor: [0, -0.03, 0] },
   "floor1-cave-bear": { id: "floor1-cave-bear", name: "동굴곰", image: floor1CaveBearImage, displayScale: 1.1, aspectRatio: 3 / 2, anchor: [0, -0.03, 0] },
   "floor1-mammoth": { id: "floor1-mammoth", name: "매머드", image: floor1MammothImage, displayScale: 1.2, aspectRatio: 3 / 2, anchor: [0, -0.04, 0] },
+  "baekje-smile": {
+    id: "baekje-smile",
+    name: "백제의 미소",
+    image: `${import.meta.env.BASE_URL}assets/monsters/baekje-smile.png`,
+    displayScale: 1.08,
+    aspectRatio: 3 / 2,
+    anchor: [0, -0.03, 0],
+  },
+  "goguryeo-samjogo": {
+    id: "goguryeo-samjogo",
+    name: "고구려 삼족오",
+    image: `${import.meta.env.BASE_URL}assets/monsters/goguryeo-samjogo.png`,
+    displayScale: 1.08,
+    aspectRatio: 3 / 2,
+    anchor: [0, -0.03, 0],
+  },
+  "twisted-pensive-bodhisattva": {
+    id: "twisted-pensive-bodhisattva",
+    name: "뒤틀린 반가사유상",
+    image: `${import.meta.env.BASE_URL}assets/monsters/twisted-pensive-bodhisattva.png`,
+    displayScale: 1.14,
+    aspectRatio: 2 / 3,
+    anchor: [0, -0.04, 0],
+  },
 };
 
 export function getMonsterVisualDefinition(

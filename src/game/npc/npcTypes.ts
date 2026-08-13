@@ -1,6 +1,6 @@
 import type { BaseCampNpcSlotId } from "./baseCampNpcSlots";
 
-export type NpcId = "luna" | "theo" | "kaiden";
+export type NpcId = "luna" | "theo" | "kaiden" | "jeon";
 
 export type NpcDefinition = {
   id: NpcId;

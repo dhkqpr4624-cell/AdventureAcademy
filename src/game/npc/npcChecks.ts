@@ -91,7 +91,7 @@ export function runNpcChecks() {
       );
     }
   }
-  assert(occupiedSlots.size === 3, "all three NPCs must use different slots");
+  assert(occupiedSlots.size === 4, "all four NPCs must use different slots");
   const identityExpectations = {
     luna: {
       displayName: "루나",
@@ -110,6 +110,12 @@ export function runNpcChecks() {
       role: "지휘관",
       baseCampDisplayRole: "지휘관",
       defaultStorySequenceId: "npc-kaiden-default",
+    },
+    jeon: {
+      displayName: "전",
+      role: "기억을 잃은 남자",
+      baseCampDisplayRole: "기억을 잃은 남자",
+      defaultStorySequenceId: "npc-jeon-default",
     },
   } as const satisfies Record<
     NpcId,

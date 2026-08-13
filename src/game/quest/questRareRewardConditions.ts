@@ -27,6 +27,12 @@ export const QUEST_RARE_REWARD_CONDITIONS: Record<
     requiredCorrect: 6,
     totalQuestions: 8,
   },
+  "quest-floor-4-jeon-rescue": {
+    questId: "quest-floor-4-jeon-rescue",
+    floorId: "floor-4",
+    requiredCorrect: 9,
+    totalQuestions: 12,
+  },
 };
 
 export function getQuestRareRewardCondition(

@@ -21,6 +21,9 @@ const commonIdle = {
   maxBlinkIntervalMs: 10000,
 };
 
+const transparentPlaceholder =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
 export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
   {
     id: "luna",
@@ -40,7 +43,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       questAvailableStorySequenceId: "npc-luna-floor-3-quest-available",
       questActiveStorySequenceId: "npc-luna-floor-3-quest-active",
     },
-    offeredQuestIds: ["quest-floor-3-torn-cloth"],
+    offeredQuestIds: ["quest-floor-3-torn-cloth", "quest-floor-4-jeon-rescue"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
   },
   {
@@ -82,6 +85,27 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     },
     offeredQuestIds: ["quest-floor-1-prehistory", "quest-floor-2-memory-fragment"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden),
+  },
+  {
+    id: "jeon",
+    displayName: "전",
+    role: "기억을 잃은 남자",
+    baseCampDisplayRole: "기억을 잃은 남자",
+    baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.jeon,
+    idle: {
+      ...commonIdle,
+      standingImage: transparentPlaceholder,
+      blinkSpriteSheet: transparentPlaceholder,
+      blinkFrameCount: 1,
+      blinkFrameWidth: 1,
+      blinkFrameHeight: 1,
+    },
+    portraits: {
+      default: `${import.meta.env.BASE_URL}assets/story/portraits/jeon.png`,
+    },
+    dialogue: { defaultStorySequenceId: "npc-jeon-default" },
+    offeredQuestIds: [],
+    placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.jeon),
   },
 ];
 

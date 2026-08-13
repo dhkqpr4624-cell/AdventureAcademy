@@ -1,4 +1,4 @@
-export type FloorId = "floor-1" | "floor-2" | "floor-3";
+export type FloorId = "floor-1" | "floor-2" | "floor-3" | "floor-4";
 
 export type FloorDefinition = {
   id: FloorId;

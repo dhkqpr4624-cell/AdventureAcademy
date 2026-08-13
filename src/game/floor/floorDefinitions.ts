@@ -22,6 +22,13 @@ export const FLOOR_DEFINITIONS: readonly FloorDefinition[] = [
     questId: "quest-floor-3-torn-cloth",
     questionCount: 12,
   },
+  {
+    id: "floor-4",
+    order: 4,
+    title: "4층",
+    questId: "quest-floor-4-jeon-rescue",
+    questionCount: 12,
+  },
 ];
 
 export const INITIAL_FLOOR_UNLOCK_STATE: FloorUnlockState = {

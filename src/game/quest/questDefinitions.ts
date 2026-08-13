@@ -45,6 +45,20 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-luna-floor-3-quest-complete",
     rewards: { description: "5 Gold · 광개토대왕 갑옷(희귀)" },
   },
+  {
+    id: "quest-floor-4-jeon-rescue",
+    title: "수상한 것의 정체",
+    summary: "던전 4층 너머의 수상한 것을 찾자.",
+    description: "던전 3층의 천 조각과 닮은 기운을 따라 던전 4층 너머를 조사한다.",
+    objectiveText: "던전 4층 너머의 수상한 것 찾기",
+    giverNpcId: "luna",
+    offerStorySequenceId: "npc-luna-floor-4-quest-available",
+    acceptStorySequenceId: "npc-luna-floor-4-quest-accepted",
+    activeStorySequenceId: "npc-luna-floor-4-quest-active",
+    targetFloorId: "floor-4",
+    completeStorySequenceId: "npc-luna-floor-4-quest-complete",
+    rewards: { description: "5 Gold · 칠지도 무기 스킨(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(

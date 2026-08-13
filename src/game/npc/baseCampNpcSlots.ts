@@ -5,6 +5,7 @@ export const BASE_CAMP_NPC_SLOT_IDS = {
   lunaOriginal: "lunaNpc",
   theoOriginal: "theoNpc",
   kaidenOriginal: "kaidenNpc",
+  jeon: "jeonNpc",
 } as const;
 
 export type BaseCampNpcSlotId =
@@ -47,12 +48,21 @@ export const BASE_CAMP_NPC_SLOTS: Record<
     baseHeight: 300,
     focusPointId: "kaidenNpc",
   },
+  jeonNpc: {
+    id: "jeonNpc",
+    anchorX: 930,
+    previousAnchorY: 795,
+    baseWidth: 190,
+    baseHeight: 300,
+    focusPointId: "jeonNpc",
+  },
 };
 
 export const BASE_CAMP_NPC_SLOT_ASSIGNMENTS = {
   luna: BASE_CAMP_NPC_SLOT_IDS.kaidenOriginal,
   theo: BASE_CAMP_NPC_SLOT_IDS.lunaOriginal,
   kaiden: BASE_CAMP_NPC_SLOT_IDS.theoOriginal,
+  jeon: BASE_CAMP_NPC_SLOT_IDS.jeon,
 } as const;
 
 export function getBaseCampNpcPlacement(slotId: BaseCampNpcSlotId) {
