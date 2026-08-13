@@ -45,31 +45,33 @@ export function JeonDiscoveryStory({
   const [phase, setPhase] = useState<Phase>("prison");
 
   const prisonSequence = useMemo(() => makeSequence("floor-4-prison-entry", "가야의 감옥", "???", [
-    { id: "prison-1", type: "dialogue", speakerName: "", text: "이 곳은..?", advanceMode: "click" },
-    { id: "prison-2", type: "dialogue", speakerName: "", text: "철을 주로 사용하고 있는 감옥이다.\n아마 가야의 감옥인 듯하다.", advanceMode: "click" },
-    { id: "prison-3", type: "dialogue", speakerName: "", text: "이상하게도,\n어느 한 곳만 감옥 문이 부숴져 있는 듯하다.", advanceMode: "click" },
-    { id: "prison-4", type: "dialogue", speakerName: "", text: "부숴진 감옥으로 다가가 보자.", advanceMode: "click" },
+    { id: "prison-1", type: "narration", text: "이 곳은..?", advanceMode: "click" },
+    { id: "prison-2", type: "narration", text: "철을 주로 사용하고 있는 감옥이다. 아마 가야의 감옥인 듯하다.", advanceMode: "click" },
+    { id: "prison-3", type: "narration", text: "이상하게도, 어느 한 곳만 감옥 문이 부숴져 있는 듯하다.", advanceMode: "click" },
+    { id: "prison-4", type: "narration", text: "부숴진 감옥으로 다가가 보자.", advanceMode: "click" },
   ]), []);
 
   const introSequence = useMemo(() => makeSequence("floor-4-jeon-intro", "수상한 사람", "???", [
     { id: "show-jeon", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
-    { id: "jeon-question", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "당신은..\n누구시오?", advanceMode: "click" },
+    { id: "jeon-question", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "당신은.. 누구시오?", advanceMode: "click" },
     { id: "name-choice", type: "choice", prompt: "", advanceMode: "click", options: [{ id: "tell-name", label: "이름을 말해준다." }] },
-    { id: "jeon-name", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: `그래,\n${playerName}\n(이)라고 하는군...`, advanceMode: "click" },
+    { id: "jeon-name", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: `그래, ${playerName}(이)라고 하는군...`, advanceMode: "click" },
     { id: "identity-choice", type: "choice", prompt: "", advanceMode: "click", options: [{ id: "ask-identity", label: "당신은 누구시죠?" }] },
-    { id: "jeon-hesitate", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "나는...\n내 이름은...", advanceMode: "click" },
+    { id: "jeon-hesitate", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "나는... 내 이름은...", advanceMode: "click" },
   ]), [playerName]);
 
   const revealSequence = useMemo(() => makeSequence("floor-4-jeon-reveal", "전", "전", [
     { id: "show-jeon", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
-    { id: "jeon-memory", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "사실\n기억이 잘 나지 않습니다..", advanceMode: "click" },
-    { id: "jeon-name-reveal", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "유일하게 기억나는 것은..\n\n'전'\n\n이라는 이름뿐이지요.", advanceMode: "click" },
-    { id: "jeon-bars", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "눈을 떠 보니\n이곳에서 헤매고 있었고..\n\n당황스러운 마음에\n쇠창살을 손에 쥐니,\n\n갑자기 쇠창살이\n눈 녹듯이 부서졌습니다.", advanceMode: "click" },
-    { id: "jeon-waited", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "어디로 가야 할지 모르고\n\n혼란스러운 마음에\n\n이곳에서 가만히 있었는데\n\n당신이 나타났지요.", advanceMode: "click" },
-    { id: "player-thought-1", type: "dialogue", speakerName: "", text: "루나가 말한\n수상한 것이\n\n혹시 이 사람을 말하는 것일까?", advanceMode: "click" },
-    { id: "player-thought-2", type: "dialogue", speakerName: "", text: "혹시 모르니\n\n베이스캠프로 데려가는 것이 좋을 것 같다.", advanceMode: "click" },
+    { id: "jeon-memory", type: "dialogue", speakerId: "jeon", speakerName: "???", activeActorId: "jeon", text: "사실 기억이 잘 나지 않습니다..", advanceMode: "click" },
+    { id: "jeon-name-reveal", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "유일하게 기억나는 것은.. '전'이라는 이름뿐이지요.", advanceMode: "click" },
+    { id: "jeon-bars", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "눈을 떠 보니 이곳에서 헤매고 있었고.. 당황스러운 마음에 쇠창살을 손에 쥐니, 갑자기 쇠창살이 눈 녹듯이 부서졌습니다.", advanceMode: "click" },
+    { id: "jeon-waited", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "어디로 가야 할지 모르고 혼란스러운 마음에 이곳에서 가만히 있었는데 당신이 나타났지요.", advanceMode: "click" },
+    { id: "hide-jeon-for-thought", type: "hidePortrait", actorId: "jeon", advanceMode: "auto" },
+    { id: "player-thought-1", type: "narration", text: "루나가 말한 수상한 것이 혹시 이 사람을 말하는 것일까?", advanceMode: "click" },
+    { id: "player-thought-2", type: "narration", text: "혹시 모르니, 베이스캠프로 데려가는 것이 좋을 것 같다.", advanceMode: "click" },
+    { id: "show-jeon-again", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
     { id: "jeon-invite", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "함께 가자는 말씀이십니까?", advanceMode: "click" },
-    { id: "jeon-thanks", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "...정말 감사합니다.\n\n잘 부탁드리겠습니다.", advanceMode: "click" },
+    { id: "jeon-thanks", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "...정말 감사합니다. 잘 부탁드리겠습니다.", advanceMode: "click" },
   ]), []);
 
   useEffect(() => {

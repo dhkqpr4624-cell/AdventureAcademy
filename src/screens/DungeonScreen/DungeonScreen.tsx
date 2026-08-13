@@ -2321,6 +2321,7 @@ export function DungeonScreen({
         onComplete={() => {
           playerHpRef.current = maxHp;
           setPlayerHp(maxHp);
+          setInventoryState((current) => changeItemQuantity(current, "quest-jeon-rescue-marker", 1));
           onStoryEventSeen("floor-4:jeon-discovered");
           onObjectiveAcquired(runCorrectCountRef.current);
           onNavigate("baseCamp");

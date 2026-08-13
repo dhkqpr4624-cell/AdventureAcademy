@@ -46,6 +46,7 @@ import { runDungeonExplorationChecks } from "./game/dungeon/dungeonExplorationCh
 import { runDungeonDialogueChecks } from "./game/dungeon/dungeonDialogueChecks";
 import { runItemCollectionQuestRulesChecks } from "./game/quest/itemCollectionQuestRulesChecks";
 import { runPhase29_8Checks } from "./phase29_8Checks";
+import { runPhase29_9Checks } from "./phase29_9Checks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -99,6 +100,7 @@ const checks = [
   ["dungeon dialogue checks", runDungeonDialogueChecks],
   ["item collection quest rule checks", runItemCollectionQuestRulesChecks],
   ["phase29-8 dungeon4 content checks", runPhase29_8Checks],
+  ["phase29-9 quest reward and story checks", runPhase29_9Checks],
 ] as const;
 
 for (const [label, run] of checks) {

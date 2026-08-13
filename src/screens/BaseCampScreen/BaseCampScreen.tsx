@@ -43,8 +43,12 @@ import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
 import {
   ITEM_COLLECTION_QUEST_RULES,
   canCompleteItemCollectionQuest,
-  removeCollectionQuestItems,
 } from "../../game/quest/itemCollectionQuestRules";
+import {
+  completeQuestStateAfterRewardClaim,
+  removeQuestItemsAfterRewardClaim,
+  resolveQuestRewardGrant,
+} from "../../game/quest/questRewardCompletionResolver";
 
 const memoryQuestRareRewardCondition = getQuestRareRewardCondition(
   "quest-floor-2-memory-fragment",
@@ -257,7 +261,7 @@ export function BaseCampScreen({
       return;
     }
     if (finishedSequenceId === "npc-luna-floor-4-quest-complete") {
-      revealRewardAndCompleteQuest(jeonQuestId);
+      revealReward(jeonQuestId);
       setJeonRewardOpen(true);
       return;
     }
@@ -324,21 +328,13 @@ export function BaseCampScreen({
     void viewportRef.current?.restore(450);
   };
 
-  const revealRewardAndCompleteQuest = (questId: string) => {
+  const revealReward = (questId: string) => {
     setRewardRevealed(questId);
-    setQuestState((current) => ({
-      ...current,
-      [questId]: "completed",
-      ...(questId === prehistoryQuestId && current[memoryQuestId] !== "completed"
-        ? { [memoryQuestId]: "available" as const }
-        : {}),
-      ...(questId === memoryQuestId && current[tornClothQuestId] !== "completed"
-        ? { [tornClothQuestId]: "available" as const }
-        : {}),
-      ...(questId === tornClothQuestId && current[jeonQuestId] !== "completed"
-        ? { [jeonQuestId]: "available" as const }
-        : {}),
-    }));
+    onAutoSave("npcDialogueCompleted");
+  };
+
+  const completeQuestAfterRewardClaim = (questId: string) => {
+    setQuestState((current) => completeQuestStateAfterRewardClaim(current, questId));
     onAutoSave("questCompleted");
   };
 
@@ -528,6 +524,7 @@ export function BaseCampScreen({
         onClaim={(achievementId) => {
           const achievement = ACHIEVEMENT_DEFINITIONS.find((entry) => entry.id === achievementId);
           if (!achievement || achievementReceived[achievement.id]) return;
+          if (effectiveQuestState[achievement.rewardStateId] !== "completed") return;
           if ((floorBestCorrect[achievement.floorId] ?? 0) < achievement.requiredCorrect) return;
           setInventoryState((current) => changeItemQuantity(current, achievement.rewardItemId, 1));
           setAchievementReceived(achievement.id);
@@ -541,19 +538,19 @@ export function BaseCampScreen({
       }} />}
       {memoryCompletionOpen && <MemoryCompletionStory beforeUrl={memoryBeforeUrl} afterUrl={memoryAfterUrl} onComplete={() => {
         setMemoryCompletionOpen(false);
-        revealRewardAndCompleteQuest(memoryQuestId);
+        revealReward(memoryQuestId);
         setRewardOpen(true);
       }} />}
       {prehistoryCompletionOpen && <PrehistoryCompletionStory playerName={playerState.name || "플레이어"} onComplete={() => {
         setPrehistoryCompletionOpen(false);
-        revealRewardAndCompleteQuest(prehistoryQuestId);
+        revealReward(prehistoryQuestId);
         setPrehistoryRewardOpen(true);
       }} />}
       {tornClothCompletionOpen && <TornClothCompletionStory
         playerName={playerState.name || "플레이어"}
         onComplete={() => {
           setTornClothCompletionOpen(false);
-          revealRewardAndCompleteQuest(tornClothQuestId);
+          revealReward(tornClothQuestId);
           setTornClothRewardOpen(true);
         }}
       />}
@@ -564,16 +561,16 @@ export function BaseCampScreen({
         onCancel={() => setRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[memoryQuestId]) return;
-          const rareUnlocked =
-            (floorBestCorrect["floor-2"] ?? 0) >=
-            memoryQuestRareRewardCondition.requiredCorrect;
-          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          const reward = resolveQuestRewardGrant(floorBestCorrect["floor-2"] ?? 0, memoryQuestRareRewardCondition.requiredCorrect);
+          const rareUnlocked = reward.rareUnlocked;
+          setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
           setInventoryState((current) => {
-            let next = changeItemQuantity(current, "quest-memory-fragment", -1);
+            let next = removeQuestItemsAfterRewardClaim(current, memoryQuestId);
             if (rareUnlocked) next = changeItemQuantity(next, "weapon-gojoseon-bronze-dagger", 1);
             return next;
           });
           setRewardClaimed(memoryQuestId);
+          completeQuestAfterRewardClaim(memoryQuestId);
           if (rareUnlocked) {
             setAchievementReceived("achievement-floor-2-rare-reward");
           }
@@ -584,22 +581,22 @@ export function BaseCampScreen({
       {tornClothRewardOpen && <QuestRewardPopup
         bestCorrect={floorBestCorrect["floor-3"] ?? 0}
         claimed={Boolean(rewardClaimed[tornClothQuestId])}
-        questTitle="던전 2층 조사 완료"
+        questTitle="던전 3층 조사 완료"
         rareRewardItemId="armor-gwanggaeto"
         requiredCorrect={tornClothQuestRareRewardCondition.requiredCorrect}
         onCancel={() => setTornClothRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[tornClothQuestId]) return;
-          const rareUnlocked =
-            (floorBestCorrect["floor-3"] ?? 0) >=
-            tornClothQuestRareRewardCondition.requiredCorrect;
-          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          const reward = resolveQuestRewardGrant(floorBestCorrect["floor-3"] ?? 0, tornClothQuestRareRewardCondition.requiredCorrect);
+          const rareUnlocked = reward.rareUnlocked;
+          setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
           setInventoryState((current) => {
-            let next = changeItemQuantity(current, "quest-torn-cloth", -1);
+            let next = removeQuestItemsAfterRewardClaim(current, tornClothQuestId);
             if (rareUnlocked) next = changeItemQuantity(next, "armor-gwanggaeto", 1);
             return next;
           });
           setRewardClaimed(tornClothQuestId);
+          completeQuestAfterRewardClaim(tornClothQuestId);
           if (rareUnlocked) {
             setAchievementReceived("achievement-floor-3-rare-reward");
           }
@@ -616,14 +613,16 @@ export function BaseCampScreen({
         onCancel={() => setPrehistoryRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[prehistoryQuestId]) return;
-          const rareUnlocked = (floorBestCorrect["floor-1"] ?? 0) >= prehistoryQuestRareRewardCondition.requiredCorrect;
-          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          const reward = resolveQuestRewardGrant(floorBestCorrect["floor-1"] ?? 0, prehistoryQuestRareRewardCondition.requiredCorrect);
+          const rareUnlocked = reward.rareUnlocked;
+          setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
           setInventoryState((current) => {
-            let next = removeCollectionQuestItems(current, prehistoryCollectionRule);
+            let next = removeQuestItemsAfterRewardClaim(current, prehistoryQuestId);
             if (rareUnlocked) next = changeItemQuantity(next, "weapon-hand-axe", 1);
             return next;
           });
           setRewardClaimed(prehistoryQuestId);
+          completeQuestAfterRewardClaim(prehistoryQuestId);
           if (rareUnlocked) setAchievementReceived("achievement-floor-1-rare-reward");
           onAutoSave("questCompleted");
           setPrehistoryRewardOpen(false);
@@ -638,14 +637,19 @@ export function BaseCampScreen({
         onCancel={() => setJeonRewardOpen(false)}
         onClaim={() => {
           if (rewardClaimed[jeonQuestId]) return;
-          const rareUnlocked =
-            (floorBestCorrect["floor-4"] ?? 0) >= jeonQuestRareRewardCondition.requiredCorrect;
-          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          const reward = resolveQuestRewardGrant(floorBestCorrect["floor-4"] ?? 0, jeonQuestRareRewardCondition.requiredCorrect);
+          const rareUnlocked = reward.rareUnlocked;
+          setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
+          setInventoryState((current) => {
+            let next = removeQuestItemsAfterRewardClaim(current, jeonQuestId);
+            if (rareUnlocked) next = changeItemQuantity(next, "weapon-chiljido", 1);
+            return next;
+          });
           if (rareUnlocked) {
-            setInventoryState((current) => changeItemQuantity(current, "weapon-chiljido", 1));
             setAchievementReceived("achievement-floor-4-rare-reward");
           }
           setRewardClaimed(jeonQuestId);
+          completeQuestAfterRewardClaim(jeonQuestId);
           onAutoSave("questCompleted");
           setJeonRewardOpen(false);
         }}
