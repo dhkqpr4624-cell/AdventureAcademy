@@ -22,7 +22,13 @@ export const DUNGEON_FLOOR_TITLES: DungeonFloorTitle[] = [
     floor: 3,
     floorId: "floor-3",
     title: "던전 3층",
-    subtitle: "삼국의 발전",
+    subtitle: "삼국의 발전 : 고구려와 백제",
+  },
+  {
+    floor: 4,
+    floorId: "floor-4",
+    title: "던전 4층",
+    subtitle: "삼국의 발전 : 신라와 가야",
   },
 ];
 

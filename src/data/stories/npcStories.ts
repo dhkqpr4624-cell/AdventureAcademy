@@ -1,4 +1,4 @@
-import type { StorySequence, StoryStep } from "../../types/story";
+import type { StoryActor, StorySequence, StoryStep } from "../../types/story";
 import { NPC_PORTRAIT_REGISTRY } from "../../game/npc/npcPortraitRegistry";
 import { resolveNpcPresentation } from "../../game/npc/npcPresentationResolver";
 import type { NpcId } from "../../game/npc/npcTypes";
@@ -60,6 +60,21 @@ function sequence(
   };
 }
 
+function actor(npcId: NpcId, portraitId: string): StoryActor {
+  const npc = resolveNpcPresentation(npcId);
+  return {
+    id: npcId,
+    name: npc.displayName,
+    role: npc.role,
+    portraits: {
+      [portraitId]: {
+        imageUrl: NPC_PORTRAIT_REGISTRY[`${npcId}.${portraitId}`] ?? NPC_PORTRAIT_REGISTRY[`${npcId}.default`],
+        placeholder: { label: npc.displayName, subtitle: npc.role, gradient: "linear-gradient(135deg, #30291f, #111)" },
+      },
+    },
+  };
+}
+
 export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
   "npc-luna-default": sequence("npc-luna-default", "luna", "happy", [
     "{{playerName}}! 던전은 항상 내가 먼저 정찰하고 있어. 필요한 게 있으면 언제든지 말해!",
@@ -92,6 +107,29 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
     "luna",
     "happy",
     ["아, {{playerName}}! 왔구나!"],
+  ),
+  "npc-luna-floor-4-quest-available": sequence(
+    "npc-luna-floor-4-quest-available",
+    "luna",
+    "happy",
+    [
+      "{{playerName}}! 왔구나!",
+      "던전 3층에서 네가 찾아온 천조각 기억해?\n아무래도 삼국 시대의 물건이 아니라서 혼란스러웠지..",
+      "던전 4층을 순찰하고 왔는데,\n던전 너머에서 이것과 비슷한\n수상한 낌새가 느껴져.",
+      "{{playerName}},\n던전 4층 너머에 있는\n\"수상한 것\"을 찾아 줄래?",
+    ],
+  ),
+  "npc-luna-floor-4-quest-accepted": sequence(
+    "npc-luna-floor-4-quest-accepted",
+    "luna",
+    "happy",
+    ["화이팅이야.\n위험하면 언제든 다시 베이스 캠프로 돌아와야 해."],
+  ),
+  "npc-luna-floor-4-quest-active": sequence(
+    "npc-luna-floor-4-quest-active",
+    "luna",
+    "happy",
+    ["던전 4층 너머의 수상한 낌새를 찾아줘.\n위험하면 바로 돌아와야 해!"],
   ),
   "npc-theo-default": sequence("npc-theo-default", "theo", "default", [
     "보급품은 차근차근 정리하고 있습니다. 출발 전에는 반드시 장비를 점검해 주십시오.",
@@ -139,6 +177,57 @@ export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
   "npc-kaiden-floor-2-quest-accepted": sequence("npc-kaiden-floor-2-quest-accepted", "kaiden", "serious", ["좋다. 던전을 조사한 후 바로 보고하도록."]),
   "npc-kaiden-floor-2-quest-active": sequence("npc-kaiden-floor-2-quest-active", "kaiden", "serious", ["기억 조각은 던전 2층에 있다. 서두르되, 주변을 꼼꼼히 살펴."]),
   "npc-kaiden-floor-2-quest-complete": sequence("npc-kaiden-floor-2-quest-complete", "kaiden", "serious", ["기억의 조각을 가져왔군. 바로 확인해 보겠다."]),
+  "npc-jeon-default": sequence("npc-jeon-default", "jeon", "default", [
+    "...나는...\n누구지..?",
+  ]),
+};
+
+NPC_STORY_SEQUENCES["npc-luna-floor-4-quest-complete"] = {
+  id: "npc-luna-floor-4-quest-complete",
+  title: "던전 4층 조사 완료",
+  replayable: false,
+  skippable: false,
+  onCompleteScreen: "baseCamp",
+  backgrounds: {},
+  actors: {
+    luna: actor("luna", "happy"),
+    theo: actor("theo", "default"),
+    kaiden: actor("kaiden", "serious"),
+    jeon: actor("jeon", "default"),
+  },
+  scenes: [{
+    id: "npc-luna-floor-4-quest-complete-scene",
+    steps: [
+      { id: "show-luna-1", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
+      { id: "luna-1", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "어라,\n그 사람은..?", advanceMode: "click" },
+      { id: "show-theo-1", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
+      { id: "theo-1", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "던전 안에 사람이 있었습니까..?", advanceMode: "click" },
+      { id: "show-luna-2", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
+      { id: "luna-2", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "틀림 없어.\n\n수상한 냄새.\n\n내가 말했던 수상한 것이\n바로 이 사람이구나!", advanceMode: "click" },
+      { id: "show-theo-2", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
+      { id: "theo-2", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "3층에서 발견된 천조각은\n\n이 분의 것이었나 보군요.", advanceMode: "click" },
+      { id: "show-kaiden-1", type: "showPortrait", actorId: "kaiden", portraitId: "serious", position: "left", transition: "fade" },
+      { id: "kaiden-1", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "당신,\n이름이 뭐지?", advanceMode: "click" },
+      { id: "show-jeon-1", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
+      { id: "jeon-1", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "사실..\n\n기억이 온전치 않습니다.\n\n기억하는 것은\n\n오로지\n\n'전'\n\n이라는 이름뿐이지요.", advanceMode: "click" },
+      { id: "show-luna-3", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
+      { id: "luna-3", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "전..?\n\n전이라고?\n\n사람 이름이 전?", advanceMode: "click" },
+      { id: "show-theo-3", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
+      { id: "theo-3", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "루나.\n\n그만하십시오.\n\n이름으로 놀리는 것은\n\n굉장히 실례되는 일입니다.", advanceMode: "click" },
+      { id: "show-luna-4", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
+      { id: "luna-4", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "앗...\n\n미안해요,\n아저씨.", advanceMode: "click" },
+      { id: "show-jeon-2", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
+      { id: "jeon-2", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "괜찮습니다.\n\n저도\n제 이름 같지 않은걸요.", advanceMode: "click" },
+      { id: "show-kaiden-2", type: "showPortrait", actorId: "kaiden", portraitId: "serious", position: "left", transition: "fade" },
+      { id: "kaiden-2", type: "dialogue", speakerId: "kaiden", speakerName: "카이든", activeActorId: "kaiden", text: "전.\n\n당신이 누구인지는 모르겠으나\n\n우선\n\n이 베이스캠프에서 지내도록.\n\n던전은 위험하니\n\n우리와 함께하는 것이 좋을 테지.", advanceMode: "click" },
+      { id: "show-luna-5", type: "showPortrait", actorId: "luna", portraitId: "happy", position: "left", transition: "fade" },
+      { id: "luna-5", type: "dialogue", speakerId: "luna", speakerName: "루나", activeActorId: "luna", text: "헤헤.\n\n잘 부탁해요,\n아저씨.", advanceMode: "click" },
+      { id: "show-theo-4", type: "showPortrait", actorId: "theo", portraitId: "default", position: "left", transition: "fade" },
+      { id: "theo-4", type: "dialogue", speakerId: "theo", speakerName: "테오", activeActorId: "theo", text: "잘 부탁드립니다.\n\n이 던전을 함께 탈출합시다.", advanceMode: "click" },
+      { id: "show-jeon-3", type: "showPortrait", actorId: "jeon", portraitId: "default", position: "left", transition: "fade" },
+      { id: "jeon-3", type: "dialogue", speakerId: "jeon", speakerName: "전", activeActorId: "jeon", text: "예.\n\n감사합니다.\n\n잘 부탁드립니다.", advanceMode: "click" },
+    ],
+  }],
 };
 
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];

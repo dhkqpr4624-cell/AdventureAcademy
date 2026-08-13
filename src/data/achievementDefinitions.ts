@@ -20,6 +20,7 @@ const floor2RareRewardCondition = getQuestRareRewardCondition(
   "quest-floor-2-memory-fragment",
 );
 const floor3RareRewardCondition = getQuestRareRewardCondition("quest-floor-3-torn-cloth");
+const floor4RareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeon-rescue");
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -53,5 +54,17 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     requiredCorrect: floor3RareRewardCondition.requiredCorrect,
     totalQuestions: floor3RareRewardCondition.totalQuestions,
     description: "던전 3층 정답",
+  },
+  {
+    id: "achievement-floor-4-rare-reward",
+    floorId: "floor-4",
+    floorTitle: "던전 4층",
+    title: "가야의 감옥 조사",
+    rewardIcon: `${import.meta.env.BASE_URL}assets/items/chiljido.png`,
+    rewardItemId: "weapon-chiljido",
+    rewardStateId: "quest-floor-4-jeon-rescue",
+    requiredCorrect: floor4RareRewardCondition.requiredCorrect,
+    totalQuestions: floor4RareRewardCondition.totalQuestions,
+    description: "던전 4층 정답",
   },
 ];

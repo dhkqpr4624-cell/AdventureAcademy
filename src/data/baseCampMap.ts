@@ -17,6 +17,7 @@ const theoNpcFocus = getBaseCampNpcFocusTarget(
 const kaidenNpcFocus = getBaseCampNpcFocusTarget(
   BASE_CAMP_NPC_SLOT_IDS.kaidenOriginal,
 );
+const jeonNpcFocus = getBaseCampNpcFocusTarget(BASE_CAMP_NPC_SLOT_IDS.jeon);
 
 export const BASE_CAMP_MAP: BaseCampMapDefinition = {
   id: "academy-base-camp",
@@ -63,6 +64,11 @@ export const BASE_CAMP_MAP: BaseCampMapDefinition = {
     kaidenNpc: {
       id: "kaidenNpc",
       ...kaidenNpcFocus,
+      zoom: 1.4,
+    },
+    jeonNpc: {
+      id: "jeonNpc",
+      ...jeonNpcFocus,
       zoom: 1.4,
     },
   },
