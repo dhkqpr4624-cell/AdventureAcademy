@@ -1,7 +1,7 @@
 import { INITIAL_PLAYER_STATE } from "../game/player/playerState";
 import { INITIAL_QUEST_STATE } from "../game/quest/questDefinitions";
 import { migrateSaveData } from "./SaveMigration";
-import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState, recoverRewardRevealState } from "./saveStateAdapter";
+import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState } from "./saveStateAdapter";
 import { validateCurrentSave } from "./saveSchema";
 import { planBackupRotation } from "./SaveManager";
 import { AutoSaveCoordinator } from "./AutoSaveCoordinator";
@@ -118,59 +118,6 @@ export function runSaveMigrationChecks() {
   check(migrateSaveData({ version: 999 }).success === false, "future version rejected");
   check(migrateSaveData(null).success === false, "invalid schema rejected");
   check(INITIAL_PLAYER_STATE.maxHp > 0 && Object.keys(INITIAL_QUEST_STATE).length > 0, "defaults available");
-}
-
-export function runRewardRevealCompatibilityChecks() {
-  const revealKey = (questId: string) => `reward-revealed:${questId}`;
-  const makeSave = () => createSaveDataFromGameState(createInitialGameSaveState());
-
-  const case1 = makeSave();
-  check(!recoverRewardRevealState(case1)[revealKey("quest-floor-1-prehistory")], "CASE 1 keeps unfinished reward hidden");
-
-  const case2 = makeSave();
-  case2.questProgress.firstObjectiveEventSeen[revealKey("quest-floor-1-prehistory")] = true;
-  check(recoverRewardRevealState(case2)[revealKey("quest-floor-1-prehistory")], "CASE 2 reveals reward when reward screen is first shown");
-
-  const case3 = makeSave();
-  case3.questProgress.firstObjectiveEventSeen[revealKey("quest-floor-1-prehistory")] = true;
-  check(
-    !case3.questProgress.rewardClaimed["quest-floor-1-prehistory"] &&
-      recoverRewardRevealState(case3)[revealKey("quest-floor-1-prehistory")],
-    "CASE 3 keeps viewed but unclaimed reward revealed",
-  );
-
-  const case4 = makeSave();
-  case4.quests.statuses["quest-floor-1-prehistory"] = "completed";
-  case4.inventory.items["weapon-hand-axe"] = 1;
-  delete case4.questProgress.firstObjectiveEventSeen[revealKey("quest-floor-1-prehistory")];
-  check(
-    applySaveDataToGameState(case4).firstObjectiveEventSeen[revealKey("quest-floor-1-prehistory")],
-    "CASE 4 restores an owned legacy reward without a reveal flag",
-  );
-
-  const case5 = makeSave();
-  case5.quests.statuses["quest-floor-1-prehistory"] = "completed";
-  case5.quests.statuses["quest-floor-2-memory-fragment"] = "completed";
-  case5.quests.statuses["quest-floor-3-torn-cloth"] = "active";
-  case5.inventory.items["weapon-hand-axe"] = 1;
-  case5.inventory.items["weapon-gojoseon-bronze-dagger"] = 1;
-  const case5Revealed = applySaveDataToGameState(case5).firstObjectiveEventSeen;
-  check(
-    case5Revealed[revealKey("quest-floor-1-prehistory")] &&
-      case5Revealed[revealKey("quest-floor-2-memory-fragment")] &&
-      !case5Revealed[revealKey("quest-floor-3-torn-cloth")],
-    "CASE 5 restores floors 1 and 2 while floor 3 remains hidden",
-  );
-
-  const case6 = makeSave();
-  case6.inventory.items["weapon-hand-axe"] = 1;
-  const case6Revealed = recoverRewardRevealState(case6);
-  check(
-    case6Revealed[revealKey("quest-floor-1-prehistory")] &&
-      !case6Revealed[revealKey("quest-floor-2-memory-fragment")] &&
-      !case6Revealed[revealKey("quest-floor-3-torn-cloth")],
-    "CASE 6 restores only rewards with reliable legacy evidence",
-  );
 }
 
 export function runSaveBackupChecks() {

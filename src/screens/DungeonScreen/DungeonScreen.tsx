@@ -120,6 +120,7 @@ import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolv
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
 import { DungeonReturnPrompt, MemoryFragmentEvent } from "../../components/MemoryFragmentEvent";
 import { TornClothEvent } from "../../components/TornClothEvent";
+import { JeonDiscoveryStory } from "../../components/JeonDiscoveryStory";
 import { PrehistoryArtifactEvent, type PrehistoryArtifactId } from "../../components/PrehistoryArtifactEvent";
 import memoryFoundUrl from "../../assets/quest/memory-fragment-found.png";
 import tornClothFoundUrl from "../../assets/quest/torn-cloth-found.png";
@@ -169,32 +170,61 @@ type DungeonScreenProps = {
   onFloorRunChanged: (run: DungeonFloorRunState) => void;
 };
 
-function applyFloor1MonsterData(
+export function applyFloorMonsterData(
   map: DungeonMapDefinition,
   seed: string,
+  floorId: FloorId,
 ): DungeonMapDefinition {
-  const random = createSeededRandom(`${seed}::floor1-monsters`);
+  const random = createSeededRandom(`${seed}::${floorId}-monsters`);
   return {
     ...map,
     rooms: map.rooms.map((room) => {
       if (room.type === "combat" && room.combatConfig) {
+        const monsterId = floorId === "floor-1"
+          ? random.next() < 0.5 ? "floor1-boar" : "floor1-cave-bear"
+          : floorId === "floor-3" || floorId === "floor-4"
+            ? random.next() < 0.5 ? "baekje-smile" : "goguryeo-samjogo"
+            : room.combatConfig.monsterId;
         return {
           ...room,
           combatConfig: {
             ...room.combatConfig,
-            monsterId: random.next() < 0.5 ? "floor1-boar" : "floor1-cave-bear",
+            monsterId,
           },
         };
       }
       if (room.type === "elite" && room.eliteConfig) {
         return {
           ...room,
-          eliteConfig: { ...room.eliteConfig, monsterId: "floor1-mammoth" },
+          eliteConfig: {
+            ...room.eliteConfig,
+            monsterId: floorId === "floor-1"
+              ? "floor1-mammoth"
+              : floorId === "floor-3" || floorId === "floor-4"
+                ? "twisted-pensive-bodhisattva"
+                : room.eliteConfig.monsterId,
+          },
         };
       }
       return room;
     }),
   };
+}
+
+export function prepareFloorDungeonMap(
+  map: DungeonMapDefinition,
+  floorId: FloorId,
+  seed: string,
+): DungeonMapDefinition {
+  const baseMap = floorId === "floor-1" ? map : {
+    ...map,
+    rooms: map.rooms.filter((room) => !room.id.startsWith("room-story-")),
+    connections: map.connections.filter((connection) =>
+      !connection.fromRoomId.startsWith("room-story-") &&
+      !connection.toRoomId.startsWith("room-story-")
+    ),
+  };
+  return applyFloorMonsterData(baseMap, seed, floorId);
 }
 
 type NormalCombatPhase =
@@ -314,14 +344,7 @@ export function DungeonScreen({
         : undefined,
     ),
   );
-  const dungeonMap = floorId === "floor-1" ? applyFloor1MonsterData(dungeonRun.map, dungeonRun.seed) : {
-    ...dungeonRun.map,
-    rooms: dungeonRun.map.rooms.filter((room) => !room.id.startsWith("room-story-")),
-    connections: dungeonRun.map.connections.filter((connection) =>
-      !connection.fromRoomId.startsWith("room-story-") &&
-      !connection.toRoomId.startsWith("room-story-")
-    ),
-  };
+  const dungeonMap = prepareFloorDungeonMap(dungeonRun.map, floorId, dungeonRun.seed);
   const maxHp = playerState.maxHp;
   const [runQuestionAssignments] = useState(() =>
     allocateDungeonRunQuestions(dungeonMap, dungeonRun.seed, floorId),
@@ -2293,6 +2316,16 @@ export function DungeonScreen({
         onInventoryChanged();
         onNavigate("baseCamp");
       }} />}
+      {objectiveEvent === "first" && floorId === "floor-4" && <JeonDiscoveryStory
+        playerName={playerState.name || DEFAULT_PLAYER_NAME}
+        onComplete={() => {
+          playerHpRef.current = maxHp;
+          setPlayerHp(maxHp);
+          onStoryEventSeen("floor-4:jeon-discovered");
+          onObjectiveAcquired(runCorrectCountRef.current);
+          onNavigate("baseCamp");
+        }}
+      />}
       {activeArtifactEvent && <PrehistoryArtifactEvent
         artifactId={activeArtifactEvent}
         imageUrl={activeArtifactEvent === "hand-axe" ? handAxeFoundUrl : activeArtifactEvent === "tanged-point" ? tangedPointFoundUrl : potteryFoundUrl}

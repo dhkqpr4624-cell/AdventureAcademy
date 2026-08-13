@@ -53,10 +53,11 @@ const tornClothQuestRareRewardCondition = getQuestRareRewardCondition(
   "quest-floor-3-torn-cloth",
 );
 const prehistoryQuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-1-prehistory");
+const jeonQuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeon-rescue");
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
-  onEnterDungeon: (floorId: "floor-1" | "floor-2" | "floor-3") => void;
+  onEnterDungeon: (floorId: "floor-1" | "floor-2" | "floor-3" | "floor-4") => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
   inventoryState: InventoryState;
@@ -126,13 +127,16 @@ export function BaseCampScreen({
   const [rewardOpen, setRewardOpen] = useState(false);
   const [prehistoryRewardOpen, setPrehistoryRewardOpen] = useState(false);
   const [tornClothRewardOpen, setTornClothRewardOpen] = useState(false);
+  const [jeonRewardOpen, setJeonRewardOpen] = useState(false);
   const prehistoryQuestId = "quest-floor-1-prehistory";
   const memoryQuestId = "quest-floor-2-memory-fragment";
   const tornClothQuestId = "quest-floor-3-torn-cloth";
+  const jeonQuestId = "quest-floor-4-jeon-rescue";
   const effectiveQuestState: QuestState = {
     ...questState,
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
     ...(questState[memoryQuestId] === "completed" && questState[tornClothQuestId] === "locked" ? { [tornClothQuestId]: "available" as const } : {}),
+    ...(questState[tornClothQuestId] === "completed" && questState[jeonQuestId] === "locked" ? { [jeonQuestId]: "available" as const } : {}),
   };
   const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
   const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(
@@ -142,6 +146,7 @@ export function BaseCampScreen({
   );
   const hasMemoryFragment = getItemQuantity(inventoryState, "quest-memory-fragment") > 0;
   const hasTornCloth = getItemQuantity(inventoryState, "quest-torn-cloth") > 0;
+  const hasFoundJeon = clearedFloorIds.includes("floor-4");
   const markerQuestState = {
     ...effectiveQuestState,
     ...(canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
@@ -150,6 +155,9 @@ export function BaseCampScreen({
       : {}),
     ...(hasTornCloth && effectiveQuestState[tornClothQuestId] === "active"
       ? { [tornClothQuestId]: "readyToComplete" as const }
+      : {}),
+    ...(hasFoundJeon && effectiveQuestState[jeonQuestId] === "active"
+      ? { [jeonQuestId]: "readyToComplete" as const }
       : {}),
   } as unknown as QuestState;
   const activeQuest = QuestManager.getActiveQuest(effectiveQuestState);
@@ -219,6 +227,10 @@ export function BaseCampScreen({
             hasTornCloth &&
             effectiveQuestState[tornClothQuestId] === "active"
           ? "npc-luna-floor-3-quest-complete"
+        : npc.id === "luna" &&
+            hasFoundJeon &&
+            effectiveQuestState[jeonQuestId] === "active"
+          ? "npc-luna-floor-4-quest-complete"
           : resolveNpcStorySequence(npc.id, effectiveQuestState);
     setStorySequenceId(sequenceId);
     interactionLockRef.current = false;
@@ -242,6 +254,11 @@ export function BaseCampScreen({
     }
     if (finishedSequenceId === "npc-luna-floor-3-quest-complete") {
       setTornClothCompletionOpen(true);
+      return;
+    }
+    if (finishedSequenceId === "npc-luna-floor-4-quest-complete") {
+      revealRewardAndCompleteQuest(jeonQuestId);
+      setJeonRewardOpen(true);
       return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>
@@ -318,6 +335,9 @@ export function BaseCampScreen({
       ...(questId === memoryQuestId && current[tornClothQuestId] !== "completed"
         ? { [tornClothQuestId]: "available" as const }
         : {}),
+      ...(questId === tornClothQuestId && current[jeonQuestId] !== "completed"
+        ? { [jeonQuestId]: "available" as const }
+        : {}),
     }));
     onAutoSave("questCompleted");
   };
@@ -338,6 +358,9 @@ export function BaseCampScreen({
         }
         interactionsDisabled={interactionLocked}
         questState={markerQuestState}
+        visibleNpcIds={rewardClaimed["quest-floor-4-jeon-rescue"]
+          ? ["luna", "theo", "kaiden", "jeon"]
+          : ["luna", "theo", "kaiden"]}
       />
 
       <aside className="current-quest-tracker" aria-live="polite">
@@ -604,6 +627,27 @@ export function BaseCampScreen({
           if (rareUnlocked) setAchievementReceived("achievement-floor-1-rare-reward");
           onAutoSave("questCompleted");
           setPrehistoryRewardOpen(false);
+        }}
+      />}
+      {jeonRewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-4"] ?? 0}
+        claimed={Boolean(rewardClaimed[jeonQuestId])}
+        questTitle="던전 4층 조사 완료"
+        rareRewardItemId="weapon-chiljido"
+        requiredCorrect={jeonQuestRareRewardCondition.requiredCorrect}
+        onCancel={() => setJeonRewardOpen(false)}
+        onClaim={() => {
+          if (rewardClaimed[jeonQuestId]) return;
+          const rareUnlocked =
+            (floorBestCorrect["floor-4"] ?? 0) >= jeonQuestRareRewardCondition.requiredCorrect;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          if (rareUnlocked) {
+            setInventoryState((current) => changeItemQuantity(current, "weapon-chiljido", 1));
+            setAchievementReceived("achievement-floor-4-rare-reward");
+          }
+          setRewardClaimed(jeonQuestId);
+          onAutoSave("questCompleted");
+          setJeonRewardOpen(false);
         }}
       />}
     </main>

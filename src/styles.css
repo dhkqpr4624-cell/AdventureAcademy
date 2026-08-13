@@ -1861,6 +1861,40 @@ button:focus-visible {
   }
 }
 
+.dungeon-four-story {
+  position: absolute;
+  z-index: 130;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.dungeon-four-story-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dungeon-four-story-image.is-fading-in {
+  animation: dungeon-four-story-fade-in 700ms ease both;
+}
+
+.dungeon-four-story-image.is-fading-out {
+  animation: dungeon-four-story-fade-out 700ms ease both;
+}
+
+@keyframes dungeon-four-story-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dungeon-four-story-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @media (max-width: 720px) {
   .dungeon-overlay {
     padding: 0.65rem;

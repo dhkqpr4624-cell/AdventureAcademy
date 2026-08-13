@@ -66,6 +66,7 @@ type BaseCampViewportProps = {
   onSelectNpc?: (npc: NpcDefinition) => void;
   interactionsDisabled?: boolean;
   questState?: QuestState;
+  visibleNpcIds?: readonly string[];
 };
 
 const MIN_ZOOM = 1;
@@ -137,6 +138,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
   onSelectNpc,
   interactionsDisabled = false,
   questState = {},
+  visibleNpcIds,
 }, forwardedRef) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -447,7 +449,8 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           selectedNpcId={selectedNpcId}
           onSelectNpc={onSelectNpc}
           interactionsDisabled={interactionsDisabled}
-          questState={questState}
+        questState={questState}
+        visibleNpcIds={visibleNpcIds}
         />
         {import.meta.env.DEV && mode === "play" && devDraft && (
           <span

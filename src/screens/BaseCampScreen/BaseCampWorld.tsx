@@ -25,6 +25,7 @@ type BaseCampWorldProps = {
   onSelectNpc?: (npc: NpcDefinition) => void;
   interactionsDisabled?: boolean;
   questState: QuestState;
+  visibleNpcIds?: readonly string[];
 };
 
 type LayerName = keyof BaseCampMapDefinition["layers"];
@@ -53,6 +54,7 @@ export function BaseCampWorld({
   onSelectNpc,
   interactionsDisabled = false,
   questState,
+  visibleNpcIds,
 }: BaseCampWorldProps) {
   const [highlightedNpcId, setHighlightedNpcId] = useState<string | null>(null);
   const [dungeonEntranceHighlighted, setDungeonEntranceHighlighted] =
@@ -163,7 +165,7 @@ export function BaseCampWorld({
         className="base-camp-layer npc-layer"
         style={{ zIndex: BASE_CAMP_LAYER.npcSprite }}
       >
-        {NPC_DEFINITIONS.map((npc) => (
+        {NPC_DEFINITIONS.filter((npc) => !visibleNpcIds || visibleNpcIds.includes(npc.id)).map((npc) => (
           <NpcIdleSprite
             key={npc.id}
             npc={npc}
@@ -180,7 +182,7 @@ export function BaseCampWorld({
         }`}
         style={{ zIndex: BASE_CAMP_LAYER.interactionOverlay }}
       >
-        {NPC_DEFINITIONS.map((npc) => {
+        {NPC_DEFINITIONS.filter((npc) => !visibleNpcIds || visibleNpcIds.includes(npc.id)).map((npc) => {
           const presentation = resolveNpcPresentation(npc.id);
           const questMarker = resolveNpcQuestMarker(npc, questState);
           return (

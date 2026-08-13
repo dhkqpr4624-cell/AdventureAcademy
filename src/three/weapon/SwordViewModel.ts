@@ -66,12 +66,18 @@ export const HAND_AXE_DEFINITION: SwordDefinition = {
   id: "hand-axe",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/hand-axe.png`,
 };
+export const CHILJIDO_DEFINITION: SwordDefinition = {
+  ...BASIC_SWORD_DEFINITION,
+  id: "chiljido",
+  textureUrl: `${import.meta.env.BASE_URL}assets/swords/chiljido.png`,
+};
 
 export function getSwordDefinitionForEquippedItem(
   equippedItemId: string | null | undefined,
 ): SwordDefinition {
   if (equippedItemId === "weapon-gojoseon-bronze-dagger") return GOJOSEON_BRONZE_SWORD_DEFINITION;
   if (equippedItemId === "weapon-hand-axe") return HAND_AXE_DEFINITION;
+  if (equippedItemId === "weapon-chiljido") return CHILJIDO_DEFINITION;
   return BASIC_SWORD_DEFINITION;
 }
 

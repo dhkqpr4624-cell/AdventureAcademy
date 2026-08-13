@@ -34,26 +34,6 @@ export const createInitialGameSaveState = (): GameSaveState => ({
     equippedItemIds: { ...INITIAL_INVENTORY_STATE.equippedItemIds },
   },
 });
-
-export function recoverRewardRevealState(data: CurrentSaveData): Record<string, boolean> {
-  const recovered = { ...data.questProgress.firstObjectiveEventSeen };
-
-  for (const achievement of ACHIEVEMENT_DEFINITIONS) {
-    const revealKey = `reward-revealed:${achievement.rewardStateId}`;
-    const alreadyRevealed = Boolean(recovered[revealKey]);
-    const questCompleted = data.quests.statuses[achievement.rewardStateId] === "completed";
-    const rewardClaimed = Boolean(data.questProgress.rewardClaimed[achievement.rewardStateId]);
-    const achievementReceived = Boolean(data.questProgress.achievementReceived[achievement.id]);
-    const rewardOwned = (data.inventory.items[achievement.rewardItemId] ?? 0) > 0;
-
-    if (alreadyRevealed || questCompleted || rewardClaimed || achievementReceived || rewardOwned) {
-      recovered[revealKey] = true;
-    }
-  }
-
-  return recovered;
-}
-
 export function createSaveDataFromGameState(state: GameSaveState): CurrentSaveData {
   const activeQuestId = Object.entries(state.questState).find(([, value]) => value === "active")?.[0] ?? null;
   const maxHp = calculatePlayerMaxHp(state.inventoryState);
@@ -102,12 +82,30 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
       armor: data.inventory.equippedItemIds.armor ?? null,
     },
   };
+  const questState: QuestState = {
+    ...INITIAL_QUEST_STATE,
+    ...data.quests.statuses,
+  };
+  const firstObjectiveEventSeen = {
+    ...data.questProgress.firstObjectiveEventSeen,
+  };
+  for (const achievement of ACHIEVEMENT_DEFINITIONS) {
+    const questId = achievement.rewardStateId;
+    const alreadyEarned =
+      questState[questId] === "completed" ||
+      Boolean(data.questProgress.rewardClaimed[questId]) ||
+      Boolean(data.questProgress.achievementReceived[achievement.id]) ||
+      (inventoryState.items[achievement.rewardItemId] ?? 0) > 0;
+    if (alreadyEarned) {
+      firstObjectiveEventSeen[`reward-revealed:${questId}`] = true;
+    }
+  }
   return {
     playerState: {
       ...data.player,
       maxHp: calculatePlayerMaxHp(inventoryState),
       currentHp: Math.min(data.player.currentHp, calculatePlayerMaxHp(inventoryState)),
-    }, questState: { ...data.quests.statuses },
+    }, questState,
     floorUnlockState: { unlockedFloorIds: [...data.floors.unlockedFloorIds] as FloorUnlockState["unlockedFloorIds"] },
     storyActionState: { executedActionIds: [...data.story.executedActionIds] },
     playTimeSeconds: data.playTimeSeconds, completedStoryIds: [...data.story.completedStoryIds],
@@ -125,7 +123,7 @@ export function applySaveDataToGameState(data: CurrentSaveData): GameSaveState {
       : null,
     inventoryState,
     floorBestCorrect: { ...data.questProgress.floorBestCorrect },
-    firstObjectiveEventSeen: recoverRewardRevealState(data),
+    firstObjectiveEventSeen,
     rewardClaimed: { ...data.questProgress.rewardClaimed },
     achievementReceived: { ...data.questProgress.achievementReceived },
   };

@@ -20,7 +20,7 @@ import { runStoryPresentationChecks } from "./game/story/storyPresentationChecks
 import { runFloorUnlockChecks } from "./game/floor/floorUnlockChecks";
 import { runQuestMarkerChecks } from "./game/quest/questMarkerChecks";
 import { runBaseCampInteractionChecks } from "./game/baseCamp/baseCampInteractionChecks";
-import { runAutoSaveChecks, runRewardRevealCompatibilityChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
+import { runAutoSaveChecks, runSaveBackupChecks, runSaveChecks, runSaveMigrationChecks } from "./save/saveChecks";
 import { runStoryChoiceChecks } from "./game/story/storyChoiceChecks";
 import { runEliteCombatChecks } from "./game/combat/eliteCombatChecks";
 import { runEliteRoomChecks } from "./game/dungeon/eliteRoomChecks";
@@ -45,6 +45,7 @@ import { runFloorBalanceChecks } from "./game/balance/floorBalanceChecks";
 import { runDungeonExplorationChecks } from "./game/dungeon/dungeonExplorationChecks";
 import { runDungeonDialogueChecks } from "./game/dungeon/dungeonDialogueChecks";
 import { runItemCollectionQuestRulesChecks } from "./game/quest/itemCollectionQuestRulesChecks";
+import { runPhase29_8Checks } from "./phase29_8Checks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -89,7 +90,6 @@ const checks = [
   ["dungeon validator checks", runDungeonValidatorChecks],
   ["save checks", runSaveChecks],
   ["save migration checks", runSaveMigrationChecks],
-  ["reward reveal compatibility checks", runRewardRevealCompatibilityChecks],
   ["save backup checks", runSaveBackupChecks],
   ["autosave checks", runAutoSaveChecks],
   ["story choice checks", runStoryChoiceChecks],
@@ -98,6 +98,7 @@ const checks = [
   ["phase22 floor balance checks", runFloorBalanceChecks],
   ["dungeon dialogue checks", runDungeonDialogueChecks],
   ["item collection quest rule checks", runItemCollectionQuestRulesChecks],
+  ["phase29-8 dungeon4 content checks", runPhase29_8Checks],
 ] as const;
 
 for (const [label, run] of checks) {
