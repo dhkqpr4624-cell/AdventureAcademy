@@ -23,6 +23,7 @@ import {
   getItemCollectionQuestRuleForFloor,
   removeCollectionQuestItems,
 } from "../game/quest/itemCollectionQuestRules";
+import { createDebugFloorJumpState } from "../debug/debugFloorJump";
 
 export function App() {
   const loaded = useRef(SaveManager.load());
@@ -174,7 +175,11 @@ export function App() {
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
-      default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onNewGame={() => {
+      default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onDebugFloorJump={(floorId) => {
+        const next = createDebugFloorJumpState(floorId, gameRef.current.playerState.name || "DEBUG");
+        SaveManager.save(createSaveDataFromGameState(next), "manual");
+        setGame(next); gameRef.current = next; startedAtRef.current = Date.now(); setCurrentScreen("baseCamp");
+      }} onNewGame={() => {
         if (SaveManager.load().success && !window.confirm("기존 모험 기록이 있습니다.\n새로 시작하면 현재 기록이 초기화됩니다.\n\n새로 시작하시겠습니까?")) return;
         SaveManager.clear(); const next = createInitialGameSaveState(); setGame(next); gameRef.current = next;
         startedAtRef.current = Date.now(); setNamePopupOpen(true);

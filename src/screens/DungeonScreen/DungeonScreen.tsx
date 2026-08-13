@@ -182,8 +182,10 @@ export function applyFloorMonsterData(
       if (room.type === "combat" && room.combatConfig) {
         const monsterId = floorId === "floor-1"
           ? random.next() < 0.5 ? "floor1-boar" : "floor1-cave-bear"
-          : floorId === "floor-3" || floorId === "floor-4"
+          : floorId === "floor-3"
             ? random.next() < 0.5 ? "baekje-smile" : "goguryeo-samjogo"
+            : floorId === "floor-4"
+              ? random.next() < 0.5 ? "gold-crown-wraith" : "corrupted-gaya-pottery"
             : room.combatConfig.monsterId;
         return {
           ...room,
@@ -200,8 +202,10 @@ export function applyFloorMonsterData(
             ...room.eliteConfig,
             monsterId: floorId === "floor-1"
               ? "floor1-mammoth"
-              : floorId === "floor-3" || floorId === "floor-4"
+              : floorId === "floor-3"
                 ? "twisted-pensive-bodhisattva"
+                : floorId === "floor-4"
+                  ? "silla-cheonma"
                 : room.eliteConfig.monsterId,
           },
         };

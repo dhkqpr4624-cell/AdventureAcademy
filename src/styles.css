@@ -87,6 +87,11 @@ button:focus-visible {
   backdrop-filter: blur(3px);
 }
 
+.title-debug-floor-jump { position: absolute; z-index: 6; top: 10px; left: 10px; display: grid; gap: 4px; justify-items: start; }
+.title-debug-toggle { padding: 3px 6px; border: 1px solid rgba(255,255,255,.45); border-radius: 3px; background: rgba(0,0,0,.6); color: #ddd; font-size: 9px; }
+.title-debug-panel { display: grid; gap: 3px; padding: 5px; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; background: rgba(0,0,0,.78); }
+.title-debug-panel button { min-width: 74px; padding: 4px 6px; border: 1px solid rgba(255,255,255,.25); background: #272727; color: #eee; font-size: 11px; text-align: left; }
+
 .title-preview-controls {
   position: absolute;
   z-index: 2;
