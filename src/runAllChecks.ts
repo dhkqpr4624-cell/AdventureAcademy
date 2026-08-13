@@ -47,6 +47,7 @@ import { runDungeonDialogueChecks } from "./game/dungeon/dungeonDialogueChecks";
 import { runItemCollectionQuestRulesChecks } from "./game/quest/itemCollectionQuestRulesChecks";
 import { runPhase29_8Checks } from "./phase29_8Checks";
 import { runPhase29_9Checks } from "./phase29_9Checks";
+import { runPhase29_11Checks } from "./phase29_11Checks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -101,6 +102,7 @@ const checks = [
   ["item collection quest rule checks", runItemCollectionQuestRulesChecks],
   ["phase29-8 dungeon4 content checks", runPhase29_8Checks],
   ["phase29-9 quest reward and story checks", runPhase29_9Checks],
+  ["phase29-11 dungeon4 monsters/debug floor jump checks", runPhase29_11Checks],
 ] as const;
 
 for (const [label, run] of checks) {
