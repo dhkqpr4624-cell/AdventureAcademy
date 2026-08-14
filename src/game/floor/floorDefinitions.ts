@@ -29,6 +29,7 @@ export const FLOOR_DEFINITIONS: readonly FloorDefinition[] = [
     questId: "quest-floor-4-jeon-rescue",
     questionCount: 12,
   },
+  { id: "floor-5", order: 5, title: "5층", questId: "quest-floor-5-unified-silla", questionCount: 12 },
 ];
 
 export const INITIAL_FLOOR_UNLOCK_STATE: FloorUnlockState = {

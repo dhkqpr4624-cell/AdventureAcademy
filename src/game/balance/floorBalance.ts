@@ -53,7 +53,11 @@ export function getMonsterDamageForFloor(
   floorNumber: number,
   kind: CombatDifficultyKind = "normal",
 ): number {
-  const normal = Math.max(1, Math.ceil(getExpectedMaxHpForFloor(floorNumber) / 6));
+  const floor = asFloorNumber(floorNumber);
+  const normal = Math.max(1, Math.ceil(getExpectedMaxHpForFloor(floor) / 6));
+  // Floor 4 keeps wrong-answer pressure, but removes the extra elite basic-hit
+  // surcharge so a 75% run stays within the intended one-to-two-potion range.
+  if (floor === 4 && kind === "elite") return normal;
   return kind === "elite" ? Math.ceil(normal * 1.25) : normal;
 }
 

@@ -33,6 +33,7 @@ export const QUEST_RARE_REWARD_CONDITIONS: Record<
     requiredCorrect: 9,
     totalQuestions: 12,
   },
+  "quest-floor-5-unified-silla": { questId: "quest-floor-5-unified-silla", floorId: "floor-5", requiredCorrect: 9, totalQuestions: 12 },
 };
 
 export function getQuestRareRewardCondition(

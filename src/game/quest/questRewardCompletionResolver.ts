@@ -10,12 +10,14 @@ export const QUEST_ITEM_IDS_BY_QUEST: Readonly<Record<string, readonly string[]>
   "quest-floor-2-memory-fragment": ["quest-memory-fragment"],
   "quest-floor-3-torn-cloth": ["quest-torn-cloth"],
   "quest-floor-4-jeon-rescue": ["quest-jeon-rescue-marker"],
+  "quest-floor-5-unified-silla": [],
 };
 
 const NEXT_QUEST_ID: Readonly<Record<string, string>> = {
   "quest-floor-1-prehistory": "quest-floor-2-memory-fragment",
   "quest-floor-2-memory-fragment": "quest-floor-3-torn-cloth",
   "quest-floor-3-torn-cloth": "quest-floor-4-jeon-rescue",
+  "quest-floor-4-jeon-rescue": "quest-floor-5-unified-silla",
 };
 
 export function completeQuestStateAfterRewardClaim(

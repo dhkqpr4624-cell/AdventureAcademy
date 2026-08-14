@@ -3697,3 +3697,13 @@ button:focus-visible {
   .dungeon-modal-backdrop,
   .dungeon-modal-panel { animation: none !important; transition: none !important; }
 }
+.dungeon5-screen { position: relative; width: 100%; height: 100%; min-height: 100vh; overflow: hidden; background: #65b9f3; }
+.dungeon5-sky { position: absolute; inset: 0; background: url('/assets/dungeon5/sky-sphere.png') center/cover no-repeat; }
+.dungeon5-mountains { position: fixed; z-index: 1; left: 0; right: 0; bottom: 22%; height: 52%; background: url('/assets/dungeon5/background-mountain.png') center bottom/cover no-repeat; pointer-events: none; }
+.dungeon5-floor { position: absolute; z-index: 2; left: -10%; right: -10%; bottom: -10%; height: 55%; background: url('/assets/dungeon5/floor.png') center/420px repeat; transform: perspective(600px) rotateX(58deg); transform-origin: bottom; }
+.dungeon5-battle-scene { position: absolute; z-index: 3; bottom: 18%; width: min(42vw, 620px); max-height: 52vh; object-fit: contain; pointer-events: none; }
+.dungeon5-battle-scene.side-0 { left: 2%; } .dungeon5-battle-scene.side-1 { right: 2%; }
+.dungeon5-encounter { position: absolute; z-index: 4; left: 50%; bottom: 17%; transform: translateX(-50%); display: grid; justify-items: center; color: white; text-shadow: 0 2px 5px #000; }
+.dungeon5-encounter img { max-width: min(34vw, 430px); max-height: 48vh; object-fit: contain; }
+.dungeon5-navigation { position: absolute; z-index: 5; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; gap: 16px; }
+.dungeon5-navigation button { min-width: 92px; padding: 10px 18px; }

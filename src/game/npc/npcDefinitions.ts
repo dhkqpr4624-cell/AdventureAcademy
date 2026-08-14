@@ -7,6 +7,7 @@ import theoPortrait from "../../assets/npcs/theo/theo_portrait.png";
 import kaidenStanding from "../../assets/npcs/kaiden/kaiden_standing.png";
 import kaidenBlink from "../../assets/npcs/kaiden/kaiden_blink.png";
 import kaidenPortrait from "../../assets/npcs/kaiden/kaiden_portrait.png";
+import jeonStanding from "../../assets/npcs/jeon/jeon_standing.png";
 import type { NpcDefinition, NpcId } from "./npcTypes";
 import {
   BASE_CAMP_NPC_SLOT_ASSIGNMENTS,
@@ -20,9 +21,6 @@ const commonIdle = {
   minBlinkIntervalMs: 5000,
   maxBlinkIntervalMs: 10000,
 };
-
-const transparentPlaceholder =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
 export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
   {
@@ -60,7 +58,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     },
     portraits: { default: theoPortrait },
     dialogue: { defaultStorySequenceId: "npc-theo-default" },
-    offeredQuestIds: [],
+    offeredQuestIds: ["quest-floor-5-unified-silla"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo),
   },
   {
@@ -94,11 +92,11 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     baseCampSpawnId: BASE_CAMP_NPC_SLOT_ASSIGNMENTS.jeon,
     idle: {
       ...commonIdle,
-      standingImage: transparentPlaceholder,
-      blinkSpriteSheet: transparentPlaceholder,
+      standingImage: jeonStanding,
+      blinkSpriteSheet: jeonStanding,
       blinkFrameCount: 1,
-      blinkFrameWidth: 1,
-      blinkFrameHeight: 1,
+      blinkFrameWidth: 500,
+      blinkFrameHeight: 750,
     },
     portraits: {
       default: `${import.meta.env.BASE_URL}assets/story/portraits/jeon.png`,

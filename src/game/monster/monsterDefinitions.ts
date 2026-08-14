@@ -61,6 +61,9 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "gold-crown-wraith": { id: "gold-crown-wraith", name: "금관의 원혼", image: `${import.meta.env.BASE_URL}assets/monsters/gold-crown-wraith.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
   "corrupted-gaya-pottery": { id: "corrupted-gaya-pottery", name: "오염된 가야 토기", image: `${import.meta.env.BASE_URL}assets/monsters/corrupted-gaya-pottery.png`, displayScale: 1.08, aspectRatio: 2 / 3, anchor: [0, -0.03, 0] },
   "silla-cheonma": { id: "silla-cheonma", name: "신라의 천마", image: `${import.meta.env.BASE_URL}assets/monsters/silla-cheonma.png`, displayScale: 1.14, aspectRatio: 3 / 2, anchor: [0, -0.04, 0] },
+  "baekje-archer": { id: "baekje-archer", name: "백제 궁병", image: `${import.meta.env.BASE_URL}assets/monsters/baekje-archer.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
+  "goguryeo-cavalry": { id: "goguryeo-cavalry", name: "고구려 기마병", image: `${import.meta.env.BASE_URL}assets/monsters/goguryeo-cavalry.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
+  "corrupted-munmu-wraith": { id: "corrupted-munmu-wraith", name: "오염된 문무왕의 망령", image: `${import.meta.env.BASE_URL}assets/monsters/corrupted-munmu-wraith.png`, displayScale: 1.14, aspectRatio: 1, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(

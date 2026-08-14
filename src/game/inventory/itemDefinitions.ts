@@ -48,6 +48,12 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     icon: `${import.meta.env.BASE_URL}assets/items/chiljido.png`,
     stackable: false,
   },
+  "armor-munmu": {
+    id: "armor-munmu", name: "문무왕의 갑옷", type: "armor", rarity: "rare",
+    description: "삼국 통일을 완성한 문무왕을 상징하는 희귀 갑옷.",
+    icon: `${import.meta.env.BASE_URL}assets/items/munmu-armor.png`, stackable: false,
+    equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(5) },
+  },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",

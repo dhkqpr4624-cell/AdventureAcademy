@@ -59,6 +59,15 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-luna-floor-4-quest-complete",
     rewards: { description: "5 Gold · 칠지도 무기 스킨(희귀)" },
   },
+  {
+    id: "quest-floor-5-unified-silla", title: "삼국 통일의 과정", summary: "던전 5층을 동료들과 조사하자.",
+    description: "전쟁터처럼 변한 던전 5층을 함께 조사하고 다음 층으로 향하는 통로를 연다.",
+    objectiveText: "던전 5층의 닫힌 입구 열기", giverNpcId: "theo",
+    offerStorySequenceId: "npc-theo-floor-5-quest-available", acceptStorySequenceId: "npc-theo-floor-5-quest-accepted",
+    activeStorySequenceId: "npc-theo-floor-5-quest-active", targetFloorId: "floor-5",
+    completeStorySequenceId: "npc-theo-floor-5-quest-complete",
+    rewards: { description: "5 Gold · 문무왕의 갑옷(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(
