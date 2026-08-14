@@ -21,6 +21,7 @@ const floor2RareRewardCondition = getQuestRareRewardCondition(
 );
 const floor3RareRewardCondition = getQuestRareRewardCondition("quest-floor-3-torn-cloth");
 const floor4RareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeon-rescue");
+const floor5RareRewardCondition = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -66,5 +67,12 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     requiredCorrect: floor4RareRewardCondition.requiredCorrect,
     totalQuestions: floor4RareRewardCondition.totalQuestions,
     description: "던전 4층 정답",
+  },
+  {
+    id: "achievement-floor-5-rare-reward", floorId: "floor-5", floorTitle: "던전 5층",
+    title: "삼국 통일의 과정", rewardIcon: `${import.meta.env.BASE_URL}assets/items/munmu-armor.png`,
+    rewardItemId: "armor-munmu", rewardStateId: "quest-floor-5-unified-silla",
+    requiredCorrect: floor5RareRewardCondition.requiredCorrect, totalQuestions: floor5RareRewardCondition.totalQuestions,
+    description: "던전 5층 정답",
   },
 ];

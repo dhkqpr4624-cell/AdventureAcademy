@@ -251,6 +251,24 @@ NPC_STORY_SEQUENCES["npc-luna-floor-4-quest-complete"] = {
   }],
 };
 
+NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-available"] = {
+  id: "npc-theo-floor-5-quest-available", title: "던전 5층 의뢰", replayable: true, skippable: false,
+  onCompleteScreen: "baseCamp", backgrounds: {},
+  actors: { theo: actor("theo", "default"), kaiden: actor("kaiden", "serious"), jeon: actor("jeon", "default") },
+  scenes: [{ id: "npc-theo-floor-5-quest-available-scene", steps: [
+    ...singleSpeakerDialogue("floor5-theo-1", "theo", "default", "어서오십시오, {{playerName}}."),
+    ...singleSpeakerDialogue("floor5-theo-2", "theo", "default", "이제 던전 5층으로 향할 차례이지요."),
+    ...singleSpeakerDialogue("floor5-theo-3", "theo", "default", "루나가 먼저 정찰을 다녀왔는데, 입구에서는 어떤 수상한 것도 발견하지 못했다고 합니다."),
+    ...singleSpeakerDialogue("floor5-theo-4", "theo", "default", "즉.. 아무런 정보가 없는 셈이지요."),
+    ...singleSpeakerDialogue("floor5-kaiden-1", "kaiden", "serious", "그래. 그래서 이번에는 아무래도 다 같이 들어가는 게 좋을 것 같다."),
+    ...singleSpeakerDialogue("floor5-kaiden-2", "kaiden", "serious", "안에 어떤 단서가 있을지 모르니 위험하더라도 같이 움직이는 것이 파악하기에 수월할테니.."),
+    ...singleSpeakerDialogue("floor5-jeon-1", "jeon", "default", "도움이 될지는 모르겠으나, 저 또한 힘내겠습니다."),
+  ] }],
+};
+NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-accepted"] = sequence("npc-theo-floor-5-quest-accepted", "theo", "default", ["{{playerName}}, 준비를 마치고 함께 5층으로 들어갑시다."]);
+NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-active"] = sequence("npc-theo-floor-5-quest-active", "theo", "default", ["준비가 되면 함께 던전 5층으로 들어갑시다."]);
+NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-complete"] = sequence("npc-theo-floor-5-quest-complete", "theo", "default", ["입구가 열렸습니다. 이제 보상을 정리하겠습니다."]);
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {

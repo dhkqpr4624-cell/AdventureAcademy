@@ -30,6 +30,7 @@ export const DUNGEON_FLOOR_TITLES: DungeonFloorTitle[] = [
     title: "던전 4층",
     subtitle: "삼국의 발전 : 신라와 가야",
   },
+  { floor: 5, floorId: "floor-5", title: "던전 5층", subtitle: "통일 신라" },
 ];
 
 export const getDungeonFloorTitle = (floorId: string) =>

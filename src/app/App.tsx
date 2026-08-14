@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BaseCampScreen } from "../screens/BaseCampScreen/BaseCampScreen";
 import { DungeonScreen } from "../screens/DungeonScreen/DungeonScreen";
+import { Dungeon5Screen } from "../screens/Dungeon5Screen/Dungeon5Screen";
 import { StoryScreen } from "../screens/StoryScreen/StoryScreen";
 import { TitleScreen } from "../screens/TitleScreen/TitleScreen";
 import { QuestionScreen } from "../screens/QuestionScreen/QuestionScreen";
@@ -24,6 +25,8 @@ import {
   removeCollectionQuestItems,
 } from "../game/quest/itemCollectionQuestRules";
 import { createDebugFloorJumpState } from "../debug/debugFloorJump";
+import { changeItemQuantity } from "../game/inventory/inventoryState";
+import { completeQuestStateAfterRewardClaim } from "../game/quest/questRewardCompletionResolver";
 
 export function App() {
   const loaded = useRef(SaveManager.load());
@@ -91,12 +94,16 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-4"
+    const activeFloorId = game.currentFloorId === "floor-5"
+      ? "floor-5"
+      : game.currentFloorId === "floor-4"
       ? "floor-4"
       : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-4"
+    const activeFloorQuestId = activeFloorId === "floor-5"
+      ? "quest-floor-5-unified-silla"
+      : activeFloorId === "floor-4"
       ? "quest-floor-4-jeon-rescue"
       : activeFloorId === "floor-3"
       ? "quest-floor-3-torn-cloth"
@@ -133,7 +140,30 @@ export function App() {
         setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
         clearedFloorIds={game.clearedFloorIds}
       />;
-      case "dungeon": return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
+      case "dungeon": if (activeFloorId === "floor-5") return <Dungeon5Screen
+        playerState={game.playerState}
+        onNavigate={navigate}
+        onCleared={() => {
+          setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null,
+            clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-5"])],
+            firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, "floor-5": true },
+            floorBestCorrect: { ...current.floorBestCorrect, "floor-5": 12 },
+          }));
+          requestSave("floorCleared");
+        }}
+        onClaim={() => {
+          setGame((current) => ({ ...current,
+            playerState: { ...current.playerState, gold: current.playerState.gold + 5 },
+            inventoryState: changeItemQuantity(current.inventoryState, "armor-munmu", 1),
+            questState: completeQuestStateAfterRewardClaim(current.questState, "quest-floor-5-unified-silla"),
+            rewardClaimed: { ...current.rewardClaimed, "quest-floor-5-unified-silla": true },
+            achievementReceived: { ...current.achievementReceived, "achievement-floor-5-rare-reward": true },
+          }));
+          requestSave("questCompleted");
+          navigate("baseCamp");
+        }}
+      />;
+      return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
         inventoryState={game.inventoryState}
         setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
