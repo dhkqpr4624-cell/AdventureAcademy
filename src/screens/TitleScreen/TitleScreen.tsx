@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ScreenId } from "../../app/routes";
+
+export function isDebugToggleShortcut(event: Pick<KeyboardEvent, "ctrlKey" | "shiftKey" | "key">) {
+  return event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "d";
+}
 
 type TitleScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -10,7 +14,22 @@ type TitleScreenProps = {
 };
 
 export function TitleScreen({ onNavigate, onOpenSettings, hasSave, onNewGame, onDebugFloorJump }: TitleScreenProps) {
+  const [debugVisible, setDebugVisible] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isDebugToggleShortcut(event) || event.repeat) return;
+      event.preventDefault();
+      setDebugVisible((visible) => {
+        if (visible) setDebugOpen(false);
+        return !visible;
+      });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <main className="game-screen title-screen">
       <img
@@ -25,24 +44,12 @@ export function TitleScreen({ onNavigate, onOpenSettings, hasSave, onNewGame, on
         설정
       </button>
 
-      {import.meta.env.DEV && <div className="title-debug-floor-jump">
+      {debugVisible && <div className="title-debug-floor-jump">
         <button className="title-debug-toggle" type="button" onClick={() => setDebugOpen((open) => !open)}>[DEBUG]</button>
         {debugOpen && <div className="title-debug-panel" aria-label="던전 층 테스트 이동">
           {([1, 2, 3, 4] as const).map((floor) => <button key={floor} type="button" onClick={() => onDebugFloorJump(`floor-${floor}`)}>Dungeon {floor}</button>)}
         </div>}
       </div>}
-
-      <aside className="title-preview-controls" aria-label="개발용 화면 미리 보기">
-        <button type="button" onClick={() => onNavigate("baseCamp")}>
-          베이스캠프 미리 보기
-        </button>
-        <button type="button" onClick={() => onNavigate("dungeon")}>
-          던전 미리 보기
-        </button>
-        <button type="button" onClick={() => onNavigate("question")}>
-          퀴즈 테스트
-        </button>
-      </aside>
 
       <section className="title-primary-controls" aria-label="게임 시작 메뉴">
         <p className="title-unit-label">&lt;5학년 2학기 1단원&gt;</p>
