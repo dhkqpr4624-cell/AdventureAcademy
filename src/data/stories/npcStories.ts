@@ -110,6 +110,14 @@ function singleSpeakerDialogue(
   ];
 }
 
+function floor5QuestDialogue(id: string, npcId: NpcId, portraitId: string, text: string): StoryStep[] {
+  return singleSpeakerDialogue(id, npcId, portraitId, text).map((step) =>
+    step.type === "hidePortrait" || step.type === "showPortrait"
+      ? { ...step, durationMs: 0 }
+      : step
+  );
+}
+
 export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
   "npc-luna-default": sequence("npc-luna-default", "luna", "happy", [
     "{{playerName}}! 던전은 항상 내가 먼저 정찰하고 있어. 필요한 게 있으면 언제든지 말해!",
@@ -256,13 +264,13 @@ NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-available"] = {
   onCompleteScreen: "baseCamp", backgrounds: {},
   actors: { theo: actor("theo", "default"), kaiden: actor("kaiden", "serious"), jeon: actor("jeon", "default") },
   scenes: [{ id: "npc-theo-floor-5-quest-available-scene", steps: [
-    ...singleSpeakerDialogue("floor5-theo-1", "theo", "default", "어서오십시오, {{playerName}}."),
-    ...singleSpeakerDialogue("floor5-theo-2", "theo", "default", "이제 던전 5층으로 향할 차례이지요."),
-    ...singleSpeakerDialogue("floor5-theo-3", "theo", "default", "루나가 먼저 정찰을 다녀왔는데, 입구에서는 어떤 수상한 것도 발견하지 못했다고 합니다."),
-    ...singleSpeakerDialogue("floor5-theo-4", "theo", "default", "즉.. 아무런 정보가 없는 셈이지요."),
-    ...singleSpeakerDialogue("floor5-kaiden-1", "kaiden", "serious", "그래. 그래서 이번에는 아무래도 다 같이 들어가는 게 좋을 것 같다."),
-    ...singleSpeakerDialogue("floor5-kaiden-2", "kaiden", "serious", "안에 어떤 단서가 있을지 모르니 위험하더라도 같이 움직이는 것이 파악하기에 수월할테니.."),
-    ...singleSpeakerDialogue("floor5-jeon-1", "jeon", "default", "도움이 될지는 모르겠으나, 저 또한 힘내겠습니다."),
+    ...floor5QuestDialogue("floor5-theo-1", "theo", "default", "어서오십시오, {{playerName}}."),
+    ...floor5QuestDialogue("floor5-theo-2", "theo", "default", "이제 던전 5층으로 향할 차례이지요."),
+    ...floor5QuestDialogue("floor5-theo-3", "theo", "default", "루나가 먼저 정찰을 다녀왔는데, 입구에서는 어떤 수상한 것도 발견하지 못했다고 합니다."),
+    ...floor5QuestDialogue("floor5-theo-4", "theo", "default", "즉.. 아무런 정보가 없는 셈이지요."),
+    ...floor5QuestDialogue("floor5-kaiden-1", "kaiden", "serious", "그래. 그래서 이번에는 아무래도 다 같이 들어가는 게 좋을 것 같다."),
+    ...floor5QuestDialogue("floor5-kaiden-2", "kaiden", "serious", "안에 어떤 단서가 있을지 모르니 위험하더라도 같이 움직이는 것이 파악하기에 수월할테니.."),
+    ...floor5QuestDialogue("floor5-jeon-1", "jeon", "default", "도움이 될지는 모르겠으나, 저 또한 힘내겠습니다."),
   ] }],
 };
 NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-accepted"] = sequence("npc-theo-floor-5-quest-accepted", "theo", "default", ["{{playerName}}, 준비를 마치고 함께 5층으로 들어갑시다."]);

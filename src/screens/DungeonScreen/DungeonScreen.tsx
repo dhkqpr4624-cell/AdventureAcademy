@@ -146,6 +146,11 @@ import {
   shouldRunItemCollectionQuestEvent,
 } from "../../game/quest/itemCollectionQuestRules";
 import type { QuestStatus } from "../../game/quest/questTypes";
+import { createDungeon5Environment } from "../../three/dungeon/Dungeon5Environment";
+import { StoryPlayer } from "../../game/story/StoryPlayer";
+import { DUNGEON5_ENTRY_STORY, DUNGEON5_GATE_STORY } from "../../data/stories/dungeon5Stories";
+import { QuestRewardPopup } from "../../components/QuestRewardPopup";
+import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -168,7 +173,10 @@ type DungeonScreenProps = {
   floorQuestStatus: QuestStatus;
   savedFloorRun: DungeonFloorRunState | null;
   onFloorRunChanged: (run: DungeonFloorRunState) => void;
+  onFloor5RewardClaim: (rareUnlocked: boolean) => void;
 };
+
+const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -186,6 +194,8 @@ export function applyFloorMonsterData(
             ? random.next() < 0.5 ? "baekje-smile" : "goguryeo-samjogo"
             : floorId === "floor-4"
               ? random.next() < 0.5 ? "gold-crown-wraith" : "corrupted-gaya-pottery"
+            : floorId === "floor-5"
+              ? random.next() < 0.5 ? "baekje-archer" : "goguryeo-cavalry"
             : room.combatConfig.monsterId;
         return {
           ...room,
@@ -206,6 +216,8 @@ export function applyFloorMonsterData(
                 ? "twisted-pensive-bodhisattva"
                 : floorId === "floor-4"
                   ? "silla-cheonma"
+                : floorId === "floor-5"
+                  ? "corrupted-munmu-wraith"
                 : room.eliteConfig.monsterId,
           },
         };
@@ -338,6 +350,7 @@ export function DungeonScreen({
   floorQuestStatus,
   savedFloorRun,
   onFloorRunChanged,
+  onFloor5RewardClaim,
 }: DungeonScreenProps) {
   const activeFloorNumber = getFloorNumber(floorId);
   const [dungeonRun] = useState(() =>
@@ -415,6 +428,8 @@ export function DungeonScreen({
 
   const [phase, setPhase] = useState<NormalCombatPhase>("intro");
   const [floorIntroVisible, setFloorIntroVisible] = useState(true);
+  const [floor5EntryStoryVisible, setFloor5EntryStoryVisible] = useState(false);
+  const [floor5RewardOpen, setFloor5RewardOpen] = useState(false);
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
     savedFloorRun?.floorId === floorId &&
@@ -541,7 +556,12 @@ export function DungeonScreen({
 
   useEffect(() => {
     onDungeonEntered();
-    const timer = window.setTimeout(() => setFloorIntroVisible(false), 3200);
+    const timer = window.setTimeout(() => {
+      setFloorIntroVisible(false);
+      if (floorId === "floor-5" && currentRoomId === dungeonMap.startRoomId) {
+        setFloor5EntryStoryVisible(true);
+      }
+    }, 3200);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -550,6 +570,7 @@ export function DungeonScreen({
     failureState === "none" &&
     !exitConfirmOpen &&
     objectiveEvent === null &&
+    !floor5EntryStoryVisible &&
     finalGateDialogueStep === null;
 
   useEffect(() => {
@@ -710,9 +731,15 @@ export function DungeonScreen({
       dungeonWorld.add(corridor);
     });
     let visualAssembly: ReturnType<typeof assembleDungeonVisuals> | null = null;
+    const dungeon5Environment = floorId === "floor-5"
+      ? createDungeon5Environment(dungeonMap, dungeonRun.seed)
+      : null;
     let dungeonTextures: Awaited<ReturnType<typeof loadDungeonTextureSet>> | null = null;
     let visualCancelled = false;
-    loadDungeonTextureSet()
+    if (dungeon5Environment) {
+      scene.background = new THREE.Color(0x7fc9f5);
+      scene.add(dungeon5Environment.root);
+    } else loadDungeonTextureSet()
       .then((textures) => {
         if (visualCancelled) {
           disposeDungeonTextureSet(textures);
@@ -834,6 +861,7 @@ export function DungeonScreen({
       visualAssembly?.dispose();
       visualAssemblyRef.current = null;
       if (dungeonTextures) disposeDungeonTextureSet(dungeonTextures);
+      dungeon5Environment?.dispose();
       geometries.forEach((geometry) => geometry.dispose());
       materials.forEach((material) => material.dispose());
       renderer.dispose();
@@ -2232,7 +2260,7 @@ export function DungeonScreen({
         )}
       </CombatDialoguePanel>}
 
-      {!floorIntroVisible && (dungeonMode === "exploration" || dungeonMode === "moving") && (
+      {!floorIntroVisible && !floor5EntryStoryVisible && (dungeonMode === "exploration" || dungeonMode === "moving") && (
         <section className="dungeon-movement-panel" aria-label="던전 이동 선택">
           <p className="eyebrow">DUNGEON EXPLORATION</p>
           {finalGateDialogueStep === null ? (
@@ -2328,6 +2356,52 @@ export function DungeonScreen({
           setInventoryState((current) => changeItemQuantity(current, "quest-jeon-rescue-marker", 1));
           onStoryEventSeen("floor-4:jeon-discovered");
           onObjectiveAcquired(runCorrectCountRef.current);
+          onNavigate("baseCamp");
+        }}
+      />}
+      {floor5EntryStoryVisible && floorId === "floor-5" && <div className="dungeon-story-overlay">
+        <StoryPlayer
+          sequence={DUNGEON5_ENTRY_STORY}
+          playerName={playerState.name || DEFAULT_PLAYER_NAME}
+          playerStatus={playerState}
+          presentationMode="baseCampOverlay"
+          onNavigate={onNavigate}
+          onComplete={() => {
+            setFloor5EntryStoryVisible(false);
+            setDungeonMode("exploration");
+          }}
+        />
+      </div>}
+      {objectiveEvent === "first" && floorId === "floor-5" && <div className="dungeon-story-overlay">
+        <StoryPlayer
+          sequence={DUNGEON5_GATE_STORY}
+          playerName={playerState.name || DEFAULT_PLAYER_NAME}
+          playerStatus={playerState}
+          presentationMode="baseCampOverlay"
+          onNavigate={onNavigate}
+          onComplete={() => {
+            playerHpRef.current = maxHp;
+            setPlayerHp(maxHp);
+            onStoryEventSeen("floor-5:gate-opened");
+            onObjectiveAcquired(runCorrectCountRef.current);
+            setObjectiveEvent(null);
+            setFloor5RewardOpen(true);
+          }}
+        />
+      </div>}
+      {floor5RewardOpen && floorId === "floor-5" && <QuestRewardPopup
+        bestCorrect={runCorrectCountRef.current}
+        requiredCorrect={FLOOR5_RARE_REWARD.requiredCorrect}
+        rareRewardItemId="armor-munmu"
+        questTitle="던전 5층 조사 완료"
+        claimed={false}
+        onClaim={() => {
+          onFloor5RewardClaim(runCorrectCountRef.current >= FLOOR5_RARE_REWARD.requiredCorrect);
+          setFloor5RewardOpen(false);
+          onNavigate("baseCamp");
+        }}
+        onCancel={() => {
+          setFloor5RewardOpen(false);
           onNavigate("baseCamp");
         }}
       />}

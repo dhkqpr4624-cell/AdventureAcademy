@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BaseCampScreen } from "../screens/BaseCampScreen/BaseCampScreen";
 import { DungeonScreen } from "../screens/DungeonScreen/DungeonScreen";
-import { Dungeon5Screen } from "../screens/Dungeon5Screen/Dungeon5Screen";
 import { StoryScreen } from "../screens/StoryScreen/StoryScreen";
 import { TitleScreen } from "../screens/TitleScreen/TitleScreen";
 import { QuestionScreen } from "../screens/QuestionScreen/QuestionScreen";
@@ -140,30 +139,7 @@ export function App() {
         setAchievementReceived={(achievementId) => setGame((current) => ({ ...current, achievementReceived: { ...current.achievementReceived, [achievementId]: true } }))}
         clearedFloorIds={game.clearedFloorIds}
       />;
-      case "dungeon": if (activeFloorId === "floor-5") return <Dungeon5Screen
-        playerState={game.playerState}
-        onNavigate={navigate}
-        onCleared={() => {
-          setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null,
-            clearedFloorIds: [...new Set([...current.clearedFloorIds, "floor-5"])],
-            firstObjectiveEventSeen: { ...current.firstObjectiveEventSeen, "floor-5": true },
-            floorBestCorrect: { ...current.floorBestCorrect, "floor-5": 12 },
-          }));
-          requestSave("floorCleared");
-        }}
-        onClaim={() => {
-          setGame((current) => ({ ...current,
-            playerState: { ...current.playerState, gold: current.playerState.gold + 5 },
-            inventoryState: changeItemQuantity(current.inventoryState, "armor-munmu", 1),
-            questState: completeQuestStateAfterRewardClaim(current.questState, "quest-floor-5-unified-silla"),
-            rewardClaimed: { ...current.rewardClaimed, "quest-floor-5-unified-silla": true },
-            achievementReceived: { ...current.achievementReceived, "achievement-floor-5-rare-reward": true },
-          }));
-          requestSave("questCompleted");
-          navigate("baseCamp");
-        }}
-      />;
-      return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
+      case "dungeon": return <DungeonScreen floorId={activeFloorId} onNavigate={navigate} playerState={game.playerState}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
         inventoryState={game.inventoryState}
         setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
@@ -202,6 +178,18 @@ export function App() {
         onBestCorrect={(correctCount) => setGame((current) => ({ ...current, floorBestCorrect: { ...current.floorBestCorrect, [activeFloorId]: Math.max(current.floorBestCorrect[activeFloorId] ?? 0, correctCount) } }))}
         floorQuestStarted={game.questState[activeFloorQuestId] === "active" || game.questState[activeFloorQuestId] === "completed"}
         floorQuestStatus={game.questState[activeFloorQuestId]}
+        onFloor5RewardClaim={(rareUnlocked) => {
+          setGame((current) => ({ ...current,
+            playerState: { ...current.playerState, gold: current.playerState.gold + 5 },
+            inventoryState: rareUnlocked ? changeItemQuantity(current.inventoryState, "armor-munmu", 1) : current.inventoryState,
+            questState: completeQuestStateAfterRewardClaim(current.questState, "quest-floor-5-unified-silla"),
+            rewardClaimed: { ...current.rewardClaimed, "quest-floor-5-unified-silla": true },
+            achievementReceived: rareUnlocked
+              ? { ...current.achievementReceived, "achievement-floor-5-rare-reward": true }
+              : current.achievementReceived,
+          }));
+          requestSave("questCompleted");
+        }}
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])] })); requestSave("floorCleared"); }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
