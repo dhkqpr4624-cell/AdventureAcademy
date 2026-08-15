@@ -225,15 +225,21 @@ export function BaseCampScreen({
     dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
+    if (npc.id === "theo" && hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active") {
+      claimFloor5Reward();
+      setSelectedNpc(null);
+      setFocusPointId("campCenter");
+      await viewportRef.current?.restore(450);
+      interactionLockRef.current = false;
+      return;
+    }
     if (npc.id === "kaiden" && canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active") {
       setPrehistoryCompletionOpen(true);
       interactionLockRef.current = false;
       return;
     }
     const sequenceId =
-      npc.id === "theo" && hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active"
-        ? "npc-theo-floor-5-quest-complete"
-      : npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
+      npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
           ? "npc-kaiden-floor-2-quest-complete"
         : npc.id === "luna" &&
             hasTornCloth &&
@@ -272,9 +278,6 @@ export function BaseCampScreen({
       revealReward(jeonQuestId);
       setJeonRewardOpen(true);
       return;
-    }
-    if (finishedSequenceId === "npc-theo-floor-5-quest-complete") {
-      revealReward(floor5QuestId); setFloor5RewardOpen(true); return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>
       npc.offeredQuestIds.includes(candidate.id) && effectiveQuestState[candidate.id] === "available"
@@ -347,6 +350,23 @@ export function BaseCampScreen({
   const completeQuestAfterRewardClaim = (questId: string) => {
     setQuestState((current) => completeQuestStateAfterRewardClaim(current, questId));
     onAutoSave("questCompleted");
+  };
+
+  const claimFloor5Reward = () => {
+    if (rewardClaimed[floor5QuestId]) return;
+    const reward = resolveQuestRewardGrant(
+      floorBestCorrect["floor-5"] ?? 12,
+      floor5QuestRareRewardCondition.requiredCorrect,
+    );
+    setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
+    if (reward.rareUnlocked) {
+      setInventoryState((current) => changeItemQuantity(current, "armor-munmu", 1));
+      setAchievementReceived("achievement-floor-5-rare-reward");
+    }
+    setRewardClaimed(floor5QuestId);
+    completeQuestAfterRewardClaim(floor5QuestId);
+    onAutoSave("questCompleted");
+    setFloor5RewardOpen(false);
   };
 
   return (
@@ -668,15 +688,7 @@ export function BaseCampScreen({
       {floor5RewardOpen && <QuestRewardPopup
         bestCorrect={floorBestCorrect["floor-5"] ?? 12} claimed={Boolean(rewardClaimed[floor5QuestId])}
         questTitle="던전 5층 조사 완료" rareRewardItemId="armor-munmu" requiredCorrect={floor5QuestRareRewardCondition.requiredCorrect}
-        onCancel={() => setFloor5RewardOpen(false)} onClaim={() => {
-          if (rewardClaimed[floor5QuestId]) return;
-          const reward = resolveQuestRewardGrant(floorBestCorrect["floor-5"] ?? 12, floor5QuestRareRewardCondition.requiredCorrect);
-          setPlayerState((current) => ({ ...current, gold: current.gold + reward.gold }));
-          if (reward.rareUnlocked) setInventoryState((current) => changeItemQuantity(current, "armor-munmu", 1));
-          setRewardClaimed(floor5QuestId); completeQuestAfterRewardClaim(floor5QuestId);
-          if (reward.rareUnlocked) setAchievementReceived("achievement-floor-5-rare-reward");
-          onAutoSave("questCompleted"); setFloor5RewardOpen(false);
-        }}
+        onCancel={() => setFloor5RewardOpen(false)} onClaim={claimFloor5Reward}
       />}
     </main>
   );

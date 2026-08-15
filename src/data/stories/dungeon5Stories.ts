@@ -6,8 +6,8 @@ const portraits = { luna: "happy", theo: "default", kaiden: "serious", jeon: "de
 const actor = (id: keyof typeof names): StoryActor => ({ id, name: names[id], portraits: { [portraits[id]]: { imageUrl: NPC_PORTRAIT_REGISTRY[`${id}.${portraits[id]}`] ?? NPC_PORTRAIT_REGISTRY[`${id}.default`], placeholder: { label: names[id], gradient: "#111" } } } });
 const allIds = Object.keys(names) as Array<keyof typeof names>;
 const say = (id: string, speaker: keyof typeof names, text: string): StoryStep[] => [
-  ...allIds.map((actorId): StoryStep => ({ id: `${id}-hide-${actorId}`, type: "hidePortrait", actorId })),
-  { id: `${id}-show`, type: "showPortrait", actorId: speaker, portraitId: portraits[speaker], position: "left", transition: "fade" },
+  ...allIds.map((actorId): StoryStep => ({ id: `${id}-hide-${actorId}`, type: "hidePortrait", actorId, durationMs: 0 })),
+  { id: `${id}-show`, type: "showPortrait", actorId: speaker, portraitId: portraits[speaker], position: "left", transition: "fade", durationMs: 0 },
   { id, type: "dialogue", speakerId: speaker, speakerName: names[speaker], activeActorId: speaker, text, advanceMode: "click" },
 ];
 const actors = { luna: actor("luna"), theo: actor("theo"), kaiden: actor("kaiden"), jeon: actor("jeon") };
@@ -31,7 +31,7 @@ export const DUNGEON5_GATE_STORY: StorySequence = {
     ...say("gate-theo-2", "theo", "'삼국 통일의 과정에 대해 논하라' 라고 적혀있는 것을 보면 이 문제를 풀어야 길이 열리는 것 같습니다."),
     ...say("gate-luna-2", "luna", "음.. 삼국을 통일했던 나라는 분명.."),
     { id: "unification-choice", type: "choice", prompt: "삼국을 통일한 나라는?", advanceMode: "click", options: [
-      { id: "goguryeo", label: "고구려였다.", nextStepId: "wrong-answer" }, { id: "baekje", label: "백제였다.", nextStepId: "wrong-answer" }, { id: "silla", label: "신라였다.", nextStepId: "right-answer" },
+      { id: "goguryeo", label: "고구려였다.", nextStepId: "wrong-answer-hide-luna" }, { id: "baekje", label: "백제였다.", nextStepId: "wrong-answer-hide-luna" }, { id: "silla", label: "신라였다.", nextStepId: "right-answer-hide-luna" },
     ] },
     ...say("wrong-answer", "kaiden", "아니, 신라였지."),
     { id: "wrong-jump", type: "checkpoint", checkpointId: "answer-resolved", advanceMode: "auto" },

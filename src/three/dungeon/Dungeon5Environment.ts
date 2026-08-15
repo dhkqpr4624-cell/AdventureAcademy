@@ -82,6 +82,12 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   floor.name = "Dungeon5FloorPlane";
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(centerX, -3, centerZ);
+  floor.onBeforeRender = (_renderer, _scene, renderCamera) => {
+    if (renderCamera instanceof THREE.PerspectiveCamera && renderCamera.far < SKY_RADIUS + 60) {
+      renderCamera.far = SKY_RADIUS + 60;
+      renderCamera.updateProjectionMatrix();
+    }
+  };
   root.add(floor);
   geometries.push(floorGeometry);
   materials.push(floorMaterial);
@@ -113,7 +119,12 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
       mountainWidth + index * 30, settings.y, settings.min, settings.max, 42, mountainRandom,
     );
     const material = new THREE.MeshBasicMaterial({
-      color: settings.color, side: THREE.DoubleSide, depthWrite: true, fog: true,
+      color: settings.color,
+      side: THREE.DoubleSide,
+      depthWrite: true,
+      fog: false,
+      transparent: true,
+      opacity: 0.48 + index * 0.08,
     });
     const ridge = new THREE.Mesh(geometry, material);
     ridge.name = `Dungeon5LowPolyMountainRidge-${index + 1}`;
@@ -127,7 +138,11 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   const random = createSeededRandom(`${seed}::dungeon5-background-combat`);
   const combatTextures = [1, 2, 3].map((index) => configure(loader.load(asset(`background-combat-${index}.png`))));
   textures.push(...combatTextures);
-  map.rooms.forEach((room, roomIndex) => {
+  const roomById = new Map(map.rooms.map((room) => [room.id, room]));
+  const decorationRooms = map.connections
+    .map((connection) => roomById.get(connection.fromRoomId))
+    .filter((room): room is NonNullable<typeof room> => Boolean(room));
+  decorationRooms.forEach((room, roomIndex) => {
     for (const side of [-1, 1] as const) {
       if (random.next() > COMBAT_PLANE_CHANCE) continue;
       const texture = combatTextures[Math.floor(random.next() * combatTextures.length)];
@@ -152,7 +167,7 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
 
   return {
     root,
-    fog: new THREE.Fog(0x9fc7d4, 60, 240),
+    fog: new THREE.Fog(0x9fc7d4, 10, 72),
     dispose: () => {
       root.removeFromParent();
       geometries.forEach((geometry) => geometry.dispose());

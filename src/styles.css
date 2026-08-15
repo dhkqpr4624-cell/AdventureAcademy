@@ -3708,3 +3708,18 @@ button:focus-visible {
   min-height: 0;
   background: transparent;
 }
+
+.dungeon-story-overlay .story-player[aria-label="닫힌 입구"]:has(.story-camera.is-shaking) .story-illust-overlay {
+  animation: dungeon5-gate-illust-shake 1000ms ease-in-out;
+}
+
+@keyframes dungeon5-gate-illust-shake {
+  0%, 100% { transform: translateX(0); }
+  12% { transform: translateX(-12px); }
+  24% { transform: translateX(12px); }
+  36% { transform: translateX(-10px); }
+  48% { transform: translateX(9px); }
+  60% { transform: translateX(-8px); }
+  72% { transform: translateX(7px); }
+  84% { transform: translateX(-4px); }
+}
