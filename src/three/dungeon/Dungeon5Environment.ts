@@ -9,6 +9,7 @@ const FLOOR_MARGIN = 100;
 const SKY_RADIUS = 260;
 const COMBAT_PLANE_CHANCE = 0.45;
 const COMBAT_ASPECT_RATIO = 1536 / 1024;
+const ROCKS_PER_ROOM = 2;
 
 function configure(texture: THREE.Texture, repeat = false) {
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -107,7 +108,7 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   materials.push(skyMaterial);
 
   const mountainRandom = createSeededRandom(`${seed}::dungeon5-mountains`);
-  const mountainWidth = Math.max(260, floorWidth + 120);
+  const mountainWidth = Math.max(720, floorWidth + 560);
   const floorFarEdge = centerZ - floorDepth / 2;
   const ridgeSettings = [
     { z: floorFarEdge - 16, y: -3.2, min: 15, max: 27, color: 0x829bad },
@@ -116,15 +117,16 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   ];
   ridgeSettings.forEach((settings, index) => {
     const geometry = createMountainRidge(
-      mountainWidth + index * 30, settings.y, settings.min, settings.max, 42, mountainRandom,
+      mountainWidth + index * 80, settings.y, settings.min, settings.max, 72, mountainRandom,
     );
     const material = new THREE.MeshBasicMaterial({
       color: settings.color,
       side: THREE.DoubleSide,
       depthWrite: true,
+      depthTest: true,
       fog: false,
-      transparent: true,
-      opacity: 0.48 + index * 0.08,
+      transparent: false,
+      opacity: 1,
     });
     const ridge = new THREE.Mesh(geometry, material);
     ridge.name = `Dungeon5LowPolyMountainRidge-${index + 1}`;
@@ -135,18 +137,17 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
     materials.push(material);
   });
 
-  const random = createSeededRandom(`${seed}::dungeon5-background-combat`);
   const combatTextures = [1, 2, 3].map((index) => configure(loader.load(asset(`background-combat-${index}.png`))));
   textures.push(...combatTextures);
-  const roomById = new Map(map.rooms.map((room) => [room.id, room]));
-  const decorationRooms = map.connections
-    .map((connection) => roomById.get(connection.fromRoomId))
-    .filter((room): room is NonNullable<typeof room> => Boolean(room));
+  const decorationRooms = map.rooms.filter(
+    (room) => room.type !== "quest" && !room.isFinalQuestRoom && !room.id.startsWith("room-story-"),
+  );
   decorationRooms.forEach((room, roomIndex) => {
+    const roomRandom = createSeededRandom(`${seed}::dungeon5-background-combat::${room.id}`);
     for (const side of [-1, 1] as const) {
-      if (random.next() > COMBAT_PLANE_CHANCE) continue;
-      const texture = combatTextures[Math.floor(random.next() * combatTextures.length)];
-      const height = 7.5 + random.next() * 2;
+      if (roomRandom.next() > COMBAT_PLANE_CHANCE) continue;
+      const texture = combatTextures[Math.floor(roomRandom.next() * combatTextures.length)];
+      const height = 7.5 + roomRandom.next() * 2;
       const geometry = new THREE.PlaneGeometry(height * COMBAT_ASPECT_RATIO, height);
       const material = new THREE.MeshBasicMaterial({
         map: texture, transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: true,
@@ -154,14 +155,47 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
       const plane = new THREE.Mesh(geometry, material);
       plane.name = `Dungeon5CombatScenery-${roomIndex}-${side}`;
       plane.position.set(
-        room.position.x + side * (15 + random.next() * 6),
+        room.position.x + side * (15 + roomRandom.next() * 6),
         -3 + height / 2 - 0.22,
-        room.position.z - 1 + (random.next() - 0.5) * 7,
+        room.position.z - 1 + (roomRandom.next() - 0.5) * 7,
       );
       plane.renderOrder = 2;
       root.add(plane);
       geometries.push(geometry);
       materials.push(material);
+    }
+  });
+
+  const rockRandom = createSeededRandom(`${seed}::dungeon5-rocks`);
+  const rockGeometries = [
+    new THREE.DodecahedronGeometry(0.72, 0),
+    new THREE.IcosahedronGeometry(0.68, 0),
+    new THREE.TetrahedronGeometry(0.7, 0),
+  ];
+  const rockMaterials = [0x807467, 0x6f685f, 0x948473].map(
+    (color) => new THREE.MeshBasicMaterial({ color, fog: true }),
+  );
+  geometries.push(...rockGeometries);
+  materials.push(...rockMaterials);
+  decorationRooms.forEach((room, roomIndex) => {
+    for (let rockIndex = 0; rockIndex < ROCKS_PER_ROOM; rockIndex += 1) {
+      const side = rockRandom.next() < 0.5 ? -1 : 1;
+      const geometryIndex = Math.floor(rockRandom.next() * rockGeometries.length);
+      const rock = new THREE.Mesh(rockGeometries[geometryIndex], rockMaterials[geometryIndex]);
+      const scale = 0.9 + rockRandom.next() * 0.8;
+      rock.name = `Dungeon5Rock-${roomIndex}-${rockIndex}`;
+      rock.position.set(
+        room.position.x + side * (6 + rockRandom.next() * 4),
+        -3 + 0.72 * scale,
+        room.position.z + (rockRandom.next() - 0.5) * 9,
+      );
+      rock.scale.set(scale * (1.05 + rockRandom.next() * 0.35), scale, scale * (0.9 + rockRandom.next() * 0.3));
+      rock.rotation.set(
+        (rockRandom.next() - 0.5) * 0.24,
+        rockRandom.next() * Math.PI * 2,
+        (rockRandom.next() - 0.5) * 0.18,
+      );
+      root.add(rock);
     }
   });
 

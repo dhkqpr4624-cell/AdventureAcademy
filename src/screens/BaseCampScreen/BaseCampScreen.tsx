@@ -225,21 +225,15 @@ export function BaseCampScreen({
     dialogueCompletedRef.current = false;
     setSelectedRegionId(null);
     await viewportRef.current?.focus(npc.baseCampSpawnId, 550);
-    if (npc.id === "theo" && hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active") {
-      claimFloor5Reward();
-      setSelectedNpc(null);
-      setFocusPointId("campCenter");
-      await viewportRef.current?.restore(450);
-      interactionLockRef.current = false;
-      return;
-    }
     if (npc.id === "kaiden" && canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active") {
       setPrehistoryCompletionOpen(true);
       interactionLockRef.current = false;
       return;
     }
     const sequenceId =
-      npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
+      npc.id === "theo" && hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active"
+        ? "npc-theo-floor-5-quest-complete"
+      : npc.id === "kaiden" && hasMemoryFragment && effectiveQuestState[memoryQuestId] === "active"
           ? "npc-kaiden-floor-2-quest-complete"
         : npc.id === "luna" &&
             hasTornCloth &&
@@ -277,6 +271,11 @@ export function BaseCampScreen({
     if (finishedSequenceId === "npc-luna-floor-4-quest-complete") {
       revealReward(jeonQuestId);
       setJeonRewardOpen(true);
+      return;
+    }
+    if (finishedSequenceId === "npc-theo-floor-5-quest-complete") {
+      revealReward(floor5QuestId);
+      setFloor5RewardOpen(true);
       return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>

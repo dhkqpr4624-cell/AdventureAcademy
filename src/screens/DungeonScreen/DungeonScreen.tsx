@@ -2386,7 +2386,7 @@ export function DungeonScreen({
             onStoryEventSeen("floor-5:gate-opened");
             onObjectiveAcquired(runCorrectCountRef.current);
             setObjectiveEvent(null);
-            setFloor5RewardOpen(true);
+            onNavigate("baseCamp");
           }}
         />
       </div>}
