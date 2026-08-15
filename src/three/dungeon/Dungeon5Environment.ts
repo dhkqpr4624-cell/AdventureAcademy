@@ -6,6 +6,7 @@ type OwnedEnvironment = { root: THREE.Group; fog: THREE.Fog; dispose: () => void
 
 const asset = (name: string) => `${import.meta.env.BASE_URL}assets/dungeon5/${name}`;
 const FLOOR_MARGIN = 100;
+const FLOOR_MOUNTAIN_EXTENSION = 16;
 const SKY_RADIUS = 260;
 const COMBAT_PLANE_CHANCE = 0.45;
 const COMBAT_ASPECT_RATIO = 1536 / 1024;
@@ -73,7 +74,8 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   const centerZ = (minZ + maxZ) / 2;
 
   const floorWidth = Math.max(150, maxX - minX + FLOOR_MARGIN);
-  const floorDepth = maxZ - minZ + FLOOR_MARGIN;
+  const baseFloorDepth = maxZ - minZ + FLOOR_MARGIN;
+  const floorDepth = baseFloorDepth + FLOOR_MOUNTAIN_EXTENSION;
   const floorTexture = configure(loader.load(asset("floor.png")), true);
   floorTexture.repeat.set(24, 24);
   textures.push(floorTexture);
@@ -82,7 +84,7 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
   const floor = new THREE.Mesh(floorGeometry, floorMaterial);
   floor.name = "Dungeon5FloorPlane";
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(centerX, -3, centerZ);
+  floor.position.set(centerX, -3, centerZ - FLOOR_MOUNTAIN_EXTENSION / 2);
   floor.onBeforeRender = (_renderer, _scene, renderCamera) => {
     if (renderCamera instanceof THREE.PerspectiveCamera && renderCamera.far < SKY_RADIUS + 60) {
       renderCamera.far = SKY_RADIUS + 60;
@@ -109,7 +111,7 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
 
   const mountainRandom = createSeededRandom(`${seed}::dungeon5-mountains`);
   const mountainWidth = Math.max(720, floorWidth + 560);
-  const floorFarEdge = centerZ - floorDepth / 2;
+  const floorFarEdge = centerZ - baseFloorDepth / 2;
   const ridgeSettings = [
     { z: floorFarEdge - 16, y: -3.2, min: 15, max: 27, color: 0x829bad },
     { z: floorFarEdge - 25, y: -2.6, min: 20, max: 34, color: 0x6f8798 },
@@ -186,7 +188,7 @@ export function createDungeon5Environment(map: DungeonMapDefinition, seed: strin
       rock.name = `Dungeon5Rock-${roomIndex}-${rockIndex}`;
       rock.position.set(
         room.position.x + side * (6 + rockRandom.next() * 4),
-        -3 + 0.72 * scale,
+        -3,
         room.position.z + (rockRandom.next() - 0.5) * 9,
       );
       rock.scale.set(scale * (1.05 + rockRandom.next() * 0.35), scale, scale * (0.9 + rockRandom.next() * 0.3));

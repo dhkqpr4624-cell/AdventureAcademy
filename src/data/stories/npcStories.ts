@@ -275,6 +275,16 @@ NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-available"] = {
 };
 NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-accepted"] = sequence("npc-theo-floor-5-quest-accepted", "theo", "default", ["{{playerName}}, 준비를 마치고 함께 5층으로 들어갑시다."]);
 NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-active"] = sequence("npc-theo-floor-5-quest-active", "theo", "default", ["준비가 되면 함께 던전 5층으로 들어갑시다."]);
+NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-active"].scenes[0].steps.push({
+  id: "npc-theo-floor-5-quest-active-choice",
+  type: "choice",
+  prompt: "무엇을 하시겠습니까?",
+  advanceMode: "click",
+  options: [
+    { id: "buy-items", label: "아이템 사기", actionId: "open-theo-shop", closeStory: true },
+    { id: "end-dialogue", label: "대화 끝내기", closeStory: true },
+  ],
+});
 NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-complete"] = sequence("npc-theo-floor-5-quest-complete", "theo", "default", ["{{playerName}}, 수고하셨습니다. 이제 다음 계획을 세우지요."]);
 
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
