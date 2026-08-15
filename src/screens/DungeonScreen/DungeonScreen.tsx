@@ -738,6 +738,7 @@ export function DungeonScreen({
     let visualCancelled = false;
     if (dungeon5Environment) {
       scene.background = new THREE.Color(0x7fc9f5);
+      scene.fog = dungeon5Environment.fog;
       scene.add(dungeon5Environment.root);
     } else loadDungeonTextureSet()
       .then((textures) => {

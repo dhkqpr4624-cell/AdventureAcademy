@@ -9,6 +9,7 @@ import {
   FLOOR1_QUESTION_SET_POOL,
 } from "./mapTemplates";
 import type { DungeonGenerationResult, GeneratedDungeon } from "./dungeonGenerationTypes";
+import { createDungeon5LinearLayout } from "./dungeon5LinearLayout";
 
 export type Floor1DungeonRun = {
   seed: string;
@@ -52,9 +53,12 @@ export function createDungeonRun(
     questionSetPool: FLOOR1_QUESTION_SET_POOL,
   });
   if (generationResult.success) {
+    const map = floorId === "floor-5"
+      ? createDungeon5LinearLayout(generationResult.dungeon)
+      : generationResult.dungeon;
     return {
       seed,
-      map: generationResult.dungeon,
+      map,
       generatedDungeon: generationResult.dungeon,
       generationResult,
       source: "generated",
@@ -68,7 +72,9 @@ export function createDungeonRun(
   }
   return {
     seed,
-    map: TEST_DUNGEON_MAP,
+    map: floorId === "floor-5"
+      ? createDungeon5LinearLayout(TEST_DUNGEON_MAP)
+      : TEST_DUNGEON_MAP,
     generationResult,
     source: "fallback",
   };
