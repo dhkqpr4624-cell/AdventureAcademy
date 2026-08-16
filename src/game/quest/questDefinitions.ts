@@ -68,6 +68,20 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-theo-floor-5-quest-complete",
     rewards: { description: "5 Gold · 문무왕의 갑옷(희귀)" },
   },
+  {
+    id: "quest-floor-6-balhae",
+    title: "길 잃은 발해의 혼",
+    summary: "전과 함께 던전 6층의 목소리를 조사하자.",
+    description: "던전 6층에서 정체를 잃은 발해 유민들의 혼을 돕고 다음 층의 길을 연다.",
+    objectiveText: "발해 유민들의 정체 찾기",
+    giverNpcId: "kaiden",
+    offerStorySequenceId: "npc-kaiden-floor-6-quest-available",
+    acceptStorySequenceId: "npc-kaiden-floor-6-quest-accepted",
+    activeStorySequenceId: "npc-kaiden-floor-6-quest-active",
+    targetFloorId: "floor-6",
+    completeStorySequenceId: "npc-kaiden-floor-6-quest-complete",
+    rewards: { description: "10 Gold · 신라의 환두대도(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(

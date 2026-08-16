@@ -64,6 +64,9 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "baekje-archer": { id: "baekje-archer", name: "백제 궁병", image: `${import.meta.env.BASE_URL}assets/monsters/baekje-archer.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
   "goguryeo-cavalry": { id: "goguryeo-cavalry", name: "고구려 기마병", image: `${import.meta.env.BASE_URL}assets/monsters/goguryeo-cavalry.png`, displayScale: 1.08, aspectRatio: 1, anchor: [0, -0.03, 0] },
   "corrupted-munmu-wraith": { id: "corrupted-munmu-wraith", name: "오염된 문무왕의 망령", image: `${import.meta.env.BASE_URL}assets/monsters/corrupted-munmu-wraith.png`, displayScale: 1.14, aspectRatio: 1, anchor: [0, -0.04, 0] },
+  "balhae-refugee-spirit": { id: "balhae-refugee-spirit", name: "발해 유민의 혼", image: `${import.meta.env.BASE_URL}assets/dungeon6/balhae-refugee-spirit.png`, displayScale: 1.1, aspectRatio: 1168 / 1346, anchor: [0, -0.04, 0] },
+  "balhae-guardian-stone-lion": { id: "balhae-guardian-stone-lion", name: "발해 수호 돌사자상", image: `${import.meta.env.BASE_URL}assets/dungeon6/balhae-guardian-stone-lion.png`, displayScale: 1.12, aspectRatio: 1182 / 1330, anchor: [0, -0.04, 0] },
+  "corrupted-double-buddha": { id: "corrupted-double-buddha", name: "오염된 이불병좌상", image: `${import.meta.env.BASE_URL}assets/dungeon6/corrupted-double-buddha.png`, displayScale: 1.15, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(

@@ -287,6 +287,34 @@ NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-active"].scenes[0].steps.push({
 });
 NPC_STORY_SEQUENCES["npc-theo-floor-5-quest-complete"] = sequence("npc-theo-floor-5-quest-complete", "theo", "default", ["{{playerName}}, 수고하셨습니다. 이제 다음 계획을 세우지요."]);
 
+NPC_STORY_SEQUENCES["npc-kaiden-floor-6-quest-available"] = {
+  id: "npc-kaiden-floor-6-quest-available", title: "던전 6층 의뢰", replayable: true, skippable: false,
+  onCompleteScreen: "baseCamp", backgrounds: {},
+  actors: { kaiden: actor("kaiden", "serious"), luna: actor("luna", "happy"), theo: actor("theo", "default"), jeon: actor("jeon", "default") },
+  scenes: [{ id: "npc-kaiden-floor-6-quest-available-scene", steps: [
+    ...floor5QuestDialogue("floor6-kaiden-1", "kaiden", "serious", "{{playerName}}, 고생이 많군. 이제 6층을 탐색할 차례이지?"),
+    ...floor5QuestDialogue("floor6-kaiden-2", "kaiden", "serious", "이번에도 먼저 루나가 다녀왔는데.. 아무래도 던전 6층에는 유령이 있는 것 같다고 하더군."),
+    ...floor5QuestDialogue("floor6-luna-1", "luna", "happy", "안녕~ {{playerName}}. 대장, 말하는 중에 끼어들어서 미안해. 직접 설명하는게 좋을 것 같아서."),
+    ...floor5QuestDialogue("floor6-kaiden-3", "kaiden", "serious", "상관 없다. 자세히 설명해 봐."),
+    ...floor5QuestDialogue("floor6-luna-2", "luna", "happy", "그러니까.. 내가 정찰로 던전 6층 입구를 먼저 열어봤는데, 열자마자 어떤 목소리가 들려왔어."),
+    ...floor5QuestDialogue("floor6-luna-3", "luna", "happy", "모습은 보이지 않아서 누구인지는 잘 모르겠는데... 어쨌든 간절한 목소리였어."),
+    ...floor5QuestDialogue("floor6-luna-4", "luna", "happy", "마치.. 나에게 뭔가를 부탁하는 것처럼."),
+    ...floor5QuestDialogue("floor6-theo-1", "theo", "default", "그 부탁을 들어줘야 다음 층으로 보내줄 것 같다는 뜻입니까?"),
+    ...floor5QuestDialogue("floor6-luna-5", "luna", "happy", "정확해.... 그런데 아무래도 {{playerName}} 혼자서는 힘들 수도 있겠다는 생각이 들어서."),
+    ...floor5QuestDialogue("floor6-kaiden-4", "kaiden", "serious", "...그럼 '전'과 함께 가는 게 좋겠군."),
+    ...floor5QuestDialogue("floor6-kaiden-5", "kaiden", "serious", "5층에서 보여준 전의 능력을 보면, 이번에도 전이 큰 역할을 해 줄지도 모른다."),
+    ...floor5QuestDialogue("floor6-kaiden-6", "kaiden", "serious", "어떻게 생각하지?"),
+  ] }],
+};
+NPC_STORY_SEQUENCES["npc-kaiden-floor-6-quest-accepted"] = sequence("npc-kaiden-floor-6-quest-accepted", "jeon", "default", ["잘 부탁드립니다, {{playerName}}."]);
+NPC_STORY_SEQUENCES["npc-kaiden-floor-6-quest-active"] = sequence("npc-kaiden-floor-6-quest-active", "kaiden", "serious", ["전과 함께 던전 6층의 목소리를 조사하도록."]);
+NPC_STORY_SEQUENCES["npc-kaiden-floor-6-quest-complete"] = sequence("npc-kaiden-floor-6-quest-complete", "kaiden", "serious", [
+  "왔는가. 다음 층의 입구가 열렸다는 것은 알고 있네.",
+  "그래, 발해 유민들의 정체성을 찾아주었다고..",
+  "수고했다. 둘이서 대단한 일을 해냈군.",
+  "이제 다음 계획을 세우지.",
+]);
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {

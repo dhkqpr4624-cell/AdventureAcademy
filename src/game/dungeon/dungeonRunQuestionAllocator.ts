@@ -42,7 +42,7 @@ export function allocateDungeonRunQuestions(
       ? FLOOR1_PREHISTORY_QUESTIONS
       : floorId === "floor-2"
         ? FLOOR2_GOJOSEON_QUESTIONS
-        : floorId === "floor-3" || floorId === "floor-4" || floorId === "floor-5"
+        : floorId === "floor-3" || floorId === "floor-4" || floorId === "floor-5" || floorId === "floor-6"
           ? FLOOR3_THREE_KINGDOMS_QUESTIONS
           : TEST_QUESTIONS,
   );

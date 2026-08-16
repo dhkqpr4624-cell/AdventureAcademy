@@ -22,6 +22,7 @@ const floor2RareRewardCondition = getQuestRareRewardCondition(
 const floor3RareRewardCondition = getQuestRareRewardCondition("quest-floor-3-torn-cloth");
 const floor4RareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeon-rescue");
 const floor5RareRewardCondition = getQuestRareRewardCondition("quest-floor-5-unified-silla");
+const floor6RareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -74,5 +75,12 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     rewardItemId: "armor-munmu", rewardStateId: "quest-floor-5-unified-silla",
     requiredCorrect: floor5RareRewardCondition.requiredCorrect, totalQuestions: floor5RareRewardCondition.totalQuestions,
     description: "던전 5층 정답",
+  },
+  {
+    id: "achievement-floor-6-rare-reward", floorId: "floor-6", floorTitle: "던전 6층",
+    title: "발해 유민의 정체", rewardIcon: `${import.meta.env.BASE_URL}assets/items/silla-ring-pommel-sword.png`,
+    rewardItemId: "weapon-silla-ring-pommel-sword", rewardStateId: "quest-floor-6-balhae",
+    requiredCorrect: floor6RareRewardCondition.requiredCorrect, totalQuestions: floor6RareRewardCondition.totalQuestions,
+    description: "던전 6층 정답",
   },
 ];

@@ -54,6 +54,11 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     icon: `${import.meta.env.BASE_URL}assets/items/munmu-armor.png`, stackable: false,
     equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(5) },
   },
+  "weapon-silla-ring-pommel-sword": {
+    id: "weapon-silla-ring-pommel-sword", name: "신라의 환두대도", type: "weaponSkin", rarity: "rare",
+    description: "신라의 환두대도를 본뜬 희귀 무기 스킨이다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/silla-ring-pommel-sword.png`, stackable: false,
+  },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",

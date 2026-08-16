@@ -93,14 +93,18 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-5"
+    const activeFloorId = game.currentFloorId === "floor-6"
+      ? "floor-6"
+      : game.currentFloorId === "floor-5"
       ? "floor-5"
       : game.currentFloorId === "floor-4"
       ? "floor-4"
       : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-5"
+    const activeFloorQuestId = activeFloorId === "floor-6"
+      ? "quest-floor-6-balhae"
+      : activeFloorId === "floor-5"
       ? "quest-floor-5-unified-silla"
       : activeFloorId === "floor-4"
       ? "quest-floor-4-jeon-rescue"
