@@ -415,11 +415,24 @@ button:focus-visible {
   pointer-events: none;
 }
 
-.dungeon-entrance-button-layer img {
+.dungeon-entrance-highlight-crop {
+  position: absolute;
   transition: filter 120ms ease;
 }
 
-.dungeon-entrance-button-layer.is-highlighted img {
+.dungeon-entrance-highlight-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.dungeon-entrance-highlight-viewport img {
+  position: absolute;
+  display: block;
+  max-width: none;
+}
+
+.dungeon-entrance-button-layer.is-highlighted .dungeon-entrance-highlight-crop {
   filter:
     drop-shadow(1px 0 0 rgba(255, 255, 255, 0.95))
     drop-shadow(-1px 0 0 rgba(255, 255, 255, 0.95))
@@ -3707,6 +3720,15 @@ button:focus-visible {
   height: 100%;
   min-height: 0;
   background: transparent;
+}
+
+.dungeon6-clue-story-overlay .story-background-shade {
+  background: transparent;
+}
+
+.dungeon6-clue-story-overlay .story-illust-overlay {
+  background: transparent;
+  animation: none;
 }
 
 .dungeon-story-overlay .story-player[aria-label="닫힌 입구"]:has(.story-camera.is-shaking) .story-illust-overlay {

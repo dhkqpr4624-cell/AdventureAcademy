@@ -46,6 +46,7 @@ import type {
   DungeonDirection,
   DungeonFloorRunState,
   DungeonMapDefinition,
+  DungeonRoomNode,
   DungeonRoomProgress,
   TraversableDungeonConnection,
 } from "../../game/dungeon/dungeonTypes";
@@ -248,12 +249,28 @@ export function prepareFloorDungeonMap(
   const floorMap = floorId === "floor-6" ? {
     ...baseMap,
     rooms: baseMap.rooms.map((room, _index, rooms) => {
-      const candidates = rooms.filter((candidate) => candidate.id !== baseMap.startRoomId && !candidate.isFinalQuestRoom);
-      if (!candidates.slice(0, 2).some((candidate) => candidate.id === room.id)) return room;
+      const selectedIds = selectDungeon6StoryRoomIds({ ...baseMap, rooms });
+      if (!selectedIds.includes(room.id)) return room;
       return { ...room, type: "empty" as const, combatConfig: undefined, eliteConfig: undefined, eventConfig: undefined, isRequired: true };
     }),
   } : baseMap;
   return applyFloorMonsterData(floorMap, seed, floorId);
+}
+
+function selectDungeon6StoryRoomIds(map: DungeonMapDefinition): string[] {
+  const eligible = map.rooms.filter((room) => room.id !== map.startRoomId && !room.isFinalQuestRoom);
+  const degree = (roomId: string) => map.connections.filter((connection) => connection.fromRoomId === roomId || connection.toRoomId === roomId).length;
+  const branchDirection = (roomId: string) => {
+    const connection = map.connections.find((candidate) => candidate.fromRoomId === roomId || candidate.toRoomId === roomId);
+    if (!connection) return null;
+    return connection.toRoomId === roomId ? connection.directionFromSource : connection.directionFromTarget;
+  };
+  const sideDeadEnds = eligible.filter((room) => degree(room.id) === 1 && ["left", "right"].includes(branchDirection(room.id) ?? ""));
+  const otherDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !sideDeadEnds.includes(room));
+  return [...sideDeadEnds, ...otherDeadEnds, ...eligible]
+    .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
+    .slice(0, 2)
+    .map((room) => room.id);
 }
 
 type NormalCombatPhase =
@@ -1680,7 +1697,8 @@ export function DungeonScreen({
     setDungeonMode("roomEvent");
     try {
       if (floorId === "floor-6") {
-        const clueRooms = dungeonMap.rooms.filter((room) => room.id !== dungeonMap.startRoomId && !room.isFinalQuestRoom && room.type === "empty").slice(0, 2);
+        const clueRoomIds = selectDungeon6StoryRoomIds(dungeonMap);
+        const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
         const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
         if (clueIndex >= 0 && !roomProgressRef.current[roomId]?.eventCompleted) {
           setFloor6ClueStoryIndex(clueIndex);
@@ -2402,10 +2420,11 @@ export function DungeonScreen({
         <StoryPlayer sequence={DUNGEON6_ENTRY_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
           presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => { setFloor6EntryStoryVisible(false); setDungeonMode("exploration"); }} />
       </div>}
-      {floor6ClueStoryIndex !== null && floorId === "floor-6" && <div className="dungeon-story-overlay">
+      {floor6ClueStoryIndex !== null && floorId === "floor-6" && <div className="dungeon-story-overlay dungeon6-clue-story-overlay">
         <StoryPlayer sequence={DUNGEON6_CLUE_STORIES[floor6ClueStoryIndex]!} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
           presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
-            const clueRooms = dungeonMap.rooms.filter((room) => room.id !== dungeonMap.startRoomId && !room.isFinalQuestRoom && room.type === "empty").slice(0, 2);
+            const clueRoomIds = selectDungeon6StoryRoomIds(dungeonMap);
+            const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
             const roomId = clueRooms[floor6ClueStoryIndex]?.id;
             if (roomId) { const next = completeRoomEvent(roomProgressRef.current, roomId); roomProgressRef.current = next; setRoomProgress(next); }
             setFloor6ClueStoryIndex(null); setDungeonMode("exploration");

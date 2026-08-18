@@ -117,6 +117,7 @@ export function BaseCampWorld({
   const highlightedRegion = highlightTargetId
     ? map.interactionRegions.find((region) => region.id === highlightTargetId)
     : undefined;
+  const dungeonEntranceRegion = map.interactionRegions.find((region) => region.id === "dungeonEntrance");
 
   return (
     <div
@@ -145,7 +146,33 @@ export function BaseCampWorld({
         style={{ zIndex: BASE_CAMP_LAYER.dungeonEntranceButton }}
         aria-hidden="true"
       >
-        {renderLayerImage("dungeonEntranceButton")}
+        {dungeonEntranceRegion ? (
+          <div
+            className="dungeon-entrance-highlight-crop"
+            style={{
+              left: dungeonEntranceRegion.x,
+              top: dungeonEntranceRegion.y,
+              width: dungeonEntranceRegion.width,
+              height: dungeonEntranceRegion.height,
+            }}
+          >
+            <div className="dungeon-entrance-highlight-viewport">
+              <img
+                src={map.layers.dungeonEntranceButton}
+                alt=""
+                draggable={false}
+                style={{
+                  left: -dungeonEntranceRegion.x,
+                  top: -dungeonEntranceRegion.y,
+                  width: map.worldWidth,
+                  height: map.worldHeight,
+                }}
+                onLoad={(event) => handleLayerLoad("dungeonEntranceButton", event.currentTarget)}
+                onError={(event) => handleLayerError("dungeonEntranceButton", event.currentTarget)}
+              />
+            </div>
+          </div>
+        ) : renderLayerImage("dungeonEntranceButton")}
       </div>
       <div
         className="base-camp-layer ground-layer"
