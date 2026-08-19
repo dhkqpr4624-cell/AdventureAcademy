@@ -76,13 +76,13 @@ export const DUNGEON6_FINAL_STORY: StorySequence = {
     { id: "identity-choice", type: "choice", advanceMode: "click", options: [
       { id: "japan", label: "당신들은 일본의 후손이다.", nextStepId: "wrong" },
       { id: "baekje", label: "당신들은 백제의 후손이다.", nextStepId: "wrong" },
-      { id: "goguryeo", label: "당신들은 고구려의 후손이다.", nextStepId: "correct-1" },
+      { id: "goguryeo", label: "당신들은 고구려의 후손이다.", nextStepId: "hide-jeon-for-voice" },
     ] },
     d("wrong", "jeon", "전", "이런, 다시 생각해보시겠어요?"),
     { id: "wrong-return", type: "choice", advanceMode: "click", options: [
       { id: "japan-again", label: "당신들은 일본의 후손이다.", nextStepId: "wrong" },
       { id: "baekje-again", label: "당신들은 백제의 후손이다.", nextStepId: "wrong" },
-      { id: "goguryeo-again", label: "당신들은 고구려의 후손이다.", nextStepId: "correct-1" },
+      { id: "goguryeo-again", label: "당신들은 고구려의 후손이다.", nextStepId: "hide-jeon-for-voice" },
     ] },
     { id: "hide-jeon-for-voice", type: "hidePortrait", actorId: "jeon", durationMs: 0, advanceMode: "auto" },
     d("correct-1", "balhaeGhost", "의문의 목소리", "고구려...? 고구려...."), d("correct-2", "balhaeGhost", "의문의 목소리", "그래... 고구려.."),

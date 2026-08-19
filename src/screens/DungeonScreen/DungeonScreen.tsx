@@ -260,14 +260,39 @@ export function prepareFloorDungeonMap(
 function selectDungeon6StoryRoomIds(map: DungeonMapDefinition): string[] {
   const eligible = map.rooms.filter((room) => room.id !== map.startRoomId && !room.isFinalQuestRoom);
   const degree = (roomId: string) => map.connections.filter((connection) => connection.fromRoomId === roomId || connection.toRoomId === roomId).length;
-  const branchDirection = (roomId: string) => {
-    const connection = map.connections.find((candidate) => candidate.fromRoomId === roomId || candidate.toRoomId === roomId);
-    if (!connection) return null;
-    return connection.toRoomId === roomId ? connection.directionFromSource : connection.directionFromTarget;
-  };
-  const sideDeadEnds = eligible.filter((room) => degree(room.id) === 1 && ["left", "right"].includes(branchDirection(room.id) ?? ""));
-  const otherDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !sideDeadEnds.includes(room));
-  return [...sideDeadEnds, ...otherDeadEnds, ...eligible]
+  const finalRoomId = map.rooms.find((room) => room.isFinalQuestRoom)?.id;
+  const adjacency = new Map(map.rooms.map((room) => [room.id, [] as string[]]));
+  for (const connection of map.connections) {
+    adjacency.get(connection.fromRoomId)?.push(connection.toRoomId);
+    adjacency.get(connection.toRoomId)?.push(connection.fromRoomId);
+  }
+
+  const previous = new Map<string, string>();
+  const visited = new Set([map.startRoomId]);
+  const queue = [map.startRoomId];
+  for (let index = 0; index < queue.length && finalRoomId && !visited.has(finalRoomId); index += 1) {
+    const current = queue[index];
+    for (const next of adjacency.get(current) ?? []) {
+      if (visited.has(next)) continue;
+      visited.add(next);
+      previous.set(next, current);
+      queue.push(next);
+    }
+  }
+
+  const mainPathRoomIds = new Set<string>();
+  if (finalRoomId && visited.has(finalRoomId)) {
+    for (let current: string | undefined = finalRoomId; current; current = previous.get(current)) {
+      mainPathRoomIds.add(current);
+      if (current === map.startRoomId) break;
+    }
+  }
+
+  const branchDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !mainPathRoomIds.has(room.id));
+  const otherDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !branchDeadEnds.includes(room));
+  const otherBranchRooms = eligible.filter((room) => !mainPathRoomIds.has(room.id) && !branchDeadEnds.includes(room));
+  const mainPathRooms = eligible.filter((room) => mainPathRoomIds.has(room.id));
+  return [...branchDeadEnds, ...otherDeadEnds, ...otherBranchRooms, ...mainPathRooms]
     .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
     .slice(0, 2)
     .map((room) => room.id);
