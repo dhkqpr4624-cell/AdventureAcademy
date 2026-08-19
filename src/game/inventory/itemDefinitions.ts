@@ -59,6 +59,11 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     description: "신라의 환두대도를 본뜬 희귀 무기 스킨이다.",
     icon: `${import.meta.env.BASE_URL}assets/items/silla-ring-pommel-sword.png`, stackable: false,
   },
+  "accessory-gungye-eyepatch": {
+    id: "accessory-gungye-eyepatch", name: "궁예의 안대", type: "misc", rarity: "rare",
+    description: "후고구려의 궁예를 상징하는 희귀 안대다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/gungye-eyepatch.png`, stackable: false,
+  },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",

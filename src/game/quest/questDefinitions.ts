@@ -82,6 +82,20 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-kaiden-floor-6-quest-complete",
     rewards: { description: "10 Gold · 신라의 환두대도(희귀)" },
   },
+  {
+    id: "quest-floor-7-goryeo-founding",
+    title: "고려의 기둥",
+    summary: "전과 함께 던전 7층에서 호족의 증표를 모으자.",
+    description: "던전 7층의 문을 가로막은 수수께끼를 풀고 고려의 기둥을 바로 세운다.",
+    objectiveText: "호족의 증표 3개를 모아 문 열기",
+    giverNpcId: "theo",
+    offerStorySequenceId: "npc-theo-floor-7-quest-available",
+    acceptStorySequenceId: "npc-theo-floor-7-quest-accepted",
+    activeStorySequenceId: "npc-theo-floor-7-quest-active",
+    targetFloorId: "floor-7",
+    completeStorySequenceId: "npc-theo-floor-7-quest-complete",
+    rewards: { description: "5 Gold · 궁예의 안대(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(

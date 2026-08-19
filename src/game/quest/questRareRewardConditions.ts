@@ -35,6 +35,7 @@ export const QUEST_RARE_REWARD_CONDITIONS: Record<
   },
   "quest-floor-5-unified-silla": { questId: "quest-floor-5-unified-silla", floorId: "floor-5", requiredCorrect: 9, totalQuestions: 12 },
   "quest-floor-6-balhae": { questId: "quest-floor-6-balhae", floorId: "floor-6", requiredCorrect: 9, totalQuestions: 12 },
+  "quest-floor-7-goryeo-founding": { questId: "quest-floor-7-goryeo-founding", floorId: "floor-7", requiredCorrect: 9, totalQuestions: 12 },
 };
 
 export function getQuestRareRewardCondition(

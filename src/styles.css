@@ -3722,11 +3722,15 @@ button:focus-visible {
   background: transparent;
 }
 
-.dungeon6-clue-story-overlay .story-background-shade {
+.dungeon6-clue-story-overlay .story-background-shade,
+.dungeon7-clue-story-overlay .story-background-shade,
+.dungeon7-quest-story-overlay .story-background-shade {
   background: transparent;
 }
 
-.dungeon6-clue-story-overlay .story-illust-overlay {
+.dungeon6-clue-story-overlay .story-illust-overlay,
+.dungeon7-clue-story-overlay .story-illust-overlay,
+.dungeon7-quest-story-overlay .story-illust-overlay {
   background: transparent;
   animation: none;
 }

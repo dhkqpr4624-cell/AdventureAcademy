@@ -67,6 +67,8 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "balhae-refugee-spirit": { id: "balhae-refugee-spirit", name: "발해 유민의 혼", image: `${import.meta.env.BASE_URL}assets/dungeon6/balhae-refugee-spirit.png`, displayScale: 1.1, aspectRatio: 1168 / 1346, anchor: [0, -0.04, 0] },
   "balhae-guardian-stone-lion": { id: "balhae-guardian-stone-lion", name: "발해 수호 돌사자상", image: `${import.meta.env.BASE_URL}assets/dungeon6/balhae-guardian-stone-lion.png`, displayScale: 1.12, aspectRatio: 1182 / 1330, anchor: [0, -0.04, 0] },
   "corrupted-double-buddha": { id: "corrupted-double-buddha", name: "오염된 이불병좌상", image: `${import.meta.env.BASE_URL}assets/dungeon6/corrupted-double-buddha.png`, displayScale: 1.15, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "later-baekje-soldier-spirit": { id: "later-baekje-soldier-spirit", name: "후백제 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon7/later-baekje-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "later-goguryeo-soldier-spirit": { id: "later-goguryeo-soldier-spirit", name: "후고구려 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon7/later-goguryeo-soldier-spirit.png`, displayScale: 1.15, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(

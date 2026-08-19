@@ -67,6 +67,7 @@ type BaseCampViewportProps = {
   interactionsDisabled?: boolean;
   questState?: QuestState;
   visibleNpcIds?: readonly string[];
+  jeonSick?: boolean;
 };
 
 const MIN_ZOOM = 1;
@@ -139,6 +140,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
   interactionsDisabled = false,
   questState = {},
   visibleNpcIds,
+  jeonSick = false,
 }, forwardedRef) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -451,6 +453,7 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           interactionsDisabled={interactionsDisabled}
         questState={questState}
         visibleNpcIds={visibleNpcIds}
+        jeonSick={jeonSick}
         />
         {import.meta.env.DEV && mode === "play" && devDraft && (
           <span

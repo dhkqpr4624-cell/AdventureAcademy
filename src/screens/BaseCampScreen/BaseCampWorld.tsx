@@ -14,6 +14,7 @@ import { NpcQuestMarker } from "../../components/NpcQuestMarker";
 import { DungeonEntranceButton } from "../../components/DungeonEntranceButton";
 import type { QuestState } from "../../game/quest/questTypes";
 import { resolveNpcQuestMarker } from "../../game/quest/questMarkerResolver";
+import jeonSickImage from "../../assets/npcs/jeon/jeon_sick.png";
 
 type BaseCampWorldProps = {
   map: BaseCampMapDefinition;
@@ -26,6 +27,7 @@ type BaseCampWorldProps = {
   interactionsDisabled?: boolean;
   questState: QuestState;
   visibleNpcIds?: readonly string[];
+  jeonSick?: boolean;
 };
 
 type LayerName = keyof BaseCampMapDefinition["layers"];
@@ -55,6 +57,7 @@ export function BaseCampWorld({
   interactionsDisabled = false,
   questState,
   visibleNpcIds,
+  jeonSick = false,
 }: BaseCampWorldProps) {
   const [highlightedNpcId, setHighlightedNpcId] = useState<string | null>(null);
   const [dungeonEntranceHighlighted, setDungeonEntranceHighlighted] =
@@ -192,16 +195,19 @@ export function BaseCampWorld({
         className="base-camp-layer npc-layer"
         style={{ zIndex: BASE_CAMP_LAYER.npcSprite }}
       >
-        {NPC_DEFINITIONS.filter((npc) => !visibleNpcIds || visibleNpcIds.includes(npc.id)).map((npc) => (
-          <NpcIdleSprite
-            key={npc.id}
-            npc={npc}
+        {NPC_DEFINITIONS.filter((npc) => !visibleNpcIds || visibleNpcIds.includes(npc.id)).map((npc) => {
+          const displayedNpc = npc.id === "jeon" && jeonSick
+            ? { ...npc, idle: { ...npc.idle, standingImage: jeonSickImage, blinkSpriteSheet: jeonSickImage, blinkFrameCount: 1, blinkFrameWidth: 600, blinkFrameHeight: 750 } }
+            : npc;
+          return <NpcIdleSprite
+            key={displayedNpc.id}
+            npc={displayedNpc}
             selected={selectedNpcId === npc.id}
             interactionHighlighted={
               highlightedNpcId === npc.id || selectedNpcId === npc.id
             }
-          />
-        ))}
+          />;
+        })}
       </div>
       <div
         className={`base-camp-layer interaction-layer ${

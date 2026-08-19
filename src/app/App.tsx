@@ -93,7 +93,9 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-6"
+    const activeFloorId = game.currentFloorId === "floor-7"
+      ? "floor-7"
+      : game.currentFloorId === "floor-6"
       ? "floor-6"
       : game.currentFloorId === "floor-5"
       ? "floor-5"
@@ -102,7 +104,9 @@ export function App() {
       : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-6"
+    const activeFloorQuestId = activeFloorId === "floor-7"
+      ? "quest-floor-7-goryeo-founding"
+      : activeFloorId === "floor-6"
       ? "quest-floor-6-balhae"
       : activeFloorId === "floor-5"
       ? "quest-floor-5-unified-silla"

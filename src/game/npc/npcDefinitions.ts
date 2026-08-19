@@ -58,7 +58,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
     },
     portraits: { default: theoPortrait },
     dialogue: { defaultStorySequenceId: "npc-theo-default" },
-    offeredQuestIds: ["quest-floor-5-unified-silla"],
+    offeredQuestIds: ["quest-floor-5-unified-silla", "quest-floor-7-goryeo-founding"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.theo),
   },
   {

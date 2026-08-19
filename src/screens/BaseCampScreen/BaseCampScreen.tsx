@@ -19,7 +19,7 @@ import type { BaseCampInteractionRegion } from "../../types/baseCamp";
 import { FLOOR_DEFINITIONS } from "../../game/floor/floorDefinitions";
 import { FloorUnlockManager } from "../../game/floor/FloorUnlockManager";
 import { resolveQuestFloorUnlock } from "../../game/floor/FloorUnlockResolver";
-import type { FloorUnlockState } from "../../game/floor/floorTypes";
+import type { FloorId, FloorUnlockState } from "../../game/floor/floorTypes";
 import type { StoryActionState } from "../../game/story/storyActionTypes";
 import type { SaveReason } from "../../save/saveTypes";
 import {
@@ -60,10 +60,11 @@ const prehistoryQuestRareRewardCondition = getQuestRareRewardCondition("quest-fl
 const jeonQuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeon-rescue");
 const floor5QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const floor6QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
+const floor7QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-7-goryeo-founding");
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
-  onEnterDungeon: (floorId: "floor-1" | "floor-2" | "floor-3" | "floor-4" | "floor-5" | "floor-6") => void;
+  onEnterDungeon: (floorId: FloorId) => void;
   playerState: PlayerState;
   setPlayerState: Dispatch<SetStateAction<PlayerState>>;
   inventoryState: InventoryState;
@@ -136,12 +137,14 @@ export function BaseCampScreen({
   const [jeonRewardOpen, setJeonRewardOpen] = useState(false);
   const [floor5RewardOpen, setFloor5RewardOpen] = useState(false);
   const [floor6RewardOpen, setFloor6RewardOpen] = useState(false);
+  const [floor7RewardOpen, setFloor7RewardOpen] = useState(false);
   const prehistoryQuestId = "quest-floor-1-prehistory";
   const memoryQuestId = "quest-floor-2-memory-fragment";
   const tornClothQuestId = "quest-floor-3-torn-cloth";
   const jeonQuestId = "quest-floor-4-jeon-rescue";
   const floor5QuestId = "quest-floor-5-unified-silla";
   const floor6QuestId = "quest-floor-6-balhae";
+  const floor7QuestId = "quest-floor-7-goryeo-founding";
   const effectiveQuestState: QuestState = {
     ...questState,
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
@@ -149,6 +152,7 @@ export function BaseCampScreen({
     ...(questState[tornClothQuestId] === "completed" && questState[jeonQuestId] === "locked" ? { [jeonQuestId]: "available" as const } : {}),
     ...(questState[jeonQuestId] === "completed" && questState[floor5QuestId] === "locked" ? { [floor5QuestId]: "available" as const } : {}),
     ...(questState[floor5QuestId] === "completed" && questState[floor6QuestId] === "locked" ? { [floor6QuestId]: "available" as const } : {}),
+    ...(questState[floor6QuestId] === "completed" && questState[floor7QuestId] === "locked" ? { [floor7QuestId]: "available" as const } : {}),
   };
   const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
   const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(
@@ -161,6 +165,7 @@ export function BaseCampScreen({
   const hasFoundJeon = clearedFloorIds.includes("floor-4");
   const hasClearedFloor5 = clearedFloorIds.includes("floor-5");
   const hasClearedFloor6 = clearedFloorIds.includes("floor-6");
+  const hasClearedFloor7 = clearedFloorIds.includes("floor-7");
   const markerQuestState = {
     ...effectiveQuestState,
     ...(canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
@@ -175,6 +180,7 @@ export function BaseCampScreen({
       : {}),
     ...(hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active" ? { [floor5QuestId]: "readyToComplete" as const } : {}),
     ...(hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active" ? { [floor6QuestId]: "readyToComplete" as const } : {}),
+    ...(hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active" ? { [floor7QuestId]: "readyToComplete" as const } : {}),
   } as unknown as QuestState;
   const activeQuest = QuestManager.getActiveQuest(effectiveQuestState);
   const interactionLocked = Boolean(
@@ -237,7 +243,9 @@ export function BaseCampScreen({
       return;
     }
     const sequenceId =
-      npc.id === "kaiden" && hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active"
+      npc.id === "theo" && hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active"
+        ? "npc-theo-floor-7-quest-complete"
+      : npc.id === "kaiden" && hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active"
         ? "npc-kaiden-floor-6-quest-complete"
       : npc.id === "theo" && hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active"
         ? "npc-theo-floor-5-quest-complete"
@@ -288,6 +296,9 @@ export function BaseCampScreen({
     }
     if (finishedSequenceId === "npc-kaiden-floor-6-quest-complete") {
       revealReward(floor6QuestId); setFloor6RewardOpen(true); return;
+    }
+    if (finishedSequenceId === "npc-theo-floor-7-quest-complete") {
+      revealReward(floor7QuestId); setFloor7RewardOpen(true); return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>
       npc.offeredQuestIds.includes(candidate.id) && effectiveQuestState[candidate.id] === "available"
@@ -398,6 +409,7 @@ export function BaseCampScreen({
         visibleNpcIds={rewardClaimed["quest-floor-4-jeon-rescue"]
           ? ["luna", "theo", "kaiden", "jeon"]
           : ["luna", "theo", "kaiden"]}
+        jeonSick={hasClearedFloor7}
       />
 
       <aside className="current-quest-tracker" aria-live="polite">
@@ -452,7 +464,7 @@ export function BaseCampScreen({
       />
 
       {storySequenceId && NPC_STORY_SEQUENCES[storySequenceId] && (
-        <div className="base-camp-story-overlay">
+        <div className={`base-camp-story-overlay ${storySequenceId === "npc-theo-floor-7-quest-available" ? "dungeon7-quest-story-overlay" : ""}`}>
           <StoryPlayer
             key={storySequenceId}
             sequence={JSON.parse(JSON.stringify(NPC_STORY_SEQUENCES[storySequenceId]).replaceAll("{{playerName}}", playerState.name || "플레이어"))}
@@ -709,6 +721,23 @@ export function BaseCampScreen({
           setPlayerState((current) => ({ ...current, gold: current.gold + 10 }));
           if (rareUnlocked) { setInventoryState((current) => changeItemQuantity(current, "weapon-silla-ring-pommel-sword", 1)); setAchievementReceived("achievement-floor-6-rare-reward"); }
           setRewardClaimed(floor6QuestId); completeQuestAfterRewardClaim(floor6QuestId); onAutoSave("questCompleted"); setFloor6RewardOpen(false);
+        }}
+      />}
+      {floor7RewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-7"] ?? 0} claimed={Boolean(rewardClaimed[floor7QuestId])}
+        questTitle="던전 7층 조사 완료" rareRewardItemId="accessory-gungye-eyepatch" requiredCorrect={floor7QuestRareRewardCondition.requiredCorrect}
+        onCancel={() => setFloor7RewardOpen(false)} onClaim={() => {
+          if (rewardClaimed[floor7QuestId]) return;
+          const rareUnlocked = (floorBestCorrect["floor-7"] ?? 0) >= floor7QuestRareRewardCondition.requiredCorrect;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          if (rareUnlocked) {
+            setInventoryState((current) => changeItemQuantity(current, "accessory-gungye-eyepatch", 1));
+            setAchievementReceived("achievement-floor-7-rare-reward");
+          }
+          setRewardClaimed(floor7QuestId);
+          completeQuestAfterRewardClaim(floor7QuestId);
+          onAutoSave("questCompleted");
+          setFloor7RewardOpen(false);
         }}
       />}
     </main>

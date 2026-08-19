@@ -315,6 +315,83 @@ NPC_STORY_SEQUENCES["npc-kaiden-floor-6-quest-complete"] = sequence("npc-kaiden-
   "이제 다음 계획을 세우지.",
 ]);
 
+NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-available"] = {
+  id: "npc-theo-floor-7-quest-available",
+  title: "던전 7층 의뢰",
+  replayable: true,
+  skippable: false,
+  onCompleteScreen: "baseCamp",
+  backgrounds: {},
+  actors: {
+    theo: actor("theo", "default"),
+    kaiden: actor("kaiden", "serious"),
+    luna: actor("luna", "happy"),
+    jeon: actor("jeon", "default"),
+  },
+  scenes: [{ id: "npc-theo-floor-7-quest-available-scene", steps: [
+    ...floor5QuestDialogue("floor7-theo-1", "theo", "default", "(플레이어 이름), 어서 오십시오."),
+    ...floor5QuestDialogue("floor7-theo-2", "theo", "default", "전과 당신이 노력해주신 덕분에, 다음 층이 열렸지요. 정말 감사합니다."),
+    ...floor5QuestDialogue("floor7-theo-3", "theo", "default", "이번에도 루나가 먼저 다녀왔습니다만.. 우선 이 사진을 함께 보시지요."),
+    { id: "floor7-broken-door-in", type: "illustOverlay", imageUrl: `${import.meta.env.BASE_URL}assets/dungeon7/broken-door.png`, visible: true, fadeMs: 350, advanceMode: "auto" },
+    ...floor5QuestDialogue("floor7-theo-4", "theo", "default", "이 문이 다음 층으로 가는 입구를 가로막고 있었다고 합니다."),
+    ...floor5QuestDialogue("floor7-theo-5", "theo", "default", "문에는 이렇게 적혀있습니다."),
+    ...floor5QuestDialogue("floor7-theo-6", "theo", "default", "...을 한데 모아 고려의 기둥을 바로 세워라."),
+    ...floor5QuestDialogue("floor7-theo-7", "theo", "default", "문제는 무엇을 한데 모으라는 것인지 나와 있지 않는다는 것입니다."),
+    ...floor5QuestDialogue("floor7-kaiden-1", "kaiden", "serious", "아마도 호족과 관련 있을 것이다."),
+    ...floor5QuestDialogue("floor7-theo-8", "theo", "default", "...! 그렇군요."),
+    ...floor5QuestDialogue("floor7-theo-9", "theo", "default", "고려 건국에서 호족이 빠질 수는 없으니까요."),
+    ...floor5QuestDialogue("floor7-theo-10", "theo", "default", "고려 건국 이후에도 호족을 포섭하려 노력했었고요."),
+    { id: "floor7-broken-door-out", type: "illustOverlay", visible: false, fadeMs: 350, advanceMode: "auto" },
+    ...floor5QuestDialogue("floor7-luna-1", "luna", "happy", "그렇다면 모으라는 것은 호족의 증표 같은 것이겠네!"),
+    ...floor5QuestDialogue("floor7-theo-11", "theo", "default", "분명 그럴 것입니다."),
+    ...floor5QuestDialogue("floor7-theo-12", "theo", "default", "(플레이어 이름), 이번에도 부탁드려도 괜찮겠습니까?"),
+    ...floor5QuestDialogue("floor7-jeon-1", "jeon", "default", "잠깐...이번에도 저를 데려가 주십시오!....윽!").map((step) => step.type === "dialogue" ? { ...step, emphasis: "danger" as const } : step),
+    ...floor5QuestDialogue("floor7-theo-13", "theo", "default", "전?! 무슨 일입니까?"),
+    ...floor5QuestDialogue("floor7-jeon-2", "jeon", "default", "갑작스럽게 죄송합니다..사실 아까부터 가벼운 두통이 있어서요...별일 아닙니다."),
+    ...floor5QuestDialogue("floor7-luna-2", "luna", "happy", "두통이요? 전 아저씨, 아플 땐 쉬어야 해요. 무리하지 말고요!"),
+    ...floor5QuestDialogue("floor7-theo-14", "theo", "default", "루나 말이 맞습니다."),
+    ...floor5QuestDialogue("floor7-jeon-3", "jeon", "default", "하지만...여러분의 도움만 받기는..."),
+    ...floor5QuestDialogue("floor7-kaiden-2", "kaiden", "serious", "..그렇게 하지. 전도 데려가도록 해."),
+    ...floor5QuestDialogue("floor7-kaiden-3", "kaiden", "serious", "6층에서도 전이 옛 문서를 해석해준 덕분에 쉽게 문을 열 수 있지 않았나. 이번에도 도움이 될 지도 모르니."),
+    ...floor5QuestDialogue("floor7-theo-15", "theo", "default", "대장..."),
+    ...floor5QuestDialogue("floor7-theo-16", "theo", "default", "알겠습니다. (플레이어 이름), 부탁드려도 괜찮겠습니까?"),
+  ] }],
+};
+NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-accepted"] = sequence("npc-theo-floor-7-quest-accepted", "theo", "default", [
+  "이번에도 기다리고 있겠습니다. 부디 무리는 하지 마시길.",
+]);
+NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-active"] = sequence("npc-theo-floor-7-quest-active", "theo", "default", [
+  "전과 함께 던전 7층에서 호족의 증표를 찾아주십시오.",
+]);
+NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-active"].scenes[0].steps.push({
+  id: "npc-theo-floor-7-quest-active-choice",
+  type: "choice",
+  prompt: "무엇을 하시겠습니까?",
+  advanceMode: "click",
+  options: [
+    { id: "buy-items", label: "아이템 사기", actionId: "open-theo-shop", closeStory: true },
+    { id: "end-dialogue", label: "대화 끝내기", closeStory: true },
+  ],
+});
+NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-complete"] = {
+  id: "npc-theo-floor-7-quest-complete",
+  title: "던전 7층 조사 완료",
+  replayable: true,
+  skippable: false,
+  onCompleteScreen: "baseCamp",
+  backgrounds: {},
+  actors: { theo: actor("theo", "default"), luna: actor("luna", "happy") },
+  scenes: [{ id: "npc-theo-floor-7-quest-complete-scene", steps: [
+    ...floor5QuestDialogue("floor7-complete-theo-1", "theo", "default", "아, (플레이어 이름), 어서 오십시오."),
+    ...floor5QuestDialogue("floor7-complete-theo-2", "theo", "default", "...전?! 대체 무슨 일이 있었던 겁니까?!"),
+    ...floor5QuestDialogue("floor7-complete-theo-3", "theo", "default", "그런... 문이 열리자마자 갑자기 쓰러졌다고요."),
+    ...floor5QuestDialogue("floor7-complete-theo-4", "theo", "default", "루나, 응급처치를 부탁합니다."),
+    ...floor5QuestDialogue("floor7-complete-luna-1", "luna", "happy", "맡겨줘!"),
+    ...floor5QuestDialogue("floor7-complete-theo-5", "theo", "default", "후...루나 덕분에 한시름 덜었군요."),
+    ...floor5QuestDialogue("floor7-complete-theo-6", "theo", "default", "수고하셨습니다, (플레이어 이름). 덕분에 다음 층이 열렸습니다. 이제 다음 계획을 세우도록 하지요."),
+  ] }],
+};
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {
