@@ -71,6 +71,11 @@ export const CHILJIDO_DEFINITION: SwordDefinition = {
   id: "chiljido",
   textureUrl: `${import.meta.env.BASE_URL}assets/swords/chiljido.png`,
 };
+export const SILLA_RING_POMMEL_SWORD_DEFINITION: SwordDefinition = {
+  ...BASIC_SWORD_DEFINITION,
+  id: "silla-ring-pommel-sword",
+  textureUrl: `${import.meta.env.BASE_URL}assets/swords/silla-ring-pommel-sword.png`,
+};
 
 export function getSwordDefinitionForEquippedItem(
   equippedItemId: string | null | undefined,
@@ -78,6 +83,7 @@ export function getSwordDefinitionForEquippedItem(
   if (equippedItemId === "weapon-gojoseon-bronze-dagger") return GOJOSEON_BRONZE_SWORD_DEFINITION;
   if (equippedItemId === "weapon-hand-axe") return HAND_AXE_DEFINITION;
   if (equippedItemId === "weapon-chiljido") return CHILJIDO_DEFINITION;
+  if (equippedItemId === "weapon-silla-ring-pommel-sword") return SILLA_RING_POMMEL_SWORD_DEFINITION;
   return BASIC_SWORD_DEFINITION;
 }
 

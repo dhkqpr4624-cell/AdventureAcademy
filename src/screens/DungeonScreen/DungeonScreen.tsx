@@ -181,6 +181,16 @@ type DungeonScreenProps = {
 };
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
+const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
+
+function playHitSfx() {
+  const audio = new Audio(HIT_SFX_URL);
+  audio.loop = false;
+  audio.volume = 1;
+  void audio.play().catch(() => {
+    // 오디오 재생이 제한되어도 전투 진행은 유지한다.
+  });
+}
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -420,6 +430,7 @@ export function DungeonScreen({
   onFloor5RewardClaim,
 }: DungeonScreenProps) {
   const activeFloorNumber = getFloorNumber(floorId);
+  const questStoryEnabled = floorQuestStatus !== "completed";
   const [dungeonRun] = useState(() =>
     createDungeonRun(
       floorId,
@@ -628,10 +639,10 @@ export function DungeonScreen({
     onDungeonEntered();
     const timer = window.setTimeout(() => {
       setFloorIntroVisible(false);
-      if (floorId === "floor-5" && currentRoomId === dungeonMap.startRoomId) {
+      if (questStoryEnabled && floorId === "floor-5" && currentRoomId === dungeonMap.startRoomId) {
         setFloor5EntryStoryVisible(true);
       }
-      if (floorId === "floor-6" && currentRoomId === dungeonMap.startRoomId) setFloor6EntryStoryVisible(true);
+      if (questStoryEnabled && floorId === "floor-6" && currentRoomId === dungeonMap.startRoomId) setFloor6EntryStoryVisible(true);
     }, 3200);
     return () => window.clearTimeout(timer);
   }, []);
@@ -1002,10 +1013,14 @@ export function DungeonScreen({
       const recordResult = () => {
         weaponResultRef.current = attackType;
       };
+      const recordHit = () => {
+        recordResult();
+        playHitSfx();
+      };
       const started = weapon.play(attackType, {
-        onHit: attackType === "hit" ? recordResult : undefined,
+        onHit: attackType === "hit" ? recordHit : undefined,
         onMiss: attackType === "miss" ? recordResult : undefined,
-        onFinish: attackType === "finish" ? recordResult : undefined,
+        onFinish: attackType === "finish" ? recordHit : undefined,
         onComplete: resolve,
       });
       if (!started) {
@@ -1028,6 +1043,7 @@ export function DungeonScreen({
         if (!mountedRef.current) {
           return;
         }
+        playHitSfx();
         const damageResult = applyPlayerDamage(attackDamage);
         if (damageResult.isDefeated) {
           defeatProcessingRef.current = true;
@@ -1734,7 +1750,7 @@ export function DungeonScreen({
     roomEventProcessingRef.current = true;
     setDungeonMode("roomEvent");
     try {
-      if (floorId === "floor-6") {
+      if (questStoryEnabled && floorId === "floor-6") {
         const clueRoomIds = selectDungeon6StoryRoomIds(dungeonMap);
         const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
         const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
@@ -1743,7 +1759,7 @@ export function DungeonScreen({
           return;
         }
       }
-      if (floorId === "floor-7") {
+      if (questStoryEnabled && floorId === "floor-7") {
         const clueRoomIds = selectDungeon7StoryRoomIds(dungeonMap);
         const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
         const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
@@ -1771,7 +1787,11 @@ export function DungeonScreen({
         return;
       }
       if (floorQuestStarted && (roomId === dungeonRun.generatedDungeon?.finalQuestRoomId || getDungeonRoom(roomId).type === "quest")) {
-        setObjectiveEvent(floorId === "floor-1" || firstObjectiveEventSeen ? "retry" : "first");
+        setObjectiveEvent(
+          floorQuestStatus === "completed" || floorId === "floor-1" || firstObjectiveEventSeen
+            ? "retry"
+            : "first",
+        );
         return;
       }
       const room = getDungeonRoom(roomId);
