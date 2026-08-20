@@ -197,7 +197,22 @@ export function BaseCampWorld({
       >
         {NPC_DEFINITIONS.filter((npc) => !visibleNpcIds || visibleNpcIds.includes(npc.id)).map((npc) => {
           const displayedNpc = npc.id === "jeon" && jeonSick
-            ? { ...npc, idle: { ...npc.idle, standingImage: jeonSickImage, blinkSpriteSheet: jeonSickImage, blinkFrameCount: 1, blinkFrameWidth: 600, blinkFrameHeight: 750 } }
+            ? {
+                ...npc,
+                idle: {
+                  ...npc.idle,
+                  standingImage: jeonSickImage,
+                  blinkSpriteSheet: jeonSickImage,
+                  blinkFrameCount: 1,
+                  blinkFrameWidth: 600,
+                  blinkFrameHeight: 750,
+                },
+                placement: {
+                  ...npc.placement,
+                  x: npc.placement.x + (npc.placement.width - npc.placement.height * (600 / 750)) / 2,
+                  width: npc.placement.height * (600 / 750),
+                },
+              }
             : npc;
           return <NpcIdleSprite
             key={displayedNpc.id}

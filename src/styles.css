@@ -3201,6 +3201,11 @@ button:focus-visible {
   font-weight: 900;
 }
 
+.story-dialogue-text.is-info-emphasis {
+  color: #62b9ff;
+  font-weight: 900;
+}
+
 .story-next-button {
   position: absolute;
   right: clamp(0.75rem, 2vw, 1.2rem);

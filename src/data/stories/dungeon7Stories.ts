@@ -95,6 +95,7 @@ export const DUNGEON7_FINAL_STORY: StorySequence = {
     id: "final",
     steps: [
       { id: "broken-door-in", type: "illustOverlay", imageUrl: asset("broken-door.png"), visible: true, fadeMs: 350, advanceMode: "auto" },
+      { id: "broken-door-pause", type: "wait", durationMs: 220, advanceMode: "auto" },
       showJeon("show-jeon"),
       dialogue("jeon-1", "...사진에서 본 그대로군요."),
       dialogue("jeon-2", "저희의 추측이 맞다면 호족의 증표로 문을 열 수 있을 것입니다."),
@@ -104,6 +105,7 @@ export const DUNGEON7_FINAL_STORY: StorySequence = {
       ] },
       { id: "broken-door-out", type: "illustOverlay", visible: false, fadeMs: 300, advanceMode: "auto" },
       { id: "closed-door-in", type: "illustOverlay", imageUrl: asset("closed-door.png"), visible: true, fadeMs: 350, advanceMode: "auto" },
+      { id: "closed-door-pause", type: "wait", durationMs: 220, advanceMode: "auto" },
       dialogue("jeon-4", "...!"),
       dialogue("jeon-5", "기둥이 세워졌습니다!"),
       { id: "open-choice", type: "choice", advanceMode: "click", options: [
@@ -111,6 +113,7 @@ export const DUNGEON7_FINAL_STORY: StorySequence = {
       ] },
       { id: "closed-door-out", type: "illustOverlay", visible: false, fadeMs: 300, advanceMode: "auto" },
       { id: "open-door-in", type: "illustOverlay", imageUrl: asset("open-door.png"), visible: true, fadeMs: 350, advanceMode: "auto" },
+      { id: "open-door-pause", type: "wait", durationMs: 220, advanceMode: "auto" },
       dialogue("jeon-6", "성공이군요!! 어서 돌아가서 모두에게 이 사실을..."),
       dialogue("jeon-7", "윽!!", "danger"),
       { id: "hide-jeon", type: "hidePortrait", actorId: "jeon", durationMs: 0, advanceMode: "auto" },

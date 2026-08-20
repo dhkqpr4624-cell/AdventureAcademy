@@ -62,7 +62,7 @@ export type StoryStep =
       speakerName: string;
       activeActorId?: string;
       text: string;
-      emphasis?: "danger";
+      emphasis?: "danger" | "info";
       advanceMode: "click";
     }
   | {
@@ -217,7 +217,7 @@ export type StoryDialogueState =
       speakerName: string;
       text: string;
       activeActorId?: string;
-      emphasis?: "danger";
+      emphasis?: "danger" | "info";
     }
   | {
       kind: "narration";

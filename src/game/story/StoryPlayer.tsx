@@ -582,9 +582,8 @@ export function StoryPlayer({
             <div className="story-dialogue-content">
               <p
                 className={`story-dialogue-text ${
-                  renderState.dialogue.kind === "dialogue" &&
-                  renderState.dialogue.emphasis === "danger"
-                    ? "is-danger-emphasis"
+                  renderState.dialogue.kind === "dialogue" && renderState.dialogue.emphasis
+                    ? `is-${renderState.dialogue.emphasis}-emphasis`
                     : ""
                 }`}
               >

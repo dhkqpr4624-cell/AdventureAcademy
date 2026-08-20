@@ -314,30 +314,37 @@ function selectDungeon7StoryRoomIds(map: DungeonMapDefinition): string[] {
     adjacency.get(connection.fromRoomId)?.push(connection.toRoomId);
     adjacency.get(connection.toRoomId)?.push(connection.fromRoomId);
   }
-  const previous = new Map<string, string>();
-  const visited = new Set([map.startRoomId]);
-  const queue = [map.startRoomId];
-  for (let index = 0; index < queue.length && finalRoomId && !visited.has(finalRoomId); index += 1) {
-    const current = queue[index];
-    for (const next of adjacency.get(current) ?? []) {
-      if (visited.has(next)) continue;
-      visited.add(next);
-      previous.set(next, current);
-      queue.push(next);
+  const distancesFrom = (originId: string) => {
+    const distances = new Map<string, number>([[originId, 0]]);
+    const queue = [originId];
+    for (let index = 0; index < queue.length; index += 1) {
+      const current = queue[index];
+      const nextDistance = (distances.get(current) ?? 0) + 1;
+      for (const next of adjacency.get(current) ?? []) {
+        if (distances.has(next)) continue;
+        distances.set(next, nextDistance);
+        queue.push(next);
+      }
     }
-  }
-  const mainPathRoomIds = new Set<string>();
-  if (finalRoomId && visited.has(finalRoomId)) {
-    for (let current: string | undefined = finalRoomId; current; current = previous.get(current)) {
-      mainPathRoomIds.add(current);
-      if (current === map.startRoomId) break;
-    }
-  }
+    return distances;
+  };
+  const startDistances = distancesFrom(map.startRoomId);
+  const finalDistances = finalRoomId ? distancesFrom(finalRoomId) : new Map<string, number>();
+  const shortestDistance = finalRoomId ? startDistances.get(finalRoomId) : undefined;
+  const mainPathRoomIds = new Set(
+    shortestDistance === undefined
+      ? []
+      : map.rooms
+          .filter((room) => (startDistances.get(room.id) ?? Infinity) + (finalDistances.get(room.id) ?? Infinity) === shortestDistance)
+          .map((room) => room.id),
+  );
   const branchDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !mainPathRoomIds.has(room.id));
-  const otherDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !branchDeadEnds.includes(room));
   const otherBranchRooms = eligible.filter((room) => !mainPathRoomIds.has(room.id) && !branchDeadEnds.includes(room));
   const mainPathRooms = eligible.filter((room) => mainPathRoomIds.has(room.id));
-  return [...branchDeadEnds, ...otherDeadEnds, ...otherBranchRooms, ...mainPathRooms]
+  const candidates = branchDeadEnds.length > 0
+    ? [...branchDeadEnds, ...otherBranchRooms]
+    : [...otherBranchRooms, ...mainPathRooms];
+  return candidates
     .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
     .slice(0, 3)
     .map((room) => room.id);

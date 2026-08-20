@@ -7,7 +7,7 @@ function sequence(
   id: string,
   npcId: NpcId,
   portraitId: string,
-  lines: Array<string | { text: string; emphasis: "danger" }>,
+  lines: Array<string | { text: string; emphasis: "danger" | "info" }>,
 ): StorySequence {
   const npc = resolveNpcPresentation(npcId);
   const steps: StoryStep[] = [
@@ -333,9 +333,10 @@ NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-available"] = {
     ...floor5QuestDialogue("floor7-theo-2", "theo", "default", "전과 당신이 노력해주신 덕분에, 다음 층이 열렸지요. 정말 감사합니다."),
     ...floor5QuestDialogue("floor7-theo-3", "theo", "default", "이번에도 루나가 먼저 다녀왔습니다만.. 우선 이 사진을 함께 보시지요."),
     { id: "floor7-broken-door-in", type: "illustOverlay", imageUrl: `${import.meta.env.BASE_URL}assets/dungeon7/broken-door.png`, visible: true, fadeMs: 350, advanceMode: "auto" },
+    { id: "floor7-broken-door-pause", type: "wait", durationMs: 220, advanceMode: "auto" },
     ...floor5QuestDialogue("floor7-theo-4", "theo", "default", "이 문이 다음 층으로 가는 입구를 가로막고 있었다고 합니다."),
     ...floor5QuestDialogue("floor7-theo-5", "theo", "default", "문에는 이렇게 적혀있습니다."),
-    ...floor5QuestDialogue("floor7-theo-6", "theo", "default", "...을 한데 모아 고려의 기둥을 바로 세워라."),
+    ...floor5QuestDialogue("floor7-theo-6", "theo", "default", "...을 한데 모아 고려의 기둥을 바로 세워라.").map((step) => step.type === "dialogue" ? { ...step, emphasis: "info" as const } : step),
     ...floor5QuestDialogue("floor7-theo-7", "theo", "default", "문제는 무엇을 한데 모으라는 것인지 나와 있지 않는다는 것입니다."),
     ...floor5QuestDialogue("floor7-kaiden-1", "kaiden", "serious", "아마도 호족과 관련 있을 것이다."),
     ...floor5QuestDialogue("floor7-theo-8", "theo", "default", "...! 그렇군요."),
@@ -345,7 +346,8 @@ NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-available"] = {
     ...floor5QuestDialogue("floor7-luna-1", "luna", "happy", "그렇다면 모으라는 것은 호족의 증표 같은 것이겠네!"),
     ...floor5QuestDialogue("floor7-theo-11", "theo", "default", "분명 그럴 것입니다."),
     ...floor5QuestDialogue("floor7-theo-12", "theo", "default", "(플레이어 이름), 이번에도 부탁드려도 괜찮겠습니까?"),
-    ...floor5QuestDialogue("floor7-jeon-1", "jeon", "default", "잠깐...이번에도 저를 데려가 주십시오!....윽!").map((step) => step.type === "dialogue" ? { ...step, emphasis: "danger" as const } : step),
+    ...floor5QuestDialogue("floor7-jeon-1", "jeon", "default", "잠깐... 이번에도 저를 데려가 주십시오!"),
+    ...floor5QuestDialogue("floor7-jeon-pain", "jeon", "default", "윽!").map((step) => step.type === "dialogue" ? { ...step, emphasis: "danger" as const } : step),
     ...floor5QuestDialogue("floor7-theo-13", "theo", "default", "전?! 무슨 일입니까?"),
     ...floor5QuestDialogue("floor7-jeon-2", "jeon", "default", "갑작스럽게 죄송합니다..사실 아까부터 가벼운 두통이 있어서요...별일 아닙니다."),
     ...floor5QuestDialogue("floor7-luna-2", "luna", "happy", "두통이요? 전 아저씨, 아플 땐 쉬어야 해요. 무리하지 말고요!"),
