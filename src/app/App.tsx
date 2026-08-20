@@ -93,11 +93,28 @@ export function App() {
       if (event.detail === 0 || !(event.target instanceof Element)) return;
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
+
+      if (
+        currentScreen === "baseCamp" &&
+        button.matches(
+          ".base-camp-npc-interaction, .dungeon-entrance-button, .floor-list button",
+        )
+      ) {
+        return;
+      }
+
+      if (currentScreen === "dungeon") {
+        const label = button.textContent?.trim().replace(/\s+/g, " ") ?? "";
+        if (label !== "답 제출" && label !== "다음" && label !== "다음으로") {
+          return;
+        }
+      }
+
       playRandomizedOneShot(BUTTON_CLICK_SFX_URL);
     };
     document.addEventListener("click", playButtonClick, true);
     return () => document.removeEventListener("click", playButtonClick, true);
-  }, []);
+  }, [currentScreen]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
