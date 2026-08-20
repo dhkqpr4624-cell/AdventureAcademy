@@ -26,6 +26,9 @@ import {
 import { createDebugFloorJumpState } from "../debug/debugFloorJump";
 import { changeItemQuantity } from "../game/inventory/inventoryState";
 import { completeQuestStateAfterRewardClaim } from "../game/quest/questRewardCompletionResolver";
+import { playRandomizedOneShot } from "../game/audioOneShot";
+
+const BUTTON_CLICK_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/button-clicked-sfx.mp3`;
 
 export function App() {
   const loaded = useRef(SaveManager.load());
@@ -84,6 +87,17 @@ export function App() {
       window.removeEventListener("pagehide", pagehide); coordinatorRef.current?.dispose(); coordinatorRef.current = null;
     };
   }, [requestSave, snapshot]);
+
+  useEffect(() => {
+    const playButtonClick = (event: MouseEvent) => {
+      if (event.detail === 0 || !(event.target instanceof Element)) return;
+      const button = event.target.closest("button");
+      if (!button || button.disabled) return;
+      playRandomizedOneShot(BUTTON_CLICK_SFX_URL);
+    };
+    document.addEventListener("click", playButtonClick, true);
+    return () => document.removeEventListener("click", playButtonClick, true);
+  }, []);
 
   useEffect(() => {
     if (import.meta.env.DEV) {

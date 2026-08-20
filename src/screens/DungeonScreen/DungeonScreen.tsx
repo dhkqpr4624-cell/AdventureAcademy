@@ -116,6 +116,7 @@ import {
   applyDungeonEventVisualVerticalOffset,
 } from "../../game/dungeon/dungeonEventVisualPlacement";
 import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitButtonResolver";
+import { playRandomizedOneShot } from "../../game/audioOneShot";
 import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
@@ -182,15 +183,6 @@ type DungeonScreenProps = {
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
-
-function playHitSfx() {
-  const audio = new Audio(HIT_SFX_URL);
-  audio.loop = false;
-  audio.volume = 1;
-  void audio.play().catch(() => {
-    // 오디오 재생이 제한되어도 전투 진행은 유지한다.
-  });
-}
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -1015,7 +1007,7 @@ export function DungeonScreen({
       };
       const recordHit = () => {
         recordResult();
-        playHitSfx();
+        playRandomizedOneShot(HIT_SFX_URL);
       };
       const started = weapon.play(attackType, {
         onHit: attackType === "hit" ? recordHit : undefined,
@@ -1043,7 +1035,7 @@ export function DungeonScreen({
         if (!mountedRef.current) {
           return;
         }
-        playHitSfx();
+        playRandomizedOneShot(HIT_SFX_URL);
         const damageResult = applyPlayerDamage(attackDamage);
         if (damageResult.isDefeated) {
           defeatProcessingRef.current = true;
