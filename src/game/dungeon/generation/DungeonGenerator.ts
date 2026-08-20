@@ -2,6 +2,7 @@ import type {
   DungeonCameraPose,
   DungeonConnection,
   DungeonFacing,
+  DungeonMapDefinition,
   DungeonRoomNode,
   DungeonRoomType,
   DungeonVector3,
@@ -59,6 +60,50 @@ export function calculateQuestionRoomPlan(
     }
   }
   return best;
+}
+
+export function selectRequiredStoryRoomIds(
+  map: Pick<DungeonMapDefinition, "rooms" | "connections" | "startRoomId">,
+  requiredCount: number,
+): string[] {
+  if (requiredCount <= 0) return [];
+  const eligible = map.rooms.filter((room) => room.id !== map.startRoomId && !room.isFinalQuestRoom);
+  const adjacency = new Map(map.rooms.map((room) => [room.id, [] as string[]]));
+  for (const connection of map.connections) {
+    adjacency.get(connection.fromRoomId)?.push(connection.toRoomId);
+    adjacency.get(connection.toRoomId)?.push(connection.fromRoomId);
+  }
+  const distancesFrom = (originId: string) => {
+    const distances = new Map<string, number>([[originId, 0]]);
+    const queue = [originId];
+    for (let index = 0; index < queue.length; index += 1) {
+      const current = queue[index];
+      for (const next of adjacency.get(current) ?? []) {
+        if (distances.has(next)) continue;
+        distances.set(next, (distances.get(current) ?? 0) + 1);
+        queue.push(next);
+      }
+    }
+    return distances;
+  };
+  const finalRoomId = map.rooms.find((room) => room.isFinalQuestRoom)?.id;
+  const startDistances = distancesFrom(map.startRoomId);
+  const finalDistances = finalRoomId ? distancesFrom(finalRoomId) : new Map<string, number>();
+  const shortestDistance = finalRoomId ? startDistances.get(finalRoomId) : undefined;
+  const mainPathRoomIds = new Set(
+    shortestDistance === undefined ? [] : map.rooms
+      .filter((room) => (startDistances.get(room.id) ?? Infinity) + (finalDistances.get(room.id) ?? Infinity) === shortestDistance)
+      .map((room) => room.id),
+  );
+  const degree = (roomId: string) => adjacency.get(roomId)?.length ?? 0;
+  const branchDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !mainPathRoomIds.has(room.id));
+  const otherDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !branchDeadEnds.includes(room));
+  const branchRooms = eligible.filter((room) => !mainPathRoomIds.has(room.id) && !branchDeadEnds.includes(room) && !otherDeadEnds.includes(room));
+  const mainPathRooms = eligible.filter((room) => mainPathRoomIds.has(room.id) && !otherDeadEnds.includes(room));
+  return [...branchDeadEnds, ...otherDeadEnds, ...branchRooms, ...mainPathRooms]
+    .filter((room, index, rooms) => rooms.findIndex((candidate) => candidate.id === room.id) === index)
+    .slice(0, requiredCount)
+    .map((room) => room.id);
 }
 
 function facingFor(_slot: MapTemplateRoomSlot): DungeonFacing {

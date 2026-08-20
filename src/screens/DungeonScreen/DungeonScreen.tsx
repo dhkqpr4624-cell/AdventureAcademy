@@ -154,6 +154,7 @@ import { DUNGEON6_CLUE_STORIES, DUNGEON6_ENTRY_STORY, DUNGEON6_FINAL_STORY } fro
 import { DUNGEON7_CLUE_STORIES, DUNGEON7_FINAL_STORY } from "../../data/stories/dungeon7Stories";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
+import { selectRequiredStoryRoomIds } from "../../game/dungeon/generation/DungeonGenerator";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -306,48 +307,7 @@ function selectDungeon6StoryRoomIds(map: DungeonMapDefinition): string[] {
 }
 
 function selectDungeon7StoryRoomIds(map: DungeonMapDefinition): string[] {
-  const eligible = map.rooms.filter((room) => room.id !== map.startRoomId && !room.isFinalQuestRoom);
-  const degree = (roomId: string) => map.connections.filter((connection) => connection.fromRoomId === roomId || connection.toRoomId === roomId).length;
-  const finalRoomId = map.rooms.find((room) => room.isFinalQuestRoom)?.id;
-  const adjacency = new Map(map.rooms.map((room) => [room.id, [] as string[]]));
-  for (const connection of map.connections) {
-    adjacency.get(connection.fromRoomId)?.push(connection.toRoomId);
-    adjacency.get(connection.toRoomId)?.push(connection.fromRoomId);
-  }
-  const distancesFrom = (originId: string) => {
-    const distances = new Map<string, number>([[originId, 0]]);
-    const queue = [originId];
-    for (let index = 0; index < queue.length; index += 1) {
-      const current = queue[index];
-      const nextDistance = (distances.get(current) ?? 0) + 1;
-      for (const next of adjacency.get(current) ?? []) {
-        if (distances.has(next)) continue;
-        distances.set(next, nextDistance);
-        queue.push(next);
-      }
-    }
-    return distances;
-  };
-  const startDistances = distancesFrom(map.startRoomId);
-  const finalDistances = finalRoomId ? distancesFrom(finalRoomId) : new Map<string, number>();
-  const shortestDistance = finalRoomId ? startDistances.get(finalRoomId) : undefined;
-  const mainPathRoomIds = new Set(
-    shortestDistance === undefined
-      ? []
-      : map.rooms
-          .filter((room) => (startDistances.get(room.id) ?? Infinity) + (finalDistances.get(room.id) ?? Infinity) === shortestDistance)
-          .map((room) => room.id),
-  );
-  const branchDeadEnds = eligible.filter((room) => degree(room.id) === 1 && !mainPathRoomIds.has(room.id));
-  const otherBranchRooms = eligible.filter((room) => !mainPathRoomIds.has(room.id) && !branchDeadEnds.includes(room));
-  const mainPathRooms = eligible.filter((room) => mainPathRoomIds.has(room.id));
-  const candidates = branchDeadEnds.length > 0
-    ? [...branchDeadEnds, ...otherBranchRooms]
-    : [...otherBranchRooms, ...mainPathRooms];
-  return candidates
-    .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
-    .slice(0, 3)
-    .map((room) => room.id);
+  return selectRequiredStoryRoomIds(map, 3);
 }
 
 type NormalCombatPhase =

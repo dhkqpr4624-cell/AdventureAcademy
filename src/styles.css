@@ -3206,6 +3206,11 @@ button:focus-visible {
   font-weight: 900;
 }
 
+.story-inline-danger {
+  color: #ff5a52;
+  font-weight: 900;
+}
+
 .story-next-button {
   position: absolute;
   right: clamp(0.75rem, 2vw, 1.2rem);
@@ -3740,7 +3745,8 @@ button:focus-visible {
   animation: none;
 }
 
-.dungeon-story-overlay .story-player[aria-label="닫힌 입구"]:has(.story-camera.is-shaking) .story-illust-overlay {
+.dungeon-story-overlay .story-player[aria-label="닫힌 입구"]:has(.story-camera.is-shaking) .story-illust-overlay,
+.dungeon-story-overlay .story-player[aria-label="고려의 기둥"]:has(.story-camera.is-shaking) .story-illust-overlay {
   animation: dungeon5-gate-illust-shake 1000ms ease-in-out;
 }
 

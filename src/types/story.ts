@@ -119,6 +119,7 @@ export type StoryStep =
       type: "shake";
       durationMs: number;
       amplitude: number;
+      hideDialogue?: boolean;
       advanceMode: "auto";
     }
   | {
@@ -148,6 +149,8 @@ export type StoryStep =
       imageUrl?: string;
       visible: boolean;
       fadeMs?: number;
+      hideDialogue?: boolean;
+      waitForFade?: boolean;
       advanceMode: "auto";
     }
   | {

@@ -60,9 +60,10 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     icon: `${import.meta.env.BASE_URL}assets/items/silla-ring-pommel-sword.png`, stackable: false,
   },
   "accessory-gungye-eyepatch": {
-    id: "accessory-gungye-eyepatch", name: "궁예의 안대", type: "misc", rarity: "rare",
-    description: "후고구려의 궁예를 상징하는 희귀 안대다.",
+    id: "accessory-gungye-eyepatch", name: "궁예의 안대", type: "armor", rarity: "rare",
+    description: "후고구려의 궁예를 상징하는 희귀 방어구다.",
     icon: `${import.meta.env.BASE_URL}assets/items/gungye-eyepatch.png`, stackable: false,
+    equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(7) },
   },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { ScreenId } from "../../app/routes";
 import { getBaseCampMap } from "../../data/baseCampMaps";
 import type {
@@ -138,20 +138,33 @@ function DialogueText({
   text: string;
   playerName: string;
 }) {
-  if (!playerName || !text.includes(playerName)) {
-    return text;
-  }
+  const renderPlayerName = (part: string, keyPrefix: string): ReactNode[] => {
+    if (!playerName || !part.includes(playerName)) return [part];
+    return part.split(playerName).flatMap((segment, index, segments) => [
+      segment,
+      ...(index < segments.length - 1
+        ? [
+            <strong className="story-player-name" key={`${keyPrefix}-player-name-${index}`}>
+              {playerName}
+            </strong>,
+          ]
+        : []),
+    ]);
+  };
 
-  return text.split(playerName).flatMap((part, index, parts) => [
-    part,
-    ...(index < parts.length - 1
-      ? [
-          <strong className="story-player-name" key={`player-name-${index}`}>
-            {playerName}
-          </strong>,
-        ]
-      : []),
-  ]);
+  const inlineDangerPattern = /<red><b>(.*?)<\/b><\/red>/g;
+  const result: ReactNode[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  let index = 0;
+  while ((match = inlineDangerPattern.exec(text)) !== null) {
+    result.push(...renderPlayerName(text.slice(cursor, match.index), `text-${index}`));
+    result.push(<strong className="story-inline-danger" key={`danger-${index}`}>{match[1]}</strong>);
+    cursor = match.index + match[0].length;
+    index += 1;
+  }
+  result.push(...renderPlayerName(text.slice(cursor), `text-${index}`));
+  return result;
 }
 
 export function StoryPlayer({

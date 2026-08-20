@@ -54,6 +54,10 @@ function resolveDuration(step: StoryStep) {
     return step.durationMs;
   }
 
+  if (step.type === "illustOverlay" && step.waitForFade) {
+    return step.fadeMs ?? 250;
+  }
+
   if (
     step.type === "setBackground" ||
     step.type === "showPortrait" ||
@@ -183,6 +187,7 @@ export class StoryStepRunner {
       case "shake":
         context.updateState((state) => ({
           ...state,
+          dialogue: step.hideDialogue ? null : state.dialogue,
           camera: {
             ...state.camera,
             shakeDurationMs: step.durationMs,
@@ -257,6 +262,7 @@ export class StoryStepRunner {
       case "illustOverlay":
         context.updateState((state) => ({
           ...state,
+          dialogue: step.hideDialogue ? null : state.dialogue,
           illust: {
             imageUrl: step.imageUrl ?? state.illust.imageUrl,
             visible: step.visible,
