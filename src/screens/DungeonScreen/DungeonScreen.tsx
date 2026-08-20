@@ -153,6 +153,7 @@ import { StoryPlayer } from "../../game/story/StoryPlayer";
 import { DUNGEON5_ENTRY_STORY, DUNGEON5_GATE_STORY } from "../../data/stories/dungeon5Stories";
 import { DUNGEON6_CLUE_STORIES, DUNGEON6_ENTRY_STORY, DUNGEON6_FINAL_STORY } from "../../data/stories/dungeon6Stories";
 import { DUNGEON7_CLUE_STORIES, DUNGEON7_FINAL_STORY } from "../../data/stories/dungeon7Stories";
+import { DUNGEON8_FINAL_STORY } from "../../data/stories/dungeon8Stories";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { selectRequiredStoryRoomIds } from "../../game/dungeon/generation/DungeonGenerator";
@@ -183,7 +184,6 @@ type DungeonScreenProps = {
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
-const HEAL_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/heal-sfx.mp3`;
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -207,6 +207,8 @@ export function applyFloorMonsterData(
               ? random.next() < 0.5 ? "balhae-refugee-spirit" : "balhae-guardian-stone-lion"
             : floorId === "floor-7"
               ? "later-baekje-soldier-spirit"
+            : floorId === "floor-8"
+              ? random.next() < 0.5 ? "khitan-soldier-spirit" : "jurchen-soldier-spirit"
             : room.combatConfig.monsterId;
         return {
           ...room,
@@ -233,6 +235,8 @@ export function applyFloorMonsterData(
                   ? "corrupted-double-buddha"
                 : floorId === "floor-7"
                   ? "later-goguryeo-soldier-spirit"
+                : floorId === "floor-8"
+                  ? "mongol-general-armor"
                 : room.eliteConfig.monsterId,
           },
         };
@@ -1334,9 +1338,6 @@ export function DungeonScreen({
     const result = pendingPotionResultRef.current;
     if (phase !== "itemUse" || !result) {
       return;
-    }
-    if (result.healedAmount > 0) {
-      playRandomizedOneShot(HEAL_SFX_URL);
     }
     setPlayerHp((current) =>
       applyDungeonPlayerHealing(current, result.healedAmount, maxHp),
@@ -2531,6 +2532,13 @@ export function DungeonScreen({
         <StoryPlayer sequence={DUNGEON7_FINAL_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
           presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
             playerHpRef.current = maxHp; setPlayerHp(maxHp); onStoryEventSeen("floor-7:goryeo-door-opened");
+            onObjectiveAcquired(runCorrectCountRef.current); setObjectiveEvent(null); onFloorCleared(); onNavigate("baseCamp");
+          }} />
+      </div>}
+      {objectiveEvent === "first" && floorId === "floor-8" && <div className="dungeon-story-overlay">
+        <StoryPlayer sequence={DUNGEON8_FINAL_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
+          presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
+            playerHpRef.current = maxHp; setPlayerHp(maxHp); onStoryEventSeen("floor-8:gongmin-returned-to-history");
             onObjectiveAcquired(runCorrectCountRef.current); setObjectiveEvent(null); onFloorCleared(); onNavigate("baseCamp");
           }} />
       </div>}

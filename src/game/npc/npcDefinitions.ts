@@ -81,7 +81,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       questAvailableStorySequenceId: "npc-kaiden-quest-available",
       questActiveStorySequenceId: "npc-kaiden-quest-active",
     },
-    offeredQuestIds: ["quest-floor-1-prehistory", "quest-floor-2-memory-fragment", "quest-floor-6-balhae"],
+    offeredQuestIds: ["quest-floor-1-prehistory", "quest-floor-2-memory-fragment", "quest-floor-6-balhae", "quest-floor-8-goryeo-relations"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.kaiden),
   },
   {

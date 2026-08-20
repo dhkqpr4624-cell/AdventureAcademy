@@ -32,6 +32,7 @@ export const FLOOR_DEFINITIONS: readonly FloorDefinition[] = [
   { id: "floor-5", order: 5, title: "5층", questId: "quest-floor-5-unified-silla", questionCount: 12 },
   { id: "floor-6", order: 6, title: "6층", questId: "quest-floor-6-balhae", questionCount: 12 },
   { id: "floor-7", order: 7, title: "7층", questId: "quest-floor-7-goryeo-founding", questionCount: 12 },
+  { id: "floor-8", order: 8, title: "8층", questId: "quest-floor-8-goryeo-relations", questionCount: 12 },
 ];
 
 export const INITIAL_FLOOR_UNLOCK_STATE: FloorUnlockState = {

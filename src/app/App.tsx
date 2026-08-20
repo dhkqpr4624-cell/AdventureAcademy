@@ -93,28 +93,11 @@ export function App() {
       if (event.detail === 0 || !(event.target instanceof Element)) return;
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
-
-      if (
-        currentScreen === "baseCamp" &&
-        button.matches(
-          ".base-camp-npc-interaction, .dungeon-entrance-button, .floor-list button",
-        )
-      ) {
-        return;
-      }
-
-      if (currentScreen === "dungeon") {
-        const label = button.textContent?.trim().replace(/\s+/g, " ") ?? "";
-        if (label !== "답 제출" && label !== "다음" && label !== "다음으로") {
-          return;
-        }
-      }
-
       playRandomizedOneShot(BUTTON_CLICK_SFX_URL);
     };
     document.addEventListener("click", playButtonClick, true);
     return () => document.removeEventListener("click", playButtonClick, true);
-  }, [currentScreen]);
+  }, []);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -124,7 +107,9 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-7"
+    const activeFloorId = game.currentFloorId === "floor-8"
+      ? "floor-8"
+      : game.currentFloorId === "floor-7"
       ? "floor-7"
       : game.currentFloorId === "floor-6"
       ? "floor-6"
@@ -135,7 +120,9 @@ export function App() {
       : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-7"
+    const activeFloorQuestId = activeFloorId === "floor-8"
+      ? "quest-floor-8-goryeo-relations"
+      : activeFloorId === "floor-7"
       ? "quest-floor-7-goryeo-founding"
       : activeFloorId === "floor-6"
       ? "quest-floor-6-balhae"

@@ -69,6 +69,9 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "corrupted-double-buddha": { id: "corrupted-double-buddha", name: "오염된 이불병좌상", image: `${import.meta.env.BASE_URL}assets/dungeon6/corrupted-double-buddha.png`, displayScale: 1.15, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
   "later-baekje-soldier-spirit": { id: "later-baekje-soldier-spirit", name: "후백제 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon7/later-baekje-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
   "later-goguryeo-soldier-spirit": { id: "later-goguryeo-soldier-spirit", name: "후고구려 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon7/later-goguryeo-soldier-spirit.png`, displayScale: 1.15, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "khitan-soldier-spirit": { id: "khitan-soldier-spirit", name: "거란 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon8/khitan-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "jurchen-soldier-spirit": { id: "jurchen-soldier-spirit", name: "여진족 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon8/jurchen-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "mongol-general-armor": { id: "mongol-general-armor", name: "몽골 장군의 갑주", image: `${import.meta.env.BASE_URL}assets/dungeon8/mongol-general-armor.png`, displayScale: 1.18, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(

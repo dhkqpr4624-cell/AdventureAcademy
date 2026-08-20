@@ -13,6 +13,7 @@ export const QUEST_ITEM_IDS_BY_QUEST: Readonly<Record<string, readonly string[]>
   "quest-floor-5-unified-silla": [],
   "quest-floor-6-balhae": [],
   "quest-floor-7-goryeo-founding": [],
+  "quest-floor-8-goryeo-relations": [],
 };
 
 const NEXT_QUEST_ID: Readonly<Record<string, string>> = {
@@ -22,6 +23,7 @@ const NEXT_QUEST_ID: Readonly<Record<string, string>> = {
   "quest-floor-4-jeon-rescue": "quest-floor-5-unified-silla",
   "quest-floor-5-unified-silla": "quest-floor-6-balhae",
   "quest-floor-6-balhae": "quest-floor-7-goryeo-founding",
+  "quest-floor-7-goryeo-founding": "quest-floor-8-goryeo-relations",
 };
 
 export function completeQuestStateAfterRewardClaim(

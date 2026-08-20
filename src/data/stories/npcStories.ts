@@ -394,6 +394,55 @@ NPC_STORY_SEQUENCES["npc-theo-floor-7-quest-complete"] = {
   ] }],
 };
 
+NPC_STORY_SEQUENCES["npc-kaiden-floor-8-quest-available"] = {
+  id: "npc-kaiden-floor-8-quest-available",
+  title: "던전 8층 의뢰",
+  replayable: true,
+  skippable: false,
+  onCompleteScreen: "baseCamp",
+  backgrounds: {},
+  actors: {
+    kaiden: actor("kaiden", "serious"),
+    luna: actor("luna", "happy"),
+    theo: actor("theo", "default"),
+    jeon: actor("jeon", "default"),
+  },
+  scenes: [{ id: "npc-kaiden-floor-8-quest-available-scene", steps: [
+    ...floor5QuestDialogue("floor8-kaiden-1", "kaiden", "serious", " 왔군, (플레이어 이름). "),
+    ...floor5QuestDialogue("floor8-kaiden-2", "kaiden", "serious", " 다음층으로 갈 계획을 세우고자 루나가 정찰을 갔다 왔다고 한다.. 그런데. "),
+    ...floor5QuestDialogue("floor8-luna-1", "luna", "happy", " 헤헤..이번에도 아무런 낌새를 발견하지 못했어. "),
+    ...floor5QuestDialogue("floor8-kaiden-3", "kaiden", "serious", " 아무래도 던전 안쪽에서 직접 단서를 찾아야 할것 같다. "),
+    ...floor5QuestDialogue("floor8-kaiden-4", "kaiden", "serious", " 지난번에 그랬던것처럼, 이번에도 우리 모두 함께 던전에 들어간다는 뜻이지. "),
+    ...floor5QuestDialogue("floor8-theo-1", "theo", "default", " 전은 제외입니다. 전은 부상자이니, 베이스캠프에서 휴식하도록 하죠. "),
+    ...floor5QuestDialogue("floor8-jeon-1", "jeon", "default", " 도움이 되지 못해 죄송합니다.. "),
+    ...floor5QuestDialogue("floor8-luna-2", "luna", "happy", " 그런 말 마요. 지금까지 전 아저씨의 활약이 엄청났는걸요! 이번엔 저희도 좀 활약하게 해 주세요! "),
+    ...floor5QuestDialogue("floor8-jeon-2", "jeon", "default", " 하하.. 믿고 맡기겠습니다. "),
+    ...floor5QuestDialogue("floor8-kaiden-5", "kaiden", "serious", " 준비가 되었다면 바로 출발하지. "),
+  ] }],
+};
+NPC_STORY_SEQUENCES["npc-kaiden-floor-8-quest-accepted"] = sequence(
+  "npc-kaiden-floor-8-quest-accepted",
+  "kaiden",
+  "serious",
+  [" 우리는 단서를 찾을테니, 늘 그렇듯 전투를 잘 부탁하겠다. (플레이어 이름). "],
+);
+NPC_STORY_SEQUENCES["npc-kaiden-floor-8-quest-active"] = sequence(
+  "npc-kaiden-floor-8-quest-active",
+  "kaiden",
+  "serious",
+  ["동료들과 함께 던전 8층 안쪽에서 단서를 찾도록."],
+);
+NPC_STORY_SEQUENCES["npc-kaiden-floor-8-quest-complete"] = sequence(
+  "npc-kaiden-floor-8-quest-complete",
+  "kaiden",
+  "serious",
+  [
+    " (플레이어 이름), 이번에도 수고했다. ",
+    " 전이 사라지니 테오도 루나도 조금 우울해보이지만, 그들도 조금 있으면 잘 이겨내겠지. ",
+    " 조금 휴식한 뒤 출발하는 것이 좋겠군. ",
+  ],
+);
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {

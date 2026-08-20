@@ -61,6 +61,7 @@ const jeonQuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-4-
 const floor5QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const floor6QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
 const floor7QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-7-goryeo-founding");
+const floor8QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-8-goryeo-relations");
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -138,6 +139,7 @@ export function BaseCampScreen({
   const [floor5RewardOpen, setFloor5RewardOpen] = useState(false);
   const [floor6RewardOpen, setFloor6RewardOpen] = useState(false);
   const [floor7RewardOpen, setFloor7RewardOpen] = useState(false);
+  const [floor8RewardOpen, setFloor8RewardOpen] = useState(false);
   const prehistoryQuestId = "quest-floor-1-prehistory";
   const memoryQuestId = "quest-floor-2-memory-fragment";
   const tornClothQuestId = "quest-floor-3-torn-cloth";
@@ -145,6 +147,7 @@ export function BaseCampScreen({
   const floor5QuestId = "quest-floor-5-unified-silla";
   const floor6QuestId = "quest-floor-6-balhae";
   const floor7QuestId = "quest-floor-7-goryeo-founding";
+  const floor8QuestId = "quest-floor-8-goryeo-relations";
   const effectiveQuestState: QuestState = {
     ...questState,
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
@@ -153,6 +156,7 @@ export function BaseCampScreen({
     ...(questState[jeonQuestId] === "completed" && questState[floor5QuestId] === "locked" ? { [floor5QuestId]: "available" as const } : {}),
     ...(questState[floor5QuestId] === "completed" && questState[floor6QuestId] === "locked" ? { [floor6QuestId]: "available" as const } : {}),
     ...(questState[floor6QuestId] === "completed" && questState[floor7QuestId] === "locked" ? { [floor7QuestId]: "available" as const } : {}),
+    ...(questState[floor7QuestId] === "completed" && questState[floor8QuestId] === "locked" ? { [floor8QuestId]: "available" as const } : {}),
   };
   const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
   const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(
@@ -166,6 +170,7 @@ export function BaseCampScreen({
   const hasClearedFloor5 = clearedFloorIds.includes("floor-5");
   const hasClearedFloor6 = clearedFloorIds.includes("floor-6");
   const hasClearedFloor7 = clearedFloorIds.includes("floor-7");
+  const hasClearedFloor8 = clearedFloorIds.includes("floor-8");
   const markerQuestState = {
     ...effectiveQuestState,
     ...(canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
@@ -181,6 +186,7 @@ export function BaseCampScreen({
     ...(hasClearedFloor5 && effectiveQuestState[floor5QuestId] === "active" ? { [floor5QuestId]: "readyToComplete" as const } : {}),
     ...(hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active" ? { [floor6QuestId]: "readyToComplete" as const } : {}),
     ...(hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active" ? { [floor7QuestId]: "readyToComplete" as const } : {}),
+    ...(hasClearedFloor8 && effectiveQuestState[floor8QuestId] === "active" ? { [floor8QuestId]: "readyToComplete" as const } : {}),
   } as unknown as QuestState;
   const activeQuest = QuestManager.getActiveQuest(effectiveQuestState);
   const interactionLocked = Boolean(
@@ -243,7 +249,9 @@ export function BaseCampScreen({
       return;
     }
     const sequenceId =
-      npc.id === "theo" && hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active"
+      npc.id === "kaiden" && hasClearedFloor8 && effectiveQuestState[floor8QuestId] === "active"
+        ? "npc-kaiden-floor-8-quest-complete"
+      : npc.id === "theo" && hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active"
         ? "npc-theo-floor-7-quest-complete"
       : npc.id === "kaiden" && hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active"
         ? "npc-kaiden-floor-6-quest-complete"
@@ -299,6 +307,9 @@ export function BaseCampScreen({
     }
     if (finishedSequenceId === "npc-theo-floor-7-quest-complete") {
       revealReward(floor7QuestId); setFloor7RewardOpen(true); return;
+    }
+    if (finishedSequenceId === "npc-kaiden-floor-8-quest-complete") {
+      revealReward(floor8QuestId); setFloor8RewardOpen(true); return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>
       npc.offeredQuestIds.includes(candidate.id) && effectiveQuestState[candidate.id] === "available"
@@ -407,7 +418,7 @@ export function BaseCampScreen({
         interactionsDisabled={interactionLocked}
         questState={markerQuestState}
         visibleNpcIds={rewardClaimed["quest-floor-4-jeon-rescue"]
-          ? ["luna", "theo", "kaiden", "jeon"]
+          ? hasClearedFloor8 ? ["luna", "theo", "kaiden"] : ["luna", "theo", "kaiden", "jeon"]
           : ["luna", "theo", "kaiden"]}
         jeonSick={hasClearedFloor7}
       />
@@ -738,6 +749,23 @@ export function BaseCampScreen({
           completeQuestAfterRewardClaim(floor7QuestId);
           onAutoSave("questCompleted");
           setFloor7RewardOpen(false);
+        }}
+      />}
+      {floor8RewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-8"] ?? 0} claimed={Boolean(rewardClaimed[floor8QuestId])}
+        questTitle="던전 8층 조사 완료" rareRewardItemId="weapon-choe-museon-cannon" requiredCorrect={floor8QuestRareRewardCondition.requiredCorrect}
+        onCancel={() => setFloor8RewardOpen(false)} onClaim={() => {
+          if (rewardClaimed[floor8QuestId]) return;
+          const rareUnlocked = (floorBestCorrect["floor-8"] ?? 0) >= floor8QuestRareRewardCondition.requiredCorrect;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 5 }));
+          if (rareUnlocked) {
+            setInventoryState((current) => changeItemQuantity(current, "weapon-choe-museon-cannon", 1));
+            setAchievementReceived("achievement-floor-8-rare-reward");
+          }
+          setRewardClaimed(floor8QuestId);
+          completeQuestAfterRewardClaim(floor8QuestId);
+          onAutoSave("questCompleted");
+          setFloor8RewardOpen(false);
         }}
       />}
     </main>

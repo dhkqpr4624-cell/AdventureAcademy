@@ -315,7 +315,9 @@ export function StoryPlayer({
             await controller?.restore(durationMs, signal);
           },
           checkpoint: (checkpointId) => onCheckpointReached?.(sequence.id, checkpointId),
-          resolveText: (text) => text.replaceAll("(플레이어 이름)", playerName),
+          resolveText: (text) => text
+            .replaceAll("(플레이어 이름)", playerName)
+            .replaceAll("(플레이어이름)", playerName),
         },
         abortController.signal,
       )
@@ -361,7 +363,10 @@ export function StoryPlayer({
 
     clickLockRef.current = true;
     setIsTransitioning(true);
-    setStepIndex((current) => current + 1);
+    const target = currentStep?.type === "dialogue" && currentStep.nextStepId
+      ? steps.findIndex((step) => step.id === currentStep.nextStepId)
+      : -1;
+    setStepIndex((current) => target >= 0 ? target : current + 1);
   };
 
   const markImageFailed = (url: string) => {

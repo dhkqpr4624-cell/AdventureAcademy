@@ -96,6 +96,20 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-theo-floor-7-quest-complete",
     rewards: { description: "5 Gold · 궁예의 안대(희귀)" },
   },
+  {
+    id: "quest-floor-8-goryeo-relations",
+    title: "고려와 주변 국가의 관계",
+    summary: "동료들과 던전 8층 안쪽에서 단서를 찾자.",
+    description: "고려와 주변 국가의 관계를 보여주는 단서를 조사하고 마지막 방의 비석을 완성한다.",
+    objectiveText: "던전 8층의 고려 역사 비석 조사",
+    giverNpcId: "kaiden",
+    offerStorySequenceId: "npc-kaiden-floor-8-quest-available",
+    acceptStorySequenceId: "npc-kaiden-floor-8-quest-accepted",
+    activeStorySequenceId: "npc-kaiden-floor-8-quest-active",
+    targetFloorId: "floor-8",
+    completeStorySequenceId: "npc-kaiden-floor-8-quest-complete",
+    rewards: { description: "5 Gold · 고려 최무선 화포(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(

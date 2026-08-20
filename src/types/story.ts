@@ -63,6 +63,7 @@ export type StoryStep =
       activeActorId?: string;
       text: string;
       emphasis?: "danger" | "info";
+      nextStepId?: string;
       advanceMode: "click";
     }
   | {

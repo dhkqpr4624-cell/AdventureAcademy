@@ -24,6 +24,7 @@ const floor4RareRewardCondition = getQuestRareRewardCondition("quest-floor-4-jeo
 const floor5RareRewardCondition = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const floor6RareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
 const floor7RareRewardCondition = getQuestRareRewardCondition("quest-floor-7-goryeo-founding");
+const floor8RareRewardCondition = getQuestRareRewardCondition("quest-floor-8-goryeo-relations");
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -90,5 +91,12 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     rewardItemId: "accessory-gungye-eyepatch", rewardStateId: "quest-floor-7-goryeo-founding",
     requiredCorrect: floor7RareRewardCondition.requiredCorrect, totalQuestions: floor7RareRewardCondition.totalQuestions,
     description: "던전 7층 정답",
+  },
+  {
+    id: "achievement-floor-8-rare-reward", floorId: "floor-8", floorTitle: "던전 8층",
+    title: "고려와 주변 국가의 관계", rewardIcon: `${import.meta.env.BASE_URL}assets/items/choe-museon-cannon.png`,
+    rewardItemId: "weapon-choe-museon-cannon", rewardStateId: "quest-floor-8-goryeo-relations",
+    requiredCorrect: floor8RareRewardCondition.requiredCorrect, totalQuestions: floor8RareRewardCondition.totalQuestions,
+    description: "던전 8층 정답",
   },
 ];

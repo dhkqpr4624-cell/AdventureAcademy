@@ -49,6 +49,7 @@ import { runPhase29_8Checks } from "./phase29_8Checks";
 import { runPhase29_9Checks } from "./phase29_9Checks";
 import { runPhase29_11Checks } from "./phase29_11Checks";
 import { runPhase29_12Checks } from "./phase29_12Checks";
+import { runDungeon8ContentChecks } from "./dungeon8ContentChecks";
 
 const checks = [
   ["relative direction checks", runRelativeDirectionChecks],
@@ -105,6 +106,7 @@ const checks = [
   ["phase29-9 quest reward and story checks", runPhase29_9Checks],
   ["phase29-11 dungeon4 monsters/debug floor jump checks", runPhase29_11Checks],
   ["phase29-12 production debug visibility checks", runPhase29_12Checks],
+  ["dungeon8 content checks", runDungeon8ContentChecks],
 ] as const;
 
 for (const [label, run] of checks) {
