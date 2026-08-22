@@ -184,6 +184,7 @@ type DungeonScreenProps = {
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
+const HEAL_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/heal-sfx.mp3`;
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -1338,6 +1339,9 @@ export function DungeonScreen({
     const result = pendingPotionResultRef.current;
     if (phase !== "itemUse" || !result) {
       return;
+    }
+    if (result.healedAmount > 0) {
+      playRandomizedOneShot(HEAL_SFX_URL);
     }
     setPlayerHp((current) =>
       applyDungeonPlayerHealing(current, result.healedAmount, maxHp),

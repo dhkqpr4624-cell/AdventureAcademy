@@ -30,6 +30,27 @@ import { playRandomizedOneShot } from "../game/audioOneShot";
 
 const BUTTON_CLICK_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/button-clicked-sfx.mp3`;
 
+function shouldPlayButtonClickSfx(button: HTMLButtonElement): boolean {
+  if (button.matches(".base-camp-npc-interaction, .dungeon-entrance-button")) {
+    return false;
+  }
+  if (button.closest(".floor-list")) {
+    return false;
+  }
+
+  const label = button.textContent?.replace(/\s+/g, " ").trim() ?? "";
+  if (button.closest(".base-camp-main-controls") && label === "던전") {
+    return false;
+  }
+  if (button.closest(".dungeon-screen")) {
+    if (button.closest(".story-choice-list")) {
+      return true;
+    }
+    return label === "답 제출" || label === "다음" || label === "다음으로";
+  }
+  return true;
+}
+
 export function App() {
   const loaded = useRef(SaveManager.load());
   const initial = useRef(loaded.current.success ? applySaveDataToGameState(loaded.current.data) : createInitialGameSaveState());
@@ -92,7 +113,7 @@ export function App() {
     const playButtonClick = (event: MouseEvent) => {
       if (event.detail === 0 || !(event.target instanceof Element)) return;
       const button = event.target.closest("button");
-      if (!button || button.disabled) return;
+      if (!(button instanceof HTMLButtonElement) || button.disabled || !shouldPlayButtonClickSfx(button)) return;
       playRandomizedOneShot(BUTTON_CLICK_SFX_URL);
     };
     document.addEventListener("click", playButtonClick, true);
