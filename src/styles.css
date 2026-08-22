@@ -2688,7 +2688,7 @@ button:focus-visible {
   z-index: 10;
   display: grid;
   place-items: center;
-  padding-bottom: 6vh;
+  padding: 0;
   overflow: visible;
   background: #000;
   opacity: 1;
@@ -2697,6 +2697,9 @@ button:focus-visible {
 }
 
 .story-illust-overlay img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
   width: auto;
   height: auto;
@@ -2705,7 +2708,7 @@ button:focus-visible {
   object-fit: contain;
   image-rendering: pixelated;
   opacity: 0;
-  transform: translateY(-3vh);
+  transform: translate(-50%, -50%);
   transition: opacity var(--story-illust-fade) ease;
 }
 
