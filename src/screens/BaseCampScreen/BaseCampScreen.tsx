@@ -62,6 +62,7 @@ const floor5QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-
 const floor6QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
 const floor7QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-7-goryeo-founding");
 const floor8QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-8-goryeo-relations");
+const floor9QuestRareRewardCondition = getQuestRareRewardCondition("quest-floor-9-goryeo-society-culture");
 
 type BaseCampScreenProps = {
   onNavigate: (screen: ScreenId) => void;
@@ -140,6 +141,7 @@ export function BaseCampScreen({
   const [floor6RewardOpen, setFloor6RewardOpen] = useState(false);
   const [floor7RewardOpen, setFloor7RewardOpen] = useState(false);
   const [floor8RewardOpen, setFloor8RewardOpen] = useState(false);
+  const [floor9RewardOpen, setFloor9RewardOpen] = useState(false);
   const prehistoryQuestId = "quest-floor-1-prehistory";
   const memoryQuestId = "quest-floor-2-memory-fragment";
   const tornClothQuestId = "quest-floor-3-torn-cloth";
@@ -148,6 +150,7 @@ export function BaseCampScreen({
   const floor6QuestId = "quest-floor-6-balhae";
   const floor7QuestId = "quest-floor-7-goryeo-founding";
   const floor8QuestId = "quest-floor-8-goryeo-relations";
+  const floor9QuestId = "quest-floor-9-goryeo-society-culture";
   const effectiveQuestState: QuestState = {
     ...questState,
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
@@ -157,6 +160,7 @@ export function BaseCampScreen({
     ...(questState[floor5QuestId] === "completed" && questState[floor6QuestId] === "locked" ? { [floor6QuestId]: "available" as const } : {}),
     ...(questState[floor6QuestId] === "completed" && questState[floor7QuestId] === "locked" ? { [floor7QuestId]: "available" as const } : {}),
     ...(questState[floor7QuestId] === "completed" && questState[floor8QuestId] === "locked" ? { [floor8QuestId]: "available" as const } : {}),
+    ...(questState[floor8QuestId] === "completed" && questState[floor9QuestId] === "locked" ? { [floor9QuestId]: "available" as const } : {}),
   };
   const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
   const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(
@@ -171,6 +175,7 @@ export function BaseCampScreen({
   const hasClearedFloor6 = clearedFloorIds.includes("floor-6");
   const hasClearedFloor7 = clearedFloorIds.includes("floor-7");
   const hasClearedFloor8 = clearedFloorIds.includes("floor-8");
+  const hasClearedFloor9 = clearedFloorIds.includes("floor-9");
   const markerQuestState = {
     ...effectiveQuestState,
     ...(canCompletePrehistoryQuest && effectiveQuestState[prehistoryQuestId] === "active" ? { [prehistoryQuestId]: "readyToComplete" as const } : {}),
@@ -187,6 +192,7 @@ export function BaseCampScreen({
     ...(hasClearedFloor6 && effectiveQuestState[floor6QuestId] === "active" ? { [floor6QuestId]: "readyToComplete" as const } : {}),
     ...(hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active" ? { [floor7QuestId]: "readyToComplete" as const } : {}),
     ...(hasClearedFloor8 && effectiveQuestState[floor8QuestId] === "active" ? { [floor8QuestId]: "readyToComplete" as const } : {}),
+    ...(hasClearedFloor9 && effectiveQuestState[floor9QuestId] === "active" ? { [floor9QuestId]: "readyToComplete" as const } : {}),
   } as unknown as QuestState;
   const activeQuest = QuestManager.getActiveQuest(effectiveQuestState);
   const interactionLocked = Boolean(
@@ -249,7 +255,9 @@ export function BaseCampScreen({
       return;
     }
     const sequenceId =
-      npc.id === "kaiden" && hasClearedFloor8 && effectiveQuestState[floor8QuestId] === "active"
+      npc.id === "luna" && hasClearedFloor9 && effectiveQuestState[floor9QuestId] === "active"
+        ? "npc-luna-floor-9-quest-complete"
+      : npc.id === "kaiden" && hasClearedFloor8 && effectiveQuestState[floor8QuestId] === "active"
         ? "npc-kaiden-floor-8-quest-complete"
       : npc.id === "theo" && hasClearedFloor7 && effectiveQuestState[floor7QuestId] === "active"
         ? "npc-theo-floor-7-quest-complete"
@@ -310,6 +318,9 @@ export function BaseCampScreen({
     }
     if (finishedSequenceId === "npc-kaiden-floor-8-quest-complete") {
       revealReward(floor8QuestId); setFloor8RewardOpen(true); return;
+    }
+    if (finishedSequenceId === "npc-luna-floor-9-quest-complete") {
+      revealReward(floor9QuestId); setFloor9RewardOpen(true); return;
     }
     const quest = QUEST_DEFINITIONS.find((candidate) =>
       npc.offeredQuestIds.includes(candidate.id) && effectiveQuestState[candidate.id] === "available"
@@ -766,6 +777,24 @@ export function BaseCampScreen({
           completeQuestAfterRewardClaim(floor8QuestId);
           onAutoSave("questCompleted");
           setFloor8RewardOpen(false);
+        }}
+      />}
+      {floor9RewardOpen && <QuestRewardPopup
+        bestCorrect={floorBestCorrect["floor-9"] ?? 0} claimed={Boolean(rewardClaimed[floor9QuestId])}
+        questTitle="던전 9층 조사 완료" rareRewardItemId="armor-tripitaka-koreana" requiredCorrect={floor9QuestRareRewardCondition.requiredCorrect}
+        baseGold={20}
+        onCancel={() => setFloor9RewardOpen(false)} onClaim={() => {
+          if (rewardClaimed[floor9QuestId]) return;
+          const rareUnlocked = (floorBestCorrect["floor-9"] ?? 0) >= floor9QuestRareRewardCondition.requiredCorrect;
+          setPlayerState((current) => ({ ...current, gold: current.gold + 20 }));
+          if (rareUnlocked) {
+            setInventoryState((current) => changeItemQuantity(current, "armor-tripitaka-koreana", 1));
+            setAchievementReceived("achievement-floor-9-rare-reward");
+          }
+          setRewardClaimed(floor9QuestId);
+          completeQuestAfterRewardClaim(floor9QuestId);
+          onAutoSave("questCompleted");
+          setFloor9RewardOpen(false);
         }}
       />}
     </main>

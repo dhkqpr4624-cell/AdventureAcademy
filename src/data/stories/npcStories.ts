@@ -443,6 +443,54 @@ NPC_STORY_SEQUENCES["npc-kaiden-floor-8-quest-complete"] = sequence(
   ],
 );
 
+NPC_STORY_SEQUENCES["npc-luna-floor-9-quest-available"] = {
+  id: "npc-luna-floor-9-quest-available",
+  title: "던전 9층 의뢰",
+  replayable: true,
+  skippable: false,
+  onCompleteScreen: "baseCamp",
+  backgrounds: {},
+  actors: {
+    luna: actor("luna", "happy"),
+    theo: actor("theo", "default"),
+    kaiden: actor("kaiden", "serious"),
+  },
+  scenes: [{ id: "npc-luna-floor-9-quest-available-scene", steps: [
+    ...floor5QuestDialogue("floor9-luna-1", "luna", "happy", " (플레이어 이름), 왔구나.. "),
+    ...floor5QuestDialogue("floor9-luna-2", "luna", "happy", " 하하.. 얼른 기운 차려야 하는데, 그렇지? 그동안 공민왕 아저씨랑 생각보다 큰 정이 들었나봐.. "),
+    ...floor5QuestDialogue("floor9-luna-3", "luna", "happy", " 공민왕 아저씨가 열어준 문이니까, 어서 나아가야지! 휴, 나도 어서 힘낼게! "),
+    ...floor5QuestDialogue("floor9-luna-4", "luna", "happy", " 열린 문 너머를 먼저 탐색해보고 왔어. 10층으로 통하는 문이 있었는데, 거기에서 이상한 기운이 새어 나오고 있었지. "),
+    ...floor5QuestDialogue("floor9-luna-5", "luna", "happy", " 아마도.. 10층, 그곳에 이 던전이 생긴 원인이 있을 것 같아."),
+    ...floor5QuestDialogue("floor9-theo-1", "theo", "default", "그리고 그 10층으로 가는 문을 열려면 무엇인가 필요한 것이겠죠? "),
+    ...floor5QuestDialogue("floor9-luna-6", "luna", "happy", " 응. 정확해. "),
+    ...floor5QuestDialogue("floor9-luna-7", "luna", "happy", " 9층에는 고려시대 문화를 나타내는 증거들이 곳곳에 떨어져있을 거야. "),
+    ...floor5QuestDialogue("floor9-luna-8", "luna", "happy", " 그것을 모아서, 9층 앞의 제단에 올려놓아야 해."),
+    ...floor5QuestDialogue("floor9-kaiden-1", "kaiden", "serious", " 들었지, (플레이어이름). 이번에도 전투는 너에게 맡기겠다. "),
+  ] }],
+};
+NPC_STORY_SEQUENCES["npc-luna-floor-9-quest-accepted"] = sequence(
+  "npc-luna-floor-9-quest-accepted",
+  "luna",
+  "happy",
+  [" 이제 거의 마지막이네.. 부탁할게, (플레이어 이름)."],
+);
+NPC_STORY_SEQUENCES["npc-luna-floor-9-quest-active"] = sequence(
+  "npc-luna-floor-9-quest-active",
+  "luna",
+  "happy",
+  ["9층에서 고려시대의 사회와 문화를 나타내는 증거를 모아 제단에 올려놓자."],
+);
+NPC_STORY_SEQUENCES["npc-luna-floor-9-quest-complete"] = sequence(
+  "npc-luna-floor-9-quest-complete",
+  "luna",
+  "happy",
+  [
+    " 윽, (플레이어 이름), 봤어? 10층 문 안에 있는 그거? ",
+    " 완전 괴물의 모습이었어.. 아무래도 그게 이 포탈이 열린 이유겠지. ",
+    " 그 괴물을 쓰러뜨려야만 한다니.. 무섭지만 같이 힘내자. ",
+  ],
+);
+
 const theo = NPC_STORY_SEQUENCES["npc-theo-default"];
 theo.scenes[0].steps.push(
   {

@@ -7,6 +7,7 @@ export function QuestRewardPopup({
   questTitle = "기억 조각 회수 완료",
   rareRewardItemId = "weapon-gojoseon-bronze-dagger",
   requiredCorrect = 6,
+  baseGold = 5,
   onClaim,
   onCancel,
 }: {
@@ -15,6 +16,7 @@ export function QuestRewardPopup({
   questTitle?: string;
   rareRewardItemId?: string;
   requiredCorrect?: number;
+  baseGold?: number;
   onClaim: () => void;
   onCancel: () => void;
 }) {
@@ -26,7 +28,7 @@ export function QuestRewardPopup({
       <section className="pixel-rpg-popup quest-reward-popup" role="dialog" aria-modal="true" aria-labelledby="quest-reward-title">
         <header><p className="eyebrow">QUEST COMPLETE</p><h2 id="quest-reward-title">{questTitle}</h2></header>
         <div className="quest-reward-grid">
-          <article><p className="eyebrow">기본 보상</p><span className="reward-icon">G</span><strong>5 Gold</strong><small>퀘스트 완료 기본 보상</small></article>
+          <article><p className="eyebrow">기본 보상</p><span className="reward-icon">G</span><strong>{baseGold} Gold</strong><small>퀘스트 완료 기본 보상</small></article>
           <article className={rareUnlocked ? "is-unlocked" : "is-locked"}>
             <p className="eyebrow">희귀 보상</p><span className="reward-icon"><ItemIcon item={rareReward} /></span><strong>{rareReward.name}</strong>
             <small className={rareUnlocked ? "" : "reward-condition-failed"}>정답 {bestCorrect} / {required}</small>

@@ -25,6 +25,7 @@ const floor5RareRewardCondition = getQuestRareRewardCondition("quest-floor-5-uni
 const floor6RareRewardCondition = getQuestRareRewardCondition("quest-floor-6-balhae");
 const floor7RareRewardCondition = getQuestRareRewardCondition("quest-floor-7-goryeo-founding");
 const floor8RareRewardCondition = getQuestRareRewardCondition("quest-floor-8-goryeo-relations");
+const floor9RareRewardCondition = getQuestRareRewardCondition("quest-floor-9-goryeo-society-culture");
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   {
@@ -98,5 +99,12 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     rewardItemId: "weapon-choe-museon-cannon", rewardStateId: "quest-floor-8-goryeo-relations",
     requiredCorrect: floor8RareRewardCondition.requiredCorrect, totalQuestions: floor8RareRewardCondition.totalQuestions,
     description: "던전 8층 정답",
+  },
+  {
+    id: "achievement-floor-9-rare-reward", floorId: "floor-9", floorTitle: "던전 9층",
+    title: "고려시대의 사회와 문화", rewardIcon: `${import.meta.env.BASE_URL}assets/items/tripitaka-koreana.png`,
+    rewardItemId: "armor-tripitaka-koreana", rewardStateId: "quest-floor-9-goryeo-society-culture",
+    requiredCorrect: floor9RareRewardCondition.requiredCorrect, totalQuestions: floor9RareRewardCondition.totalQuestions,
+    description: "던전 9층 정답",
   },
 ];

@@ -154,6 +154,7 @@ import { DUNGEON5_ENTRY_STORY, DUNGEON5_GATE_STORY } from "../../data/stories/du
 import { DUNGEON6_CLUE_STORIES, DUNGEON6_ENTRY_STORY, DUNGEON6_FINAL_STORY } from "../../data/stories/dungeon6Stories";
 import { DUNGEON7_CLUE_STORIES, DUNGEON7_FINAL_STORY } from "../../data/stories/dungeon7Stories";
 import { DUNGEON8_FINAL_STORY } from "../../data/stories/dungeon8Stories";
+import { DUNGEON9_CLUE_STORIES, DUNGEON9_FINAL_STORY } from "../../data/stories/dungeon9Stories";
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { selectRequiredStoryRoomIds } from "../../game/dungeon/generation/DungeonGenerator";
@@ -184,7 +185,6 @@ type DungeonScreenProps = {
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
-const HEAL_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/heal-sfx.mp3`;
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -210,6 +210,8 @@ export function applyFloorMonsterData(
               ? "later-baekje-soldier-spirit"
             : floorId === "floor-8"
               ? random.next() < 0.5 ? "khitan-soldier-spirit" : "jurchen-soldier-spirit"
+            : floorId === "floor-9"
+              ? "goryeo-spirit"
             : room.combatConfig.monsterId;
         return {
           ...room,
@@ -238,6 +240,8 @@ export function applyFloorMonsterData(
                   ? "later-goguryeo-soldier-spirit"
                 : floorId === "floor-8"
                   ? "mongol-general-armor"
+                : floorId === "floor-9"
+                  ? "vengeful-goryeo-spirit"
                 : room.eliteConfig.monsterId,
           },
         };
@@ -260,10 +264,10 @@ export function prepareFloorDungeonMap(
       !connection.toRoomId.startsWith("room-story-")
     ),
   };
-  const floorMap = floorId === "floor-6" || floorId === "floor-7" ? {
+  const floorMap = floorId === "floor-6" || floorId === "floor-7" || floorId === "floor-9" ? {
     ...baseMap,
     rooms: baseMap.rooms.map((room, _index, rooms) => {
-      const selectedIds = floorId === "floor-7"
+      const selectedIds = floorId === "floor-7" || floorId === "floor-9"
         ? selectDungeon7StoryRoomIds({ ...baseMap, rooms })
         : selectDungeon6StoryRoomIds({ ...baseMap, rooms });
       if (!selectedIds.includes(room.id)) return room;
@@ -508,6 +512,7 @@ export function DungeonScreen({
   const [floor6EntryStoryVisible, setFloor6EntryStoryVisible] = useState(false);
   const [floor6ClueStoryIndex, setFloor6ClueStoryIndex] = useState<number | null>(null);
   const [floor7ClueStoryIndex, setFloor7ClueStoryIndex] = useState<number | null>(null);
+  const [floor9ClueStoryIndex, setFloor9ClueStoryIndex] = useState<number | null>(null);
   const [floor5RewardOpen, setFloor5RewardOpen] = useState(false);
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
@@ -651,7 +656,7 @@ export function DungeonScreen({
     !exitConfirmOpen &&
     objectiveEvent === null &&
     !floor5EntryStoryVisible &&
-    !floor6EntryStoryVisible && floor6ClueStoryIndex === null && floor7ClueStoryIndex === null &&
+    !floor6EntryStoryVisible && floor6ClueStoryIndex === null && floor7ClueStoryIndex === null && floor9ClueStoryIndex === null &&
     finalGateDialogueStep === null;
 
   useEffect(() => {
@@ -1340,9 +1345,6 @@ export function DungeonScreen({
     if (phase !== "itemUse" || !result) {
       return;
     }
-    if (result.healedAmount > 0) {
-      playRandomizedOneShot(HEAL_SFX_URL);
-    }
     setPlayerHp((current) =>
       applyDungeonPlayerHealing(current, result.healedAmount, maxHp),
     );
@@ -1766,6 +1768,15 @@ export function DungeonScreen({
         const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
         if (clueIndex >= 0 && !roomProgressRef.current[roomId]?.eventCompleted) {
           setFloor7ClueStoryIndex(clueIndex);
+          return;
+        }
+      }
+      if (questStoryEnabled && floorId === "floor-9") {
+        const clueRoomIds = selectDungeon7StoryRoomIds(dungeonMap);
+        const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
+        const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
+        if (clueIndex >= 0 && !roomProgressRef.current[roomId]?.eventCompleted) {
+          setFloor9ClueStoryIndex(clueIndex);
           return;
         }
       }
@@ -2372,7 +2383,7 @@ export function DungeonScreen({
         )}
       </CombatDialoguePanel>}
 
-      {!floorIntroVisible && !floor5EntryStoryVisible && !floor6EntryStoryVisible && floor6ClueStoryIndex === null && floor7ClueStoryIndex === null && (dungeonMode === "exploration" || dungeonMode === "moving") && (
+      {!floorIntroVisible && !floor5EntryStoryVisible && !floor6EntryStoryVisible && floor6ClueStoryIndex === null && floor7ClueStoryIndex === null && floor9ClueStoryIndex === null && (dungeonMode === "exploration" || dungeonMode === "moving") && (
         <section className="dungeon-movement-panel" aria-label="던전 이동 선택">
           <p className="eyebrow">DUNGEON EXPLORATION</p>
           {finalGateDialogueStep === null ? (
@@ -2508,6 +2519,16 @@ export function DungeonScreen({
             setFloor7ClueStoryIndex(null); setDungeonMode("exploration");
           }} />
       </div>}
+      {floor9ClueStoryIndex !== null && floorId === "floor-9" && <div className="dungeon-story-overlay dungeon7-clue-story-overlay">
+        <StoryPlayer sequence={DUNGEON9_CLUE_STORIES[floor9ClueStoryIndex]!} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
+          presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
+            const clueRoomIds = selectDungeon7StoryRoomIds(dungeonMap);
+            const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
+            const roomId = clueRooms[floor9ClueStoryIndex]?.id;
+            if (roomId) { const next = completeRoomEvent(roomProgressRef.current, roomId); roomProgressRef.current = next; setRoomProgress(next); }
+            setFloor9ClueStoryIndex(null); setDungeonMode("exploration");
+          }} />
+      </div>}
       {objectiveEvent === "first" && floorId === "floor-5" && <div className="dungeon-story-overlay">
         <StoryPlayer
           sequence={DUNGEON5_GATE_STORY}
@@ -2543,6 +2564,13 @@ export function DungeonScreen({
         <StoryPlayer sequence={DUNGEON8_FINAL_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
           presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
             playerHpRef.current = maxHp; setPlayerHp(maxHp); onStoryEventSeen("floor-8:gongmin-returned-to-history");
+            onObjectiveAcquired(runCorrectCountRef.current); setObjectiveEvent(null); onFloorCleared(); onNavigate("baseCamp");
+          }} />
+      </div>}
+      {objectiveEvent === "first" && floorId === "floor-9" && <div className="dungeon-story-overlay">
+        <StoryPlayer sequence={DUNGEON9_FINAL_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
+          presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
+            playerHpRef.current = maxHp; setPlayerHp(maxHp); onStoryEventSeen("floor-9:tenth-floor-door-opened");
             onObjectiveAcquired(runCorrectCountRef.current); setObjectiveEvent(null); onFloorCleared(); onNavigate("baseCamp");
           }} />
       </div>}

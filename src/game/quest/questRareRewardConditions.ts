@@ -37,6 +37,7 @@ export const QUEST_RARE_REWARD_CONDITIONS: Record<
   "quest-floor-6-balhae": { questId: "quest-floor-6-balhae", floorId: "floor-6", requiredCorrect: 9, totalQuestions: 12 },
   "quest-floor-7-goryeo-founding": { questId: "quest-floor-7-goryeo-founding", floorId: "floor-7", requiredCorrect: 9, totalQuestions: 12 },
   "quest-floor-8-goryeo-relations": { questId: "quest-floor-8-goryeo-relations", floorId: "floor-8", requiredCorrect: 9, totalQuestions: 12 },
+  "quest-floor-9-goryeo-society-culture": { questId: "quest-floor-9-goryeo-society-culture", floorId: "floor-9", requiredCorrect: 9, totalQuestions: 12 },
 };
 
 export function getQuestRareRewardCondition(

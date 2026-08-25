@@ -72,6 +72,8 @@ export const MONSTER_VISUAL_DEFINITIONS: Readonly<
   "khitan-soldier-spirit": { id: "khitan-soldier-spirit", name: "거란 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon8/khitan-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
   "jurchen-soldier-spirit": { id: "jurchen-soldier-spirit", name: "여진족 병사의 원혼", image: `${import.meta.env.BASE_URL}assets/dungeon8/jurchen-soldier-spirit.png`, displayScale: 1.12, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
   "mongol-general-armor": { id: "mongol-general-armor", name: "몽골 장군의 갑주", image: `${import.meta.env.BASE_URL}assets/dungeon8/mongol-general-armor.png`, displayScale: 1.18, aspectRatio: 2 / 3, anchor: [0, -0.04, 0] },
+  "goryeo-spirit": { id: "goryeo-spirit", name: "고려의 영혼", image: `${import.meta.env.BASE_URL}assets/dungeon9/goryeo-spirit.png`, displayScale: 1.12, aspectRatio: 3 / 2, anchor: [0, -0.04, 0] },
+  "vengeful-goryeo-spirit": { id: "vengeful-goryeo-spirit", name: "한 맺힌 고려의 영혼", image: `${import.meta.env.BASE_URL}assets/dungeon9/vengeful-goryeo-spirit.png`, displayScale: 1.18, aspectRatio: 3 / 2, anchor: [0, -0.04, 0] },
 };
 
 export function getMonsterVisualDefinition(

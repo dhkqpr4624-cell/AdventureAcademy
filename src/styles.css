@@ -2688,7 +2688,7 @@ button:focus-visible {
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: 0;
+  padding-bottom: 6vh;
   overflow: visible;
   background: #000;
   opacity: 1;
@@ -2697,9 +2697,6 @@ button:focus-visible {
 }
 
 .story-illust-overlay img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   display: block;
   width: auto;
   height: auto;
@@ -2708,7 +2705,7 @@ button:focus-visible {
   object-fit: contain;
   image-rendering: pixelated;
   opacity: 0;
-  transform: translate(-50%, -50%);
+  transform: translateY(-3vh);
   transition: opacity var(--story-illust-fade) ease;
 }
 
@@ -3756,6 +3753,11 @@ button:focus-visible {
 .dungeon-story-overlay .story-player[aria-label="닫힌 입구"]:has(.story-camera.is-shaking) .story-illust-overlay,
 .dungeon-story-overlay .story-player[aria-label="고려의 기둥"]:has(.story-camera.is-shaking) .story-illust-overlay {
   animation: dungeon5-gate-illust-shake 1000ms ease-in-out;
+}
+
+.dungeon-story-overlay .story-player[aria-label="고려시대의 사회와 문화"]:has(.story-camera.is-shaking) .story-illust-overlay img {
+  translate: 0 -3vh;
+  animation: dungeon5-gate-illust-shake 1500ms ease-in-out;
 }
 
 @keyframes dungeon5-gate-illust-shake {

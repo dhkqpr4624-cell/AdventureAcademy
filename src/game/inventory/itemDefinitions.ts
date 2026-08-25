@@ -70,6 +70,12 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     description: "고려에서 최무선이 화약 기술을 발전시켜 만든 화포를 본뜬 희귀 무기 스킨이다.",
     icon: `${import.meta.env.BASE_URL}assets/items/choe-museon-cannon.png`, stackable: false,
   },
+  "armor-tripitaka-koreana": {
+    id: "armor-tripitaka-koreana", name: "팔만대장경", type: "armor", rarity: "rare",
+    description: "고려의 불교문화와 국난 극복의 염원을 상징하는 희귀 방어구다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/tripitaka-koreana.png`, stackable: false,
+    equipmentStats: { maxHpBonus: getArmorMaxHpBonusForFloor(9) },
+  },
   "quest-memory-fragment": {
     id: "quest-memory-fragment", name: "뒤틀린 기억의 조각", type: "misc",
     rarity: "rare", description: "카이든이 가진 조각과 꼭 맞을 듯한 비석 조각이다.",

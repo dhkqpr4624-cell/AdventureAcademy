@@ -41,7 +41,7 @@ export const NPC_DEFINITIONS: readonly NpcDefinition[] = [
       questAvailableStorySequenceId: "npc-luna-floor-3-quest-available",
       questActiveStorySequenceId: "npc-luna-floor-3-quest-active",
     },
-    offeredQuestIds: ["quest-floor-3-torn-cloth", "quest-floor-4-jeon-rescue"],
+    offeredQuestIds: ["quest-floor-3-torn-cloth", "quest-floor-4-jeon-rescue", "quest-floor-9-goryeo-society-culture"],
     placement: getBaseCampNpcPlacement(BASE_CAMP_NPC_SLOT_ASSIGNMENTS.luna),
   },
   {

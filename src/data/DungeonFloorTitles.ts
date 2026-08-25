@@ -34,6 +34,7 @@ export const DUNGEON_FLOOR_TITLES: DungeonFloorTitle[] = [
   { floor: 6, floorId: "floor-6", title: "던전 6층", subtitle: "남북국시대 : 발해" },
   { floor: 7, floorId: "floor-7", title: "던전 7층", subtitle: "후삼국 시대와 고려 건국" },
   { floor: 8, floorId: "floor-8", title: "던전 8층", subtitle: "고려와 주변 국가의 관계" },
+  { floor: 9, floorId: "floor-9", title: "던전 9층", subtitle: "고려시대의 사회와 문화" },
 ];
 
 export const getDungeonFloorTitle = (floorId: string) =>

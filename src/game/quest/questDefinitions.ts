@@ -110,6 +110,20 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-kaiden-floor-8-quest-complete",
     rewards: { description: "5 Gold · 고려 최무선 화포(희귀)" },
   },
+  {
+    id: "quest-floor-9-goryeo-society-culture",
+    title: "고려시대의 사회와 문화",
+    summary: "던전 9층에서 고려시대 사회와 문화의 증거를 모으자.",
+    description: "고려시대의 사회와 문화를 나타내는 증거 3개를 모아 10층 문 앞의 제단에 올려놓는다.",
+    objectiveText: "고려시대 사회·문화의 증거 3개 수집",
+    giverNpcId: "luna",
+    offerStorySequenceId: "npc-luna-floor-9-quest-available",
+    acceptStorySequenceId: "npc-luna-floor-9-quest-accepted",
+    activeStorySequenceId: "npc-luna-floor-9-quest-active",
+    targetFloorId: "floor-9",
+    completeStorySequenceId: "npc-luna-floor-9-quest-complete",
+    rewards: { description: "20 Gold · 팔만대장경(희귀)" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(
