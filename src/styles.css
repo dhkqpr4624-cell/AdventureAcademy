@@ -3763,8 +3763,16 @@ button:focus-visible {
 }
 
 .dungeon-story-overlay .story-player[aria-label="고려시대의 사회와 문화"]:has(.story-camera.is-shaking) .story-illust-overlay img {
-  translate: 0 -3vh;
+  translate: 0;
   animation: dungeon5-gate-illust-shake 1500ms ease-in-out;
+}
+
+.dungeon-story-overlay .story-player[aria-label="고려시대의 사회와 문화"] .story-illust-overlay {
+  padding-bottom: 0;
+}
+
+.dungeon-story-overlay .story-player[aria-label="고려시대의 사회와 문화"] .story-illust-overlay img {
+  transform: none;
 }
 
 @keyframes dungeon5-gate-illust-shake {

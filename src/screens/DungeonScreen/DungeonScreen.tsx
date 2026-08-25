@@ -185,6 +185,7 @@ type DungeonScreenProps = {
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
+const HEAL_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/heal-sfx.mp3`;
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -267,7 +268,9 @@ export function prepareFloorDungeonMap(
   const floorMap = floorId === "floor-6" || floorId === "floor-7" || floorId === "floor-9" ? {
     ...baseMap,
     rooms: baseMap.rooms.map((room, _index, rooms) => {
-      const selectedIds = floorId === "floor-7" || floorId === "floor-9"
+      const selectedIds = floorId === "floor-9"
+        ? selectDungeon9StoryRoomIds({ ...baseMap, rooms })
+        : floorId === "floor-7"
         ? selectDungeon7StoryRoomIds({ ...baseMap, rooms })
         : selectDungeon6StoryRoomIds({ ...baseMap, rooms });
       if (!selectedIds.includes(room.id)) return room;
@@ -320,6 +323,10 @@ function selectDungeon6StoryRoomIds(map: DungeonMapDefinition): string[] {
 
 function selectDungeon7StoryRoomIds(map: DungeonMapDefinition): string[] {
   return selectRequiredStoryRoomIds(map, 3);
+}
+
+function selectDungeon9StoryRoomIds(map: DungeonMapDefinition): string[] {
+  return selectRequiredStoryRoomIds(map, 3, true);
 }
 
 type NormalCombatPhase =
@@ -1348,6 +1355,9 @@ export function DungeonScreen({
     setPlayerHp((current) =>
       applyDungeonPlayerHealing(current, result.healedAmount, maxHp),
     );
+    if (result.healedAmount > 0) {
+      playRandomizedOneShot(HEAL_SFX_URL);
+    }
     setFloatingText(`+${result.healedAmount}`);
     setPhase("awaitHealResult");
     setCombatMessage(`HP가 ${result.healedAmount} 회복되었다.`);
@@ -1772,7 +1782,7 @@ export function DungeonScreen({
         }
       }
       if (questStoryEnabled && floorId === "floor-9") {
-        const clueRoomIds = selectDungeon7StoryRoomIds(dungeonMap);
+        const clueRoomIds = selectDungeon9StoryRoomIds(dungeonMap);
         const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
         const clueIndex = clueRooms.findIndex((room) => room.id === roomId);
         if (clueIndex >= 0 && !roomProgressRef.current[roomId]?.eventCompleted) {
@@ -2522,7 +2532,7 @@ export function DungeonScreen({
       {floor9ClueStoryIndex !== null && floorId === "floor-9" && <div className="dungeon-story-overlay dungeon7-clue-story-overlay">
         <StoryPlayer sequence={DUNGEON9_CLUE_STORIES[floor9ClueStoryIndex]!} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
           presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
-            const clueRoomIds = selectDungeon7StoryRoomIds(dungeonMap);
+            const clueRoomIds = selectDungeon9StoryRoomIds(dungeonMap);
             const clueRooms = clueRoomIds.map((id) => dungeonMap.rooms.find((room) => room.id === id)).filter((room): room is DungeonRoomNode => Boolean(room));
             const roomId = clueRooms[floor9ClueStoryIndex]?.id;
             if (roomId) { const next = completeRoomEvent(roomProgressRef.current, roomId); roomProgressRef.current = next; setRoomProgress(next); }

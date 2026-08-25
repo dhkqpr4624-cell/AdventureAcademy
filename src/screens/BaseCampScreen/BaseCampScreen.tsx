@@ -555,11 +555,6 @@ export function BaseCampScreen({
                   onClick={() => unlocked && onEnterDungeon(floor.id)}
                 >
                   <strong>{unlocked ? floor.title : "???"}</strong>
-                  <small>
-                    {unlocked
-                      ? "입장 가능"
-                      : "새로운 의뢰를 받아야 입장할 수 있습니다."}
-                  </small>
                 </button>
               );
             })}
