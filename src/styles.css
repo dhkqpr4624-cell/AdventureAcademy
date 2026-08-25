@@ -3066,7 +3066,9 @@ button:focus-visible {
   top: 50%;
   left: 50%;
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   width: min(28rem, calc(100% - 2rem));
+  height: min(65vh, 34rem);
   gap: 0.8rem;
   padding: 1.2rem;
   border: 2px solid rgba(225, 191, 107, 0.72);
@@ -3074,6 +3076,7 @@ button:focus-visible {
   color: #f5ead0;
   background: rgba(15, 18, 22, 0.96);
   box-shadow: 0 22px 54px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
   transform: translate(-50%, -50%);
 }
 
@@ -3084,7 +3087,11 @@ button:focus-visible {
 
 .floor-list {
   display: grid;
+  min-height: 0;
   gap: 0.55rem;
+  padding-right: 0.35rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .floor-list > button {
