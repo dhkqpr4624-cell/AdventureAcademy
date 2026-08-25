@@ -257,7 +257,7 @@ export function prepareFloorDungeonMap(
   floorId: FloorId,
   seed: string,
 ): DungeonMapDefinition {
-  const baseMap = floorId === "floor-1" ? map : {
+  const baseMap = floorId === "floor-1" || floorId === "floor-9" ? map : {
     ...map,
     rooms: map.rooms.filter((room) => !room.id.startsWith("room-story-")),
     connections: map.connections.filter((connection) =>
