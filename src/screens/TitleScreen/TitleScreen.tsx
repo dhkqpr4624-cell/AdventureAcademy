@@ -10,7 +10,7 @@ type TitleScreenProps = {
   onOpenSettings: () => void;
   hasSave: boolean;
   onNewGame: () => void;
-  onDebugFloorJump: (floorId: "floor-1" | "floor-2" | "floor-3" | "floor-4" | "floor-5" | "floor-6" | "floor-7" | "floor-8" | "floor-9") => void;
+  onDebugFloorJump: (floorId: "floor-1" | "floor-2" | "floor-3" | "floor-4" | "floor-5" | "floor-6" | "floor-7" | "floor-8" | "floor-9" | "floor-10") => void;
 };
 
 export function TitleScreen({ onNavigate, onOpenSettings, hasSave, onNewGame, onDebugFloorJump }: TitleScreenProps) {
@@ -47,7 +47,7 @@ export function TitleScreen({ onNavigate, onOpenSettings, hasSave, onNewGame, on
       {debugVisible && <div className="title-debug-floor-jump">
         <button className="title-debug-toggle" type="button" onClick={() => setDebugOpen((open) => !open)}>[DEBUG]</button>
         {debugOpen && <div className="title-debug-panel" aria-label="던전 층 테스트 이동">
-          {([1, 2, 3, 4, 5, 6, 7, 8, 9] as const).map((floor) => <button key={floor} type="button" onClick={() => onDebugFloorJump(`floor-${floor}`)}>Dungeon {floor}</button>)}
+          {([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const).map((floor) => <button key={floor} type="button" onClick={() => onDebugFloorJump(`floor-${floor}`)}>Dungeon {floor}</button>)}
         </div>}
       </div>}
 

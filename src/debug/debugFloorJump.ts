@@ -6,7 +6,7 @@ import { QUEST_DEFINITIONS } from "../game/quest/questDefinitions";
 import { getQuestRareRewardCondition } from "../game/quest/questRareRewardConditions";
 import { createInitialGameSaveState, type GameSaveState } from "../save/saveStateAdapter";
 
-const FLOOR_IDS: readonly FloorId[] = ["floor-1", "floor-2", "floor-3", "floor-4", "floor-5", "floor-6", "floor-7", "floor-8", "floor-9"];
+const FLOOR_IDS: readonly FloorId[] = ["floor-1", "floor-2", "floor-3", "floor-4", "floor-5", "floor-6", "floor-7", "floor-8", "floor-9", "floor-10"];
 
 export function createDebugFloorJumpState(targetFloor: FloorId, playerName = "DEBUG"): GameSaveState {
   const state = createInitialGameSaveState();

@@ -151,6 +151,7 @@ export function BaseCampScreen({
   const floor7QuestId = "quest-floor-7-goryeo-founding";
   const floor8QuestId = "quest-floor-8-goryeo-relations";
   const floor9QuestId = "quest-floor-9-goryeo-society-culture";
+  const floor10QuestId = "quest-floor-10-final-source";
   const effectiveQuestState: QuestState = {
     ...questState,
     ...(questState[prehistoryQuestId] === "completed" && questState[memoryQuestId] === "locked" ? { [memoryQuestId]: "available" as const } : {}),
@@ -161,6 +162,7 @@ export function BaseCampScreen({
     ...(questState[floor6QuestId] === "completed" && questState[floor7QuestId] === "locked" ? { [floor7QuestId]: "available" as const } : {}),
     ...(questState[floor7QuestId] === "completed" && questState[floor8QuestId] === "locked" ? { [floor8QuestId]: "available" as const } : {}),
     ...(questState[floor8QuestId] === "completed" && questState[floor9QuestId] === "locked" ? { [floor9QuestId]: "available" as const } : {}),
+    ...(questState[floor9QuestId] === "completed" && questState[floor10QuestId] === "locked" ? { [floor10QuestId]: "available" as const } : {}),
   };
   const prehistoryCollectionRule = ITEM_COLLECTION_QUEST_RULES[0];
   const canCompletePrehistoryQuest = canCompleteItemCollectionQuest(

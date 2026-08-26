@@ -119,6 +119,29 @@ function floor5QuestDialogue(id: string, npcId: NpcId, portraitId: string, text:
 }
 
 export const NPC_STORY_SEQUENCES: Record<string, StorySequence> = {
+  "npc-kaiden-floor-10-quest-available": sequence(
+    "npc-kaiden-floor-10-quest-available",
+    "kaiden",
+    "serious",
+    [
+      " (플레이어 이름), 아무래도 이번 층이 마지막이겠지. ",
+      " 무엇일진 모르겠지만, 10층 문 너머에 이 포탈의 원흉이 있을 것이다. ",
+      " 그것이 괴물이든, 무엇이든, 우리는 그것을 쓰러뜨리고 포탈을 소멸시켜야 해. ",
+      " (플레이어 이름), 힘든 싸움이 될 것이다. 준비 됐나? ",
+    ],
+  ),
+  "npc-kaiden-floor-10-quest-accepted": sequence(
+    "npc-kaiden-floor-10-quest-accepted",
+    "kaiden",
+    "serious",
+    [" 좋아. 그러면 장비와 포션을 다시 한 번 점검하고 출발하도록 하지. "],
+  ),
+  "npc-kaiden-floor-10-quest-active": sequence(
+    "npc-kaiden-floor-10-quest-active",
+    "kaiden",
+    "serious",
+    [" 좋아. 그러면 장비와 포션을 다시 한 번 점검하고 출발하도록 하지. "],
+  ),
   "npc-luna-default": sequence("npc-luna-default", "luna", "happy", [
     "{{playerName}}! 던전은 항상 내가 먼저 정찰하고 있어. 필요한 게 있으면 언제든지 말해!",
   ]),

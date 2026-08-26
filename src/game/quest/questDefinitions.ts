@@ -124,6 +124,19 @@ export const QUEST_DEFINITIONS: readonly QuestDefinition[] = [
     completeStorySequenceId: "npc-luna-floor-9-quest-complete",
     rewards: { description: "20 Gold · 팔만대장경(희귀)" },
   },
+  {
+    id: "quest-floor-10-final-source",
+    title: "포탈의 원흉",
+    summary: "던전 10층에서 포탈의 원흉과 마주하자.",
+    description: "마지막 층의 문 너머로 들어가 포탈을 만든 원흉을 확인한다.",
+    objectiveText: "던전 10층의 보스방 진입",
+    giverNpcId: "kaiden",
+    offerStorySequenceId: "npc-kaiden-floor-10-quest-available",
+    acceptStorySequenceId: "npc-kaiden-floor-10-quest-accepted",
+    activeStorySequenceId: "npc-kaiden-floor-10-quest-active",
+    targetFloorId: "floor-10",
+    rewards: { description: "보스 전투 준비 중" },
+  },
 ];
 
 export const INITIAL_QUEST_STATE: QuestState = Object.fromEntries(

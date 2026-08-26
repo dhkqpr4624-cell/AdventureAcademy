@@ -107,7 +107,9 @@ export function App() {
   }, []);
 
   const content = (() => {
-    const activeFloorId = game.currentFloorId === "floor-9"
+    const activeFloorId = game.currentFloorId === "floor-10"
+      ? "floor-10"
+      : game.currentFloorId === "floor-9"
       ? "floor-9"
       : game.currentFloorId === "floor-8"
       ? "floor-8"
@@ -122,7 +124,9 @@ export function App() {
       : game.currentFloorId === "floor-3"
       ? "floor-3"
       : game.currentFloorId === "floor-2" ? "floor-2" : "floor-1";
-    const activeFloorQuestId = activeFloorId === "floor-9"
+    const activeFloorQuestId = activeFloorId === "floor-10"
+      ? "quest-floor-10-final-source"
+      : activeFloorId === "floor-9"
       ? "quest-floor-9-goryeo-society-culture"
       : activeFloorId === "floor-8"
       ? "quest-floor-8-goryeo-relations"

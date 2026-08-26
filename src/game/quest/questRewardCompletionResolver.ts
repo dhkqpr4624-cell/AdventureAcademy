@@ -15,6 +15,7 @@ export const QUEST_ITEM_IDS_BY_QUEST: Readonly<Record<string, readonly string[]>
   "quest-floor-7-goryeo-founding": [],
   "quest-floor-8-goryeo-relations": [],
   "quest-floor-9-goryeo-society-culture": [],
+  "quest-floor-10-final-source": [],
 };
 
 const NEXT_QUEST_ID: Readonly<Record<string, string>> = {
@@ -26,6 +27,7 @@ const NEXT_QUEST_ID: Readonly<Record<string, string>> = {
   "quest-floor-6-balhae": "quest-floor-7-goryeo-founding",
   "quest-floor-7-goryeo-founding": "quest-floor-8-goryeo-relations",
   "quest-floor-8-goryeo-relations": "quest-floor-9-goryeo-society-culture",
+  "quest-floor-9-goryeo-society-culture": "quest-floor-10-final-source",
 };
 
 export function completeQuestStateAfterRewardClaim(
