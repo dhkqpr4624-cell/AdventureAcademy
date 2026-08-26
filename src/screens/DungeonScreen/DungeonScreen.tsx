@@ -164,6 +164,7 @@ import { Dungeon10BossPresentation } from "../../three/dungeon/Dungeon10BossPres
 import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { selectRequiredStoryRoomIds } from "../../game/dungeon/generation/DungeonGenerator";
+import { BossCombatScreen } from "../BossCombatScreen/BossCombatScreen";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -610,7 +611,7 @@ export function DungeonScreen({
   const [activeArtifactEvent, setActiveArtifactEvent] = useState<PrehistoryArtifactId | null>(null);
   const [finalGateDialogueStep, setFinalGateDialogueStep] =
     useState<0 | 1 | null>(null);
-  const [floor10BossPhase, setFloor10BossPhase] = useState<"idle" | "playing" | "complete">("idle");
+  const [floor10BossPhase, setFloor10BossPhase] = useState<"idle" | "playing" | "combat">("idle");
   const [floor10BossShake, setFloor10BossShake] = useState(false);
 
   const combatQuestionCount =
@@ -961,6 +962,7 @@ export function DungeonScreen({
       const delta = clock.getDelta();
       weapon.update(delta);
       monsterAnimation.update(delta);
+      bossPresentation.update(delta);
       const positionBlend = 1 - Math.exp(-MONSTER_POSITION_RESPONSE * delta);
       monsterBillboard.position.lerp(
         monsterPositionTargetRef.current,
@@ -1074,6 +1076,46 @@ export function DungeonScreen({
         resolve();
       }
     });
+  };
+
+  const playDungeon10PlayerAttack = (): Promise<void> => {
+    const visuals = visualsRef.current;
+    if (!visuals) return Promise.resolve();
+    return new Promise((resolve) => {
+      let hitAnimation: Promise<void> | null = null;
+      const started = visuals.weapon.play("hit", {
+        onHit: () => {
+          playRandomizedOneShot(HIT_SFX_URL);
+          hitAnimation = visuals.bossPresentation.playHit();
+        },
+        onComplete: () => {
+          void (hitAnimation ?? Promise.resolve()).then(resolve);
+        },
+      });
+      if (!started) resolve();
+    });
+  };
+
+  const playDungeon10BossAttack = (): Promise<void> => {
+    const visuals = visualsRef.current;
+    if (!visuals) return Promise.resolve();
+    return visuals.bossPresentation.playAttack(() => {
+      const damage = getMonsterDamageForFloor(10, "elite");
+      playRandomizedOneShot(HIT_SFX_URL);
+      applyPlayerDamage(damage);
+      setDamageFlash(true);
+      window.setTimeout(() => {
+        if (mountedRef.current) setDamageFlash(false);
+      }, 240);
+    });
+  };
+
+  const healDungeon10Player = async (amount: number): Promise<void> => {
+    const nextHp = Math.min(maxHp, playerHpRef.current + amount);
+    if (nextHp === playerHpRef.current) return;
+    playerHpRef.current = nextHp;
+    setPlayerHp(nextHp);
+    playRandomizedOneShot(HEAL_SFX_URL);
   };
 
   const playEnemyTurn = async () => {
@@ -1804,7 +1846,7 @@ export function DungeonScreen({
         if (floor10BossPhase !== "idle") return;
         const presentation = visualsRef.current?.bossPresentation;
         if (!presentation) {
-          setFloor10BossPhase("complete");
+          setFloor10BossPhase("combat");
           return;
         }
         setFloor10BossPhase("playing");
@@ -1816,7 +1858,7 @@ export function DungeonScreen({
           await new Promise<void>((resolve) => window.setTimeout(resolve, 3000));
           if (mountedRef.current) setFloor10BossShake(false);
         }).then(() => {
-          if (mountedRef.current) setFloor10BossPhase("complete");
+          if (mountedRef.current) setFloor10BossPhase("combat");
         });
         return;
       }
@@ -2456,6 +2498,17 @@ export function DungeonScreen({
           </div>
         )}
       </CombatDialoguePanel>}
+
+      {floorId === "floor-10" && floor10BossPhase === "combat" && (
+        <BossCombatScreen
+          seed={dungeonRun.seed}
+          playerState={playerState}
+          onNavigate={onNavigate}
+          onPlayerAttack={playDungeon10PlayerAttack}
+          onBossAttack={playDungeon10BossAttack}
+          onHeal={healDungeon10Player}
+        />
+      )}
 
       {!floorIntroVisible && !floor5EntryStoryVisible && !floor6EntryStoryVisible && !floor10EntryStoryVisible && floor6ClueStoryIndex === null && floor7ClueStoryIndex === null && floor9ClueStoryIndex === null && floor10BossPhase === "idle" && (dungeonMode === "exploration" || dungeonMode === "moving") && (
         <section className="dungeon-movement-panel" aria-label="던전 이동 선택">

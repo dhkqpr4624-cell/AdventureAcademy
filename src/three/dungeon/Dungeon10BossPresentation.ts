@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { DungeonCameraController } from "./DungeonCameraController";
+import { MonsterAnimationController } from "../monster/MonsterAnimationController";
 
 const wait = (durationMs: number) => new Promise<void>((resolve) => window.setTimeout(resolve, durationMs));
 
@@ -13,6 +14,7 @@ export class Dungeon10BossPresentation {
     side: THREE.DoubleSide,
   });
   private readonly plane = new THREE.Mesh(this.geometry, this.material);
+  private readonly animation = new MonsterAnimationController(this.plane);
   private texture: THREE.Texture | null = null;
   private frameId: number | null = null;
   private disposed = false;
@@ -96,10 +98,23 @@ export class Dungeon10BossPresentation {
     await onRoar();
   }
 
+  update(deltaTime: number): void {
+    this.animation.update(deltaTime);
+  }
+
+  playHit(): Promise<void> {
+    return this.animation.play("hit");
+  }
+
+  playAttack(onImpact: () => void): Promise<void> {
+    return this.animation.play("attack", onImpact);
+  }
+
   dispose(): void {
     this.disposed = true;
     this.cameraController.cancel();
     if (this.frameId !== null) cancelAnimationFrame(this.frameId);
+    this.animation.dispose();
     this.root.removeFromParent();
     this.texture?.dispose();
     this.geometry.dispose();
