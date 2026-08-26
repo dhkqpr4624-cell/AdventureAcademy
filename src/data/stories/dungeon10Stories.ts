@@ -29,16 +29,25 @@ const dialogue = (id: string, speakerId: keyof typeof actors, text: string): Sto
   advanceMode: "click",
 });
 
-const show = (id: string, actorId: keyof typeof actors): StoryStep => ({
-  id,
-  type: "showPortrait",
-  actorId,
-  portraitId: "default",
-  position: "left",
-  transition: "fade",
-  durationMs: 0,
-  advanceMode: "auto",
-});
+const switchPortrait = (id: string, actorId: keyof typeof actors): StoryStep[] => [
+  ...Object.keys(actors).map((visibleActorId): StoryStep => ({
+    id: `${id}-hide-${visibleActorId}`,
+    type: "hidePortrait",
+    actorId: visibleActorId,
+    durationMs: 0,
+    advanceMode: "auto",
+  })),
+  {
+    id,
+    type: "showPortrait",
+    actorId,
+    portraitId: "default",
+    position: "left",
+    transition: "fade",
+    durationMs: 0,
+    advanceMode: "auto",
+  },
+];
 
 export const DUNGEON10_ENTRY_STORY: StorySequence = {
   id: "dungeon10-entry-story",
@@ -51,15 +60,15 @@ export const DUNGEON10_ENTRY_STORY: StorySequence = {
   scenes: [{
     id: "entry",
     steps: [
-      show("show-theo", "theo"),
+      ...switchPortrait("show-theo", "theo"),
       dialogue("theo-1", "theo", "후.. 정말 어마어마한 기운이군요. 저 앞에 이 포탈의 원흉이 있는 것이 분명합니다."),
-      show("show-luna", "luna"),
+      ...switchPortrait("show-luna", "luna"),
       dialogue("luna-1", "luna", " 원흉을 쓰러뜨려야 포탈을 소멸시키고 집으로 돌아갈 수 있어. 윽.. 정말 무섭지만, 해내야만 해! "),
-      show("show-theo-2", "theo"),
+      ...switchPortrait("show-theo-2", "theo"),
       dialogue("theo-2", "theo", " 그렇습니다. 그리고, 공민왕을 위해서라도 우리는 꼭 해내야 합니다. "),
-      show("show-luna-2", "luna"),
+      ...switchPortrait("show-luna-2", "luna"),
       dialogue("luna-2", "luna", " 응, 전 아저씨를 위해서라도.. "),
-      show("show-kaiden", "kaiden"),
+      ...switchPortrait("show-kaiden", "kaiden"),
       dialogue("kaiden-1", "kaiden", " ... "),
       dialogue("kaiden-2", "kaiden", " 힘든 싸움이 될 것이다. "),
       dialogue("kaiden-3", "kaiden", " 준비가 되면 들어가자. "),

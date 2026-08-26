@@ -826,7 +826,7 @@ export function DungeonScreen({
       const room = new THREE.Group();
       room.position.set(roomNode.position.x, roomNode.position.y, roomNode.position.z);
       if (floorId === "floor-10" && roomNode.id === DUNGEON10_BOSS_ROOM_ID) {
-        room.scale.set(3, 1, 3);
+        room.scale.set(3, 3, 3);
       }
       const floorColor = index % 2 === 0 ? 0x2b2927 : 0x302d29;
       addRoomPlane(room, 10, 12, floorColor, [0, -3, -2], [-Math.PI / 2, 0, 0]);
@@ -879,7 +879,7 @@ export function DungeonScreen({
         });
         visualAssembly.setActiveRoom(currentRoomId);
         if (floorId === "floor-10") {
-          visualAssembly.roomGroups.get(DUNGEON10_BOSS_ROOM_ID)?.scale.set(3, 1, 3);
+          visualAssembly.roomGroups.get(DUNGEON10_BOSS_ROOM_ID)?.scale.set(3, 3, 3);
         }
         visualAssemblyRef.current = visualAssembly;
         scene.add(visualAssembly.root);
@@ -1956,11 +1956,13 @@ export function DungeonScreen({
         if (!mountedRef.current || !movementProcessingRef.current) {
           return;
         }
-        controller.setPose({
-          position: targetRoom.explorationCameraPose.position,
-          lookAt: targetRoom.explorationCameraPose.lookAt,
-          rotationY: DUNGEON_CANONICAL_YAW,
-        });
+        if (floorId !== "floor-10") {
+          controller.setPose({
+            position: targetRoom.explorationCameraPose.position,
+            lookAt: targetRoom.explorationCameraPose.lookAt,
+            rotationY: DUNGEON_CANONICAL_YAW,
+          });
+        }
         movementProcessingRef.current = false;
         setPreviousRoomId(sourceRoomId);
         setCurrentRoomId(route.targetRoomId);
@@ -2132,7 +2134,8 @@ export function DungeonScreen({
         className={`dungeon-scene ${floor10BossShake ? "story-camera is-shaking" : ""}`}
         style={floor10BossShake ? {
           "--story-shake-amplitude": "12px",
-          "--story-shake-duration": "3000ms",
+          "--story-shake-duration": "1000ms",
+          animationIterationCount: 3,
         } as CSSProperties : undefined}
         aria-label="고정 테스트 던전"
       />

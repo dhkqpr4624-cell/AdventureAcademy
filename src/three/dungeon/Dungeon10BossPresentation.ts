@@ -23,7 +23,7 @@ export class Dungeon10BossPresentation {
     private readonly cameraController: DungeonCameraController,
   ) {
     this.root.name = "Dungeon10BossPlane";
-    this.root.position.set(0, 6, -57);
+    this.root.position.set(0, 0, -57);
     this.root.visible = false;
     this.plane.renderOrder = 80;
     this.root.add(this.plane);
@@ -43,7 +43,7 @@ export class Dungeon10BossPresentation {
     return new Promise((resolve) => {
       const startedAt = performance.now();
       const fromPitch = this.camera.rotation.x;
-      const target = new THREE.Vector3(0, 8.2, -57);
+      const target = new THREE.Vector3(0, 5.2, -57);
       const direction = target.sub(this.camera.position).normalize();
       const targetPitch = Math.asin(direction.y);
       const animate = (now: number) => {
@@ -84,7 +84,6 @@ export class Dungeon10BossPresentation {
   async play(imageUrl: string, onRoar: () => Promise<void>): Promise<void> {
     this.cameraController.cancel();
     this.camera.rotation.order = "YXZ";
-    this.camera.rotation.set(0, 0, 0);
     const loaded = this.loadBoss(imageUrl);
     await this.rotateYaw(THREE.MathUtils.degToRad(100), 900);
     await this.rotateYaw(0, 900);
