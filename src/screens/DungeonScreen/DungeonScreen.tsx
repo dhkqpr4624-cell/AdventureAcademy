@@ -1101,18 +1101,20 @@ export function DungeonScreen({
     });
   };
 
-  const playDungeon10BossAttack = (): Promise<void> => {
+  const playDungeon10BossAttack = async () => {
     const visuals = visualsRef.current;
-    if (!visuals) return Promise.resolve();
-    return visuals.bossPresentation.playAttack(() => {
+    let damageResult = resolvePlayerDamage(playerHpRef.current, 0);
+    if (!visuals) return damageResult;
+    await visuals.bossPresentation.playAttack(() => {
       const damage = getMonsterDamageForFloor(10, "elite");
       playRandomizedOneShot(HIT_SFX_URL);
-      applyPlayerDamage(damage);
+      damageResult = applyPlayerDamage(damage);
       setDamageFlash(true);
       window.setTimeout(() => {
         if (mountedRef.current) setDamageFlash(false);
       }, 240);
     });
+    return damageResult;
   };
 
   const healDungeon10Player = async (amount: number): Promise<void> => {
@@ -2021,6 +2023,10 @@ export function DungeonScreen({
 
   const restartTestDungeon = (restoreHp = true) => {
     visualsRef.current?.dungeonCamera.cancel();
+    if (floorId === "floor-10") {
+      visualsRef.current?.bossPresentation.reset();
+      setFloor10BossPhase("idle");
+    }
     movementProcessingRef.current = false;
     roomEventProcessingRef.current = false;
     activeCombatRoomIdRef.current = null;
@@ -2515,6 +2521,7 @@ export function DungeonScreen({
           inventoryState={inventoryState}
           setInventoryState={setInventoryState}
           onInventoryChanged={onInventoryChanged}
+          onGameOver={enterDefeatedState}
         />
       )}
 

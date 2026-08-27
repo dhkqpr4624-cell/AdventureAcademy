@@ -110,6 +110,11 @@ export class Dungeon10BossPresentation {
     return this.animation.play("attack", onImpact);
   }
 
+  reset(): void {
+    this.animation.reset();
+    this.root.visible = false;
+  }
+
   dispose(): void {
     this.disposed = true;
     this.cameraController.cancel();

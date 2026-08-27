@@ -41,18 +41,33 @@ type BossCombatPhase =
   | "resolving"
   | "dodgeChoice"
   | "dodgeResult"
+  | "support"
+  | "gameOver"
   | "complete";
+
+type SupportNpc = {
+  name: "루나" | "카이든" | "테오";
+  subject: string;
+  imageUrl: string;
+};
+
+const SUPPORT_NPCS: readonly SupportNpc[] = [
+  { name: "루나", subject: "루나가", imageUrl: `${import.meta.env.BASE_URL}assets/dungeon10/support/luna-support.png` },
+  { name: "카이든", subject: "카이든이", imageUrl: `${import.meta.env.BASE_URL}assets/dungeon10/support/kaiden-support.png` },
+  { name: "테오", subject: "테오가", imageUrl: `${import.meta.env.BASE_URL}assets/dungeon10/support/theo-support.png` },
+];
 
 type BossCombatScreenProps = {
   seed: string;
   playerState: PlayerState;
   onNavigate: (screen: ScreenId) => void;
   onPlayerAttack: () => Promise<void>;
-  onBossAttack: () => Promise<void>;
+  onBossAttack: () => Promise<{ isDefeated: boolean }>;
   onHeal: (amount: number) => Promise<void>;
   inventoryState: InventoryState;
   setInventoryState: Dispatch<SetStateAction<InventoryState>>;
   onInventoryChanged: () => void;
+  onGameOver: () => void;
   onComplete?: () => void;
 };
 
@@ -66,22 +81,32 @@ export function BossCombatScreen({
   inventoryState,
   setInventoryState,
   onInventoryChanged,
+  onGameOver,
   onComplete,
 }: BossCombatScreenProps) {
   const questions = useMemo(() => createBossQuizQuestions(seed), [seed]);
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const resolvingRef = useRef(false);
+  const supportCountRef = useRef(0);
+  const supportContinuationRef = useRef<(() => void) | null>(null);
+  const supportTimerRef = useRef<number | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<BossCombatPhase>("command");
   const [selectedDirection, setSelectedDirection] =
     useState<BossDodgeDirection | null>(null);
   const [dodgeBoard, setDodgeBoard] = useState<BossDodgeBoard | null>(null);
   const [applyingDodgeResult, setApplyingDodgeResult] = useState(false);
-  const [healEffectVisible, setHealEffectVisible] = useState(false);
+  const [healEffectText, setHealEffectText] = useState<string | null>(null);
   const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
+  const [supportNpc, setSupportNpc] = useState<SupportNpc | null>(null);
+  const [supportReady, setSupportReady] = useState(false);
+  const [supportExiting, setSupportExiting] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.DEV) runBossCombatControllerChecks();
+    return () => {
+      if (supportTimerRef.current !== null) window.clearTimeout(supportTimerRef.current);
+    };
   }, []);
 
   const advanceQuestion = () => {
@@ -98,14 +123,41 @@ export function BossCombatScreen({
     setPhase("command");
   };
 
+  const beginNpcSupport = (continuation: () => void) => {
+    if (supportCountRef.current >= 2) {
+      setPhase("gameOver");
+      onGameOver();
+      return;
+    }
+    supportCountRef.current += 1;
+    supportContinuationRef.current = continuation;
+    const selected = SUPPORT_NPCS[Math.floor(Math.random() * SUPPORT_NPCS.length)];
+    setSupportNpc(selected);
+    setSupportReady(false);
+    setSupportExiting(false);
+    setPhase("support");
+    supportTimerRef.current = window.setTimeout(() => {
+      setSupportReady(true);
+      supportTimerRef.current = null;
+    }, 350);
+  };
+
+  const resolveBossAttack = async (continuation: () => void) => {
+    const result = await onBossAttack();
+    if (result.isDefeated) {
+      beginNpcSupport(continuation);
+      return;
+    }
+    continuation();
+  };
+
   const completeQuestionReview = async () => {
     if (resolvingRef.current || !pendingResultRef.current) return;
     resolvingRef.current = true;
     setPhase("resolving");
     try {
       if (!pendingResultRef.current.isCorrect) {
-        await onBossAttack();
-        advanceQuestion();
+        await resolveBossAttack(advanceQuestion);
         return;
       }
       await onPlayerAttack();
@@ -127,19 +179,44 @@ export function BossCombatScreen({
     if (resolvingRef.current || !selectedDirection || !dodgeBoard) return;
     resolvingRef.current = true;
     setApplyingDodgeResult(true);
+    let supportInterrupted = false;
     try {
       const outcome = dodgeBoard[selectedDirection];
-      if (outcome === "attack") await onBossAttack();
+      if (outcome === "attack") {
+        const result = await onBossAttack();
+        if (result.isDefeated) {
+          supportInterrupted = true;
+          beginNpcSupport(advanceQuestion);
+        }
+      }
       if (outcome === "heal") {
         await onHeal(BOSS_DODGE_HEAL_AMOUNT);
-        setHealEffectVisible(true);
-        window.setTimeout(() => setHealEffectVisible(false), 300);
+        setHealEffectText("+15");
+        window.setTimeout(() => setHealEffectText(null), 300);
       }
     } finally {
       resolvingRef.current = false;
       setApplyingDodgeResult(false);
     }
-    advanceQuestion();
+    if (!supportInterrupted) advanceQuestion();
+  };
+
+  const finishNpcSupport = () => {
+    if (!supportNpc || supportExiting) return;
+    setSupportReady(false);
+    setSupportExiting(true);
+    supportTimerRef.current = window.setTimeout(() => {
+      supportTimerRef.current = null;
+      void onHeal(playerState.maxHp).then(() => {
+        setHealEffectText(`+${playerState.maxHp}`);
+        window.setTimeout(() => setHealEffectText(null), 300);
+        setSupportNpc(null);
+        setSupportExiting(false);
+        const continuation = supportContinuationRef.current;
+        supportContinuationRef.current = null;
+        continuation?.();
+      });
+    }, 350);
   };
 
   const potionQuantity = (kind: PotionKind) =>
@@ -169,8 +246,8 @@ export function BossCombatScreen({
     setInventoryState((current) => changeItemQuantity(current, itemId, -1));
     onInventoryChanged();
     await onHeal(result.healedAmount);
-    setHealEffectVisible(true);
-    window.setTimeout(() => setHealEffectVisible(false), 300);
+    setHealEffectText(`+${result.healedAmount}`);
+    window.setTimeout(() => setHealEffectText(null), 300);
     resolvingRef.current = false;
     setSelectedPotion(null);
     setPhase("command");
@@ -182,6 +259,34 @@ export function BossCombatScreen({
       questionLabel={`${Math.min(questionIndex + 1, BOSS_QUIZ_QUESTION_COUNT)} / ${BOSS_QUIZ_QUESTION_COUNT}`}
     />
   );
+
+  if (phase === "gameOver") return null;
+
+  if (phase === "support" && supportNpc) {
+    return (
+      <section className="boss-combat-layer boss-support-layer" aria-label={`${supportNpc.name} 지원`}>
+        <div className="boss-support-visual" aria-hidden="true">
+          <img
+            src={supportNpc.imageUrl}
+            alt=""
+            className={supportExiting ? "is-exiting" : "is-entering"}
+          />
+        </div>
+        {supportReady && (
+          <CombatDialoguePanel mode="message" statusBar={statusBar}>
+            <div className="combat-message-layout">
+              <p className="combat-message" role="status">
+                {supportNpc.subject} 지원한다.<br />당신은 다시 일어났다.
+              </p>
+              <button type="button" className="combat-message-next" onClick={finishNpcSupport}>
+                다음
+              </button>
+            </div>
+          </CombatDialoguePanel>
+        )}
+      </section>
+    );
+  }
 
   if (phase === "question") {
     return (
@@ -213,8 +318,8 @@ export function BossCombatScreen({
 
   return (
     <section className="boss-combat-layer" aria-label="Dungeon10 보스 전투">
-      {healEffectVisible && (
-        <strong className="combat-floating-text is-heal">+15</strong>
+      {healEffectText && (
+        <strong className="combat-floating-text is-heal">{healEffectText}</strong>
       )}
       <header className="boss-combat-hud">
         <p className="eyebrow">BOSS COMBAT</p>
