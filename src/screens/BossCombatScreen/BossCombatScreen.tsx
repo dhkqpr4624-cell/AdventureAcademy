@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { ScreenId } from "../../app/routes";
 import { CombatDialoguePanel } from "../../components/combat/CombatDialoguePanel";
+import { ItemIcon } from "../../components/ItemIcon";
 import { PlayerStatusBar } from "../../components/PlayerStatusBar";
 import {
   BOSS_DODGE_DIRECTIONS,
@@ -16,12 +17,26 @@ import {
   BOSS_QUIZ_QUESTION_COUNT,
   createBossQuizQuestions,
 } from "../../game/bossCombat/BossQuizFlow";
+import {
+  getPotionHealAmount,
+  resolvePotionUse,
+  type PotionKind,
+} from "../../game/combat/potionResolver";
+import { getItemDefinition } from "../../game/inventory/itemDefinitions";
+import {
+  changeItemQuantity,
+  getItemQuantity,
+  type InventoryState,
+} from "../../game/inventory/inventoryState";
 import type { PlayerState } from "../../game/player/playerState";
 import type { QuestionResult } from "../../types/question";
 import { QuestionScreen } from "../QuestionScreen/QuestionScreen";
 import "./BossCombatScreen.css";
 
 type BossCombatPhase =
+  | "command"
+  | "itemSelect"
+  | "itemConfirm"
   | "question"
   | "resolving"
   | "dodgeChoice"
@@ -35,6 +50,9 @@ type BossCombatScreenProps = {
   onPlayerAttack: () => Promise<void>;
   onBossAttack: () => Promise<void>;
   onHeal: (amount: number) => Promise<void>;
+  inventoryState: InventoryState;
+  setInventoryState: Dispatch<SetStateAction<InventoryState>>;
+  onInventoryChanged: () => void;
   onComplete?: () => void;
 };
 
@@ -45,18 +63,22 @@ export function BossCombatScreen({
   onPlayerAttack,
   onBossAttack,
   onHeal,
+  inventoryState,
+  setInventoryState,
+  onInventoryChanged,
   onComplete,
 }: BossCombatScreenProps) {
   const questions = useMemo(() => createBossQuizQuestions(seed), [seed]);
   const pendingResultRef = useRef<QuestionResult | null>(null);
   const resolvingRef = useRef(false);
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [phase, setPhase] = useState<BossCombatPhase>("question");
+  const [phase, setPhase] = useState<BossCombatPhase>("command");
   const [selectedDirection, setSelectedDirection] =
     useState<BossDodgeDirection | null>(null);
   const [dodgeBoard, setDodgeBoard] = useState<BossDodgeBoard | null>(null);
-  const [outcomeApplied, setOutcomeApplied] = useState(false);
+  const [applyingDodgeResult, setApplyingDodgeResult] = useState(false);
   const [healEffectVisible, setHealEffectVisible] = useState(false);
+  const [selectedPotion, setSelectedPotion] = useState<PotionKind | null>(null);
 
   useEffect(() => {
     if (import.meta.env.DEV) runBossCombatControllerChecks();
@@ -66,14 +88,14 @@ export function BossCombatScreen({
     pendingResultRef.current = null;
     setSelectedDirection(null);
     setDodgeBoard(null);
-    setOutcomeApplied(false);
+    setApplyingDodgeResult(false);
     if (questionIndex + 1 >= BOSS_QUIZ_QUESTION_COUNT) {
       setPhase("complete");
       onComplete?.();
       return;
     }
     setQuestionIndex((current) => current + 1);
-    setPhase("question");
+    setPhase("command");
   };
 
   const completeQuestionReview = async () => {
@@ -96,11 +118,15 @@ export function BossCombatScreen({
     }
   };
 
-  const revealDodgeResult = async () => {
+  const revealDodgeResult = () => {
+    if (!selectedDirection || !dodgeBoard) return;
+    setPhase("dodgeResult");
+  };
+
+  const applyDodgeResult = async () => {
     if (resolvingRef.current || !selectedDirection || !dodgeBoard) return;
     resolvingRef.current = true;
-    setOutcomeApplied(false);
-    setPhase("dodgeResult");
+    setApplyingDodgeResult(true);
     try {
       const outcome = dodgeBoard[selectedDirection];
       if (outcome === "attack") await onBossAttack();
@@ -111,8 +137,43 @@ export function BossCombatScreen({
       }
     } finally {
       resolvingRef.current = false;
-      setOutcomeApplied(true);
+      setApplyingDodgeResult(false);
     }
+    advanceQuestion();
+  };
+
+  const potionQuantity = (kind: PotionKind) =>
+    getItemQuantity(
+      inventoryState,
+      kind === "smallPotion" ? "potion-small" : "potion-medium",
+    );
+
+  const potionName = (kind: PotionKind) =>
+    kind === "smallPotion" ? "소형 포션" : "중형 포션";
+
+  const useSelectedPotion = async () => {
+    if (!selectedPotion || resolvingRef.current) return;
+    const result = resolvePotionUse({
+      currentHp: playerState.currentHp,
+      maxHp: playerState.maxHp,
+      potionKind: selectedPotion,
+      quantity: potionQuantity(selectedPotion),
+    });
+    if (!result.success) {
+      setSelectedPotion(null);
+      setPhase("command");
+      return;
+    }
+    resolvingRef.current = true;
+    const itemId = selectedPotion === "smallPotion" ? "potion-small" : "potion-medium";
+    setInventoryState((current) => changeItemQuantity(current, itemId, -1));
+    onInventoryChanged();
+    await onHeal(result.healedAmount);
+    setHealEffectVisible(true);
+    window.setTimeout(() => setHealEffectVisible(false), 300);
+    resolvingRef.current = false;
+    setSelectedPotion(null);
+    setPhase("command");
   };
 
   const statusBar = (
@@ -171,6 +232,59 @@ export function BossCombatScreen({
           </div>
         )}
 
+        {phase === "command" && (
+          <div className="combat-message-layout">
+            <p className="combat-message" role="status">무엇을 할까?</p>
+            <div className="combat-command-buttons">
+              <button type="button" onClick={() => setPhase("question")}>공격하기</button>
+              <button
+                type="button"
+                disabled={
+                  playerState.currentHp >= playerState.maxHp ||
+                  (potionQuantity("smallPotion") <= 0 && potionQuantity("mediumPotion") <= 0)
+                }
+                onClick={() => setPhase("itemSelect")}
+              >
+                아이템 사용
+              </button>
+            </div>
+          </div>
+        )}
+
+        {phase === "itemSelect" && (
+          <div className="combat-item-panel" aria-label="아이템 선택">
+            {(["smallPotion", "mediumPotion"] as const).map((kind) => {
+              const itemId = kind === "smallPotion" ? "potion-small" : "potion-medium";
+              return (
+                <button
+                  key={kind}
+                  type="button"
+                  disabled={potionQuantity(kind) <= 0 || playerState.currentHp >= playerState.maxHp}
+                  onClick={() => { setSelectedPotion(kind); setPhase("itemConfirm"); }}
+                >
+                  <ItemIcon item={getItemDefinition(itemId)!} />
+                  <strong>{potionName(kind)}</strong>
+                  <span>HP +{getPotionHealAmount(kind)}</span>
+                  <small>보유 {potionQuantity(kind)}개</small>
+                </button>
+              );
+            })}
+            <button type="button" onClick={() => setPhase("command")}>뒤로</button>
+          </div>
+        )}
+
+        {phase === "itemConfirm" && selectedPotion && (
+          <div className="combat-item-confirm">
+            <p>
+              {potionName(selectedPotion)} · HP +{getPotionHealAmount(selectedPotion)} · 보유 {potionQuantity(selectedPotion)}개
+            </p>
+            <div>
+              <button type="button" onClick={() => void useSelectedPotion()}>사용</button>
+              <button type="button" onClick={() => { setSelectedPotion(null); setPhase("itemSelect"); }}>취소</button>
+            </div>
+          </div>
+        )}
+
         {(phase === "dodgeChoice" || phase === "dodgeResult") && dodgeBoard && (
           <div className="boss-dodge-panel">
             <p className="combat-message" role="status">
@@ -201,7 +315,7 @@ export function BossCombatScreen({
                 type="button"
                 className="combat-message-next"
                 disabled={!selectedDirection}
-                onClick={() => void revealDodgeResult()}
+                onClick={revealDodgeResult}
               >
                 다음
               </button>
@@ -209,10 +323,10 @@ export function BossCombatScreen({
               <button
                 type="button"
                 className="combat-message-next"
-                disabled={!outcomeApplied}
-                onClick={advanceQuestion}
+                disabled={applyingDodgeResult}
+                onClick={() => void applyDodgeResult()}
               >
-                다음 문제
+                다음
               </button>
             )}
           </div>

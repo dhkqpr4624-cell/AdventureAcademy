@@ -25,7 +25,7 @@ export class Dungeon10BossPresentation {
     private readonly cameraController: DungeonCameraController,
   ) {
     this.root.name = "Dungeon10BossPlane";
-    this.root.position.set(0, 0, -57);
+    this.root.position.set(0, 6, -57);
     this.root.visible = false;
     this.plane.renderOrder = 80;
     this.root.add(this.plane);
@@ -45,7 +45,7 @@ export class Dungeon10BossPresentation {
     return new Promise((resolve) => {
       const startedAt = performance.now();
       const fromPitch = this.camera.rotation.x;
-      const target = new THREE.Vector3(0, 5.2, -57);
+      const target = new THREE.Vector3(0, 11.2, -57);
       const direction = target.sub(this.camera.position).normalize();
       const targetPitch = Math.asin(direction.y);
       const animate = (now: number) => {
@@ -87,12 +87,12 @@ export class Dungeon10BossPresentation {
     this.cameraController.cancel();
     this.camera.rotation.order = "YXZ";
     const loaded = this.loadBoss(imageUrl);
-    await this.rotateYaw(THREE.MathUtils.degToRad(100), 900);
-    await this.rotateYaw(0, 900);
-    await this.rotateYaw(THREE.MathUtils.degToRad(-100), 900);
+    await this.rotateYaw(THREE.MathUtils.degToRad(100), 1500);
+    await this.rotateYaw(0, 1500);
+    await this.rotateYaw(THREE.MathUtils.degToRad(-100), 1500);
     await loaded;
     this.root.visible = true;
-    await this.rotateYaw(0, 900);
+    await this.rotateYaw(0, 1500);
     await wait(1000);
     await this.tiltToBossFace(1500);
     await onRoar();

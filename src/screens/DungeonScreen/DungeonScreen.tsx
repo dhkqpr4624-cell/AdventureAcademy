@@ -828,6 +828,7 @@ export function DungeonScreen({
       room.position.set(roomNode.position.x, roomNode.position.y, roomNode.position.z);
       if (floorId === "floor-10" && roomNode.id === DUNGEON10_BOSS_ROOM_ID) {
         room.scale.set(3, 3, 3);
+        room.position.y += FLOOR1_STANDARD_ROOM.height;
       }
       const floorColor = index % 2 === 0 ? 0x2b2927 : 0x302d29;
       addRoomPlane(room, 10, 12, floorColor, [0, -3, -2], [-Math.PI / 2, 0, 0]);
@@ -880,7 +881,11 @@ export function DungeonScreen({
         });
         visualAssembly.setActiveRoom(currentRoomId);
         if (floorId === "floor-10") {
-          visualAssembly.roomGroups.get(DUNGEON10_BOSS_ROOM_ID)?.scale.set(3, 3, 3);
+          const bossRoom = visualAssembly.roomGroups.get(DUNGEON10_BOSS_ROOM_ID);
+          if (bossRoom) {
+            bossRoom.scale.set(3, 3, 3);
+            bossRoom.position.y += FLOOR1_STANDARD_ROOM.height;
+          }
         }
         visualAssemblyRef.current = visualAssembly;
         scene.add(visualAssembly.root);
@@ -2507,6 +2512,9 @@ export function DungeonScreen({
           onPlayerAttack={playDungeon10PlayerAttack}
           onBossAttack={playDungeon10BossAttack}
           onHeal={healDungeon10Player}
+          inventoryState={inventoryState}
+          setInventoryState={setInventoryState}
+          onInventoryChanged={onInventoryChanged}
         />
       )}
 
