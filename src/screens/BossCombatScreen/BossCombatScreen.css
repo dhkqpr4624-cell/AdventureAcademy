@@ -20,20 +20,20 @@
 .boss-support-visual {
   position: absolute;
   z-index: 1;
-  top: 50%;
-  right: 0;
-  width: min(78vw, 1100px);
+  top: clamp(42px, 9vh, 96px);
+  right: clamp(24px, 5vw, 84px);
+  width: min(39vw, 550px);
   pointer-events: none;
-  transform: translateY(-50%);
 }
 
 .boss-support-visual img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 76vh;
+  max-height: 38vh;
   object-fit: contain;
-  object-position: right center;
+  object-position: right top;
+  will-change: transform;
 }
 
 .boss-support-visual img.is-entering {
@@ -49,13 +49,13 @@
 }
 
 @keyframes boss-support-enter {
-  from { transform: translateX(110%); }
-  to { transform: translateX(0); }
+  from { transform: translate3d(115%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 @keyframes boss-support-exit {
-  from { transform: translateX(0); }
-  to { transform: translateX(110%); }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(115%, 0, 0); }
 }
 
 .boss-combat-hud {

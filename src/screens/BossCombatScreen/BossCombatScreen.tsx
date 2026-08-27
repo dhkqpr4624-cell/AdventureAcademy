@@ -41,6 +41,7 @@ type BossCombatPhase =
   | "resolving"
   | "dodgeChoice"
   | "dodgeResult"
+  | "supportPrelude"
   | "support"
   | "gameOver"
   | "complete";
@@ -133,6 +134,13 @@ export function BossCombatScreen({
     supportContinuationRef.current = continuation;
     const selected = SUPPORT_NPCS[Math.floor(Math.random() * SUPPORT_NPCS.length)];
     setSupportNpc(selected);
+    setSupportReady(false);
+    setSupportExiting(false);
+    setPhase("supportPrelude");
+  };
+
+  const startNpcSupportCutin = () => {
+    if (!supportNpc) return;
     setSupportReady(false);
     setSupportExiting(false);
     setPhase("support");
@@ -262,11 +270,27 @@ export function BossCombatScreen({
 
   if (phase === "gameOver") return null;
 
+  if (phase === "supportPrelude" && supportNpc) {
+    return (
+      <section className="boss-combat-layer boss-support-layer" aria-label="전투 불능">
+        <CombatDialoguePanel mode="message" statusBar={statusBar}>
+          <div className="combat-message-layout">
+            <p className="combat-message" role="status">눈 앞이 어두워진다..</p>
+            <button type="button" className="combat-message-next" onClick={startNpcSupportCutin}>
+              다음
+            </button>
+          </div>
+        </CombatDialoguePanel>
+      </section>
+    );
+  }
+
   if (phase === "support" && supportNpc) {
     return (
       <section className="boss-combat-layer boss-support-layer" aria-label={`${supportNpc.name} 지원`}>
         <div className="boss-support-visual" aria-hidden="true">
           <img
+            key={`${supportNpc.name}-${supportCountRef.current}`}
             src={supportNpc.imageUrl}
             alt=""
             className={supportExiting ? "is-exiting" : "is-entering"}
