@@ -102,6 +102,7 @@ export function BossCombatScreen({
   const [supportNpc, setSupportNpc] = useState<SupportNpc | null>(null);
   const [supportReady, setSupportReady] = useState(false);
   const [supportExiting, setSupportExiting] = useState(false);
+  const [supportEnteringActive, setSupportEnteringActive] = useState(false);
 
   useEffect(() => {
     if (import.meta.env.DEV) runBossCombatControllerChecks();
@@ -109,6 +110,21 @@ export function BossCombatScreen({
       if (supportTimerRef.current !== null) window.clearTimeout(supportTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "support" || !supportNpc || supportExiting) return;
+    setSupportEnteringActive(false);
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        setSupportEnteringActive(true);
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [phase, supportNpc, supportExiting]);
 
   const advanceQuestion = () => {
     pendingResultRef.current = null;
@@ -293,7 +309,9 @@ export function BossCombatScreen({
             key={`${supportNpc.name}-${supportCountRef.current}`}
             src={supportNpc.imageUrl}
             alt=""
-            className={supportExiting ? "is-exiting" : "is-entering"}
+            className={supportExiting
+              ? "is-exiting"
+              : `is-entering${supportEnteringActive ? " is-active" : ""}`}
           />
         </div>
         {supportReady && (
