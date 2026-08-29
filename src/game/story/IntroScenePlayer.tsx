@@ -19,8 +19,8 @@ export function IntroScenePlayer({
   const scene = sequence.scenes[sceneIndex];
 
   useEffect(() => {
-    if (sceneIndex < 2) playBgm("airship", undefined, { loop: true, volume: 0.52 });
-    else playBgm("intro-story", undefined, { loop: true, volume: 0.52 });
+    if (sceneIndex < 2) playBgm("airship", undefined, { loop: true, volume: 0.42 });
+    else playBgm("intro-story", undefined, { loop: true, volume: 0.42 });
   }, [sceneIndex]);
   const finishScene = () => {
     if (sceneIndex + 1 < sequence.scenes.length) setSceneIndex((current) => current + 1);

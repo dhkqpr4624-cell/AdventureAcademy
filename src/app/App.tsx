@@ -107,11 +107,11 @@ export function App() {
 
   useEffect(() => {
     if (currentScreen === "baseCamp") {
-      playBgm("village", undefined, { loop: true, volume: 0.5 });
+      playBgm("village", undefined, { loop: true, volume: 0.42 });
       return;
     }
     if (currentScreen === "dungeon") {
-      playBgm("dungeon", undefined, { loop: true, volume: 0.5 });
+      playBgm("dungeon", undefined, { loop: true, volume: 0.42 });
       return;
     }
     if (currentScreen === "title" || currentScreen === "question") stopBgm();

@@ -1,5 +1,6 @@
 import type { Question } from "../types/question";
 
+/* 이전 개발용 문항: 런타임 문제 풀에서 완전히 비활성화됨.
 export const TEST_QUESTIONS: readonly Question[] = [
   {
     id: "test-mc-01",
@@ -115,6 +116,7 @@ export const TEST_QUESTIONS: readonly Question[] = [
 ];
 
 export const FLOOR3_THREE_KINGDOMS_QUESTIONS: readonly Question[] = TEST_QUESTIONS;
+*/
 
 export const FLOOR1_PREHISTORY_QUESTIONS: readonly Question[] = [
   {
@@ -291,3 +293,7 @@ export const FLOOR2_GOJOSEON_QUESTIONS: readonly Question[] = [
     acceptedAnswers: ["고조선"], explanation: "청동기 문화를 바탕으로 성장한 우리 역사상 최초의 국가는 고조선입니다.",
   },
 ];
+
+// 독립 Question 화면도 실제 학습 문항만 사용한다.
+export const TEST_QUESTIONS: readonly Question[] = FLOOR1_PREHISTORY_QUESTIONS;
+export { FLOOR3_GOGURYEO_BAEKJE_QUESTIONS as FLOOR3_THREE_KINGDOMS_QUESTIONS } from "./historyQuestions";

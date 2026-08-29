@@ -234,7 +234,7 @@ export function EndingSequenceScreen({ playerName, onComplete }: { playerName: s
     setDialogueIndex(0);
     if (phase === "BASECAMP_DISAPPEAR_IN") {
       stopBgm("boss-battle");
-      playBgm("ending-credit", undefined, { volume: 0.65, restartDelayMs: 2_500 });
+      playBgm("ending-credit", undefined, { volume: 0.42, restartDelayMs: 2_500 });
     }
   }, [phase]);
 

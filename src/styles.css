@@ -1116,17 +1116,18 @@ button:focus-visible {
 
 .combat-dialogue-panel.is-question,
 .combat-dialogue-panel.is-review {
-  height: min(34vh, 22rem);
+  height: min(68vh, 44rem);
+  max-height: calc(100svh - 4rem);
 }
 
 .combat-dialogue-panel.is-question:has(.question-header-prompt.has-quote),
 .combat-dialogue-panel.is-review:has(.question-header-prompt.has-quote) {
-  height: min(42vh, 27rem);
-  max-height: 42vh;
+  height: min(72vh, 47rem);
+  max-height: calc(100svh - 4rem);
 }
 
 .combat-dialogue-panel.is-review {
-  height: min(36vh, 23rem);
+  height: min(68vh, 44rem);
 }
 
 .combat-dialogue-label {
@@ -1725,8 +1726,10 @@ button:focus-visible {
 }
 
 .question-screen.is-embedded .question-scroll-area {
-  overflow: visible;
-  scrollbar-gutter: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .question-screen.is-embedded .question-scroll-area {
@@ -1913,7 +1916,8 @@ button:focus-visible {
 
   .combat-dialogue-panel.is-question,
   .combat-dialogue-panel.is-review {
-    height: 38vh;
+    height: min(72vh, 44rem);
+    max-height: calc(100svh - 2rem);
   }
 
   .question-screen.is-embedded .question-options {
@@ -1958,7 +1962,8 @@ button:focus-visible {
 
   .combat-dialogue-panel.is-question,
   .combat-dialogue-panel.is-review {
-    height: 40vh;
+    height: min(76vh, 32rem);
+    max-height: calc(100svh - 0.7rem);
   }
 
   .combat-dialogue-content {
@@ -3632,7 +3637,8 @@ button:focus-visible {
 
 .dungeon-room-event-panel.is-question {
   bottom: clamp(1rem, 3vh, 2rem);
-  height: min(42vh, 430px);
+  height: min(72vh, 680px);
+  max-height: calc(100svh - 4rem);
   overflow: hidden;
 }
 

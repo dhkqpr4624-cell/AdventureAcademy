@@ -745,11 +745,11 @@ export function DungeonScreen({
   useEffect(() => {
     if (floorId !== "floor-10") return;
     if (floor10BossPhase === "combat") {
-      playBgm("boss-battle", undefined, { loop: true, volume: 0.55 });
+      playBgm("boss-battle", undefined, { loop: true, volume: 0.46 });
       return () => stopBgm("boss-battle");
     }
     if (floor10BossPhase === "ending") stopBgm("boss-battle");
-    else playBgm("dungeon", undefined, { loop: true, volume: 0.5 });
+    else playBgm("dungeon", undefined, { loop: true, volume: 0.42 });
   }, [floor10BossPhase, floorId]);
 
   useEffect(() => {
@@ -2748,7 +2748,7 @@ export function DungeonScreen({
           presentationMode="baseCampOverlay" onNavigate={onNavigate}
           onCheckpointReached={(_storyId, checkpointId) => {
             if (checkpointId === "start-sacrifice-theme") {
-              playBgm("sacrifice", undefined, { loop: true, volume: 0.52 });
+              playBgm("sacrifice", undefined, { loop: true, volume: 0.42 });
             }
           }}
           onComplete={() => {

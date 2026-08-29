@@ -70,7 +70,7 @@ export function playBgm(
   const audio = new Audio(url);
   const restartDelayMs = Math.max(0, options.restartDelayMs ?? 0);
   audio.preload = "auto";
-  audio.volume = Math.max(0, Math.min(1, options.volume ?? 0.55));
+  audio.volume = Math.max(0, Math.min(1, options.volume ?? 0.42));
   audio.loop = Boolean(options.loop) && restartDelayMs === 0;
   activeBgm = { id, audio, restartDelayMs, restartTimer: null };
 

@@ -1,0 +1,30 @@
+import type { FloorId } from "../game/floor/floorTypes";
+import type { Question } from "../types/question";
+import {
+  FLOOR1_PREHISTORY_QUESTIONS,
+  FLOOR2_GOJOSEON_QUESTIONS,
+} from "./testQuestions";
+import {
+  FLOOR3_GOGURYEO_BAEKJE_QUESTIONS,
+  FLOOR4_SILLA_GAYA_QUESTIONS,
+  FLOOR5_UNIFIED_SILLA_QUESTIONS,
+  FLOOR6_BALHAE_QUESTIONS,
+  FLOOR7_GORYEO_FOUNDING_QUESTIONS,
+  FLOOR8_GORYEO_RELATIONS_QUESTIONS,
+  FLOOR9_GORYEO_CULTURE_QUESTIONS,
+} from "./historyQuestions";
+
+export const FLOOR_QUESTION_POOLS: Readonly<Record<Exclude<FloorId, "floor-10">, readonly Question[]>> = {
+  "floor-1": FLOOR1_PREHISTORY_QUESTIONS,
+  "floor-2": FLOOR2_GOJOSEON_QUESTIONS,
+  "floor-3": FLOOR3_GOGURYEO_BAEKJE_QUESTIONS,
+  "floor-4": FLOOR4_SILLA_GAYA_QUESTIONS,
+  "floor-5": FLOOR5_UNIFIED_SILLA_QUESTIONS,
+  "floor-6": FLOOR6_BALHAE_QUESTIONS,
+  "floor-7": FLOOR7_GORYEO_FOUNDING_QUESTIONS,
+  "floor-8": FLOOR8_GORYEO_RELATIONS_QUESTIONS,
+  "floor-9": FLOOR9_GORYEO_CULTURE_QUESTIONS,
+};
+
+export const DUNGEON_1_TO_9_QUESTION_POOL: readonly Question[] =
+  Object.values(FLOOR_QUESTION_POOLS).flat();

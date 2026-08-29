@@ -49,13 +49,13 @@ export function runDungeonRunQuestionAllocatorChecks() {
   const floor2Repeated = allocateDungeonRunQuestions(floor2Run.map, floor2Run.seed, "floor-2");
   const floor2Assigned = Object.values(floor2First).flat();
   check(FLOOR2_GOJOSEON_QUESTIONS.length === 16, "floor 2 pool contains 16 questions");
-  check(floor2Assigned.length === 11, "one floor 2 run assigns exactly 11 questions");
+  check(floor2Assigned.length === 10, "one floor 2 run assigns exactly 10 questions");
   check(
     floor2Assigned.every((question) => FLOOR2_GOJOSEON_QUESTIONS.some((candidate) => candidate.id === question.id)),
     "floor 2 only assigns its own question pool",
   );
   check(
-    new Set(floor2Assigned.map((question) => question.id)).size === 11,
+    new Set(floor2Assigned.map((question) => question.id)).size === 10,
     "floor 2 questions do not repeat in one dungeon",
   );
   check(JSON.stringify(floor2First) === JSON.stringify(floor2Repeated), "floor 2 same seed repeats");
@@ -77,14 +77,14 @@ export function runDungeonRunQuestionAllocatorChecks() {
   const floor3First = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
   const floor3Repeated = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
   const floor3Assigned = Object.values(floor3First).flat();
-  check(FLOOR3_THREE_KINGDOMS_QUESTIONS.length === 12, "floor 3 pool contains 12 questions");
-  check(floor3Assigned.length === 12, "one floor 3 run assigns exactly 12 questions");
+  check(FLOOR3_THREE_KINGDOMS_QUESTIONS.length === 19, "floor 3 pool contains 19 questions");
+  check(floor3Assigned.length === 10, "one floor 3 run assigns exactly 10 questions");
   check(
     floor3Assigned.every((question) => FLOOR3_THREE_KINGDOMS_QUESTIONS.some((candidate) => candidate.id === question.id)),
     "floor 3 only assigns its registered question pool",
   );
   check(
-    new Set(floor3Assigned.map((question) => question.id)).size === 12,
+    new Set(floor3Assigned.map((question) => question.id)).size === 10,
     "floor 3 questions do not repeat in one dungeon",
   );
   check(JSON.stringify(floor3First) === JSON.stringify(floor3Repeated), "floor 3 same seed repeats");
