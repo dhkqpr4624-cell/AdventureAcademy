@@ -165,6 +165,7 @@ import { QuestRewardPopup } from "../../components/QuestRewardPopup";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { selectRequiredStoryRoomIds } from "../../game/dungeon/generation/DungeonGenerator";
 import { BossCombatScreen } from "../BossCombatScreen/BossCombatScreen";
+import { EndingSequenceScreen } from "../EndingSequenceScreen/EndingSequenceScreen";
 
 type DungeonScreenProps = {
   floorId: FloorId;
@@ -188,6 +189,8 @@ type DungeonScreenProps = {
   savedFloorRun: DungeonFloorRunState | null;
   onFloorRunChanged: (run: DungeonFloorRunState) => void;
   onFloor5RewardClaim: (rareUnlocked: boolean) => void;
+  onDungeon10EndingStarted: () => void;
+  onDungeon10EndingComplete: () => void;
 };
 
 const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-silla");
@@ -449,6 +452,8 @@ export function DungeonScreen({
   savedFloorRun,
   onFloorRunChanged,
   onFloor5RewardClaim,
+  onDungeon10EndingStarted,
+  onDungeon10EndingComplete,
 }: DungeonScreenProps) {
   const activeFloorNumber = getFloorNumber(floorId);
   const questStoryEnabled = floorQuestStatus !== "completed";
@@ -611,7 +616,7 @@ export function DungeonScreen({
   const [activeArtifactEvent, setActiveArtifactEvent] = useState<PrehistoryArtifactId | null>(null);
   const [finalGateDialogueStep, setFinalGateDialogueStep] =
     useState<0 | 1 | null>(null);
-  const [floor10BossPhase, setFloor10BossPhase] = useState<"idle" | "playing" | "combat">("idle");
+  const [floor10BossPhase, setFloor10BossPhase] = useState<"idle" | "playing" | "combat" | "ending">("idle");
   const [floor10BossShake, setFloor10BossShake] = useState(false);
 
   const combatQuestionCount =
@@ -2522,6 +2527,17 @@ export function DungeonScreen({
           setInventoryState={setInventoryState}
           onInventoryChanged={onInventoryChanged}
           onGameOver={enterDefeatedState}
+          onComplete={() => {
+            onDungeon10EndingStarted();
+            setFloor10BossPhase("ending");
+          }}
+        />
+      )}
+
+      {floorId === "floor-10" && floor10BossPhase === "ending" && (
+        <EndingSequenceScreen
+          playerName={playerState.name || "플레이어"}
+          onComplete={onDungeon10EndingComplete}
         />
       )}
 

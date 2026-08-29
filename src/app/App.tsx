@@ -16,7 +16,7 @@ import { SaveManagementPanel } from "../components/SaveManagementPanel";
 import { SaveManager } from "../save/SaveManager";
 import { AutoSaveCoordinator } from "../save/AutoSaveCoordinator";
 import { applySaveDataToGameState, createInitialGameSaveState, createSaveDataFromGameState, type GameSaveState } from "../save/saveStateAdapter";
-import type { SaveReason } from "../save/saveTypes";
+import type { CurrentSaveData, SaveReason } from "../save/saveTypes";
 import { PlayerNamePopup } from "../components/PlayerNamePopup";
 import {
   clearCollectionQuestEventFlags,
@@ -42,6 +42,10 @@ export function App() {
   const [saveMessage, setSaveMessage] = useState(loaded.current.success && loaded.current.source !== "main" ? "메인 세이브가 손상되어 최근 백업을 복구했습니다." : "");
   const startedAtRef = useRef(Date.now());
   const coordinatorRef = useRef<AutoSaveCoordinator | null>(null);
+  const endingSequenceActiveRef = useRef(false);
+  const dungeon10ReturnSaveRef = useRef<CurrentSaveData | null>(
+    loaded.current.success ? loaded.current.data : null,
+  );
   gameRef.current = game;
 
   const snapshot = useCallback(() => createSaveDataFromGameState({
@@ -49,6 +53,7 @@ export function App() {
     playTimeSeconds: gameRef.current.playTimeSeconds + Math.floor((Date.now() - startedAtRef.current) / 1000),
   }), []);
   const requestSave = useCallback((reason: SaveReason, immediate = false) => {
+    if (endingSequenceActiveRef.current) return;
     if (immediate) coordinatorRef.current?.flush(reason);
     else coordinatorRef.current?.requestSave(reason);
   }, []);
@@ -158,7 +163,20 @@ export function App() {
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}
         inventoryState={game.inventoryState}
         setInventoryState={(value) => setGame((current) => ({ ...current, inventoryState: typeof value === "function" ? value(current.inventoryState) : value }))}
-        questState={game.questState} setQuestState={(value) => setGame((current) => ({ ...current, questState: typeof value === "function" ? value(current.questState) : value }))}
+        questState={game.questState} setQuestState={(value) => setGame((current) => {
+          const nextQuestState = typeof value === "function" ? value(current.questState) : value;
+          if (
+            current.questState["quest-floor-10-final-source"] !== "active" &&
+            nextQuestState["quest-floor-10-final-source"] === "active"
+          ) {
+            dungeon10ReturnSaveRef.current = createSaveDataFromGameState({
+              ...current,
+              currentFloorId: null,
+              currentFloorRun: null,
+            });
+          }
+          return { ...current, questState: nextQuestState };
+        })}
         floorUnlockState={game.floorUnlockState} setFloorUnlockState={(value) => setGame((current) => ({ ...current, floorUnlockState: typeof value === "function" ? value(current.floorUnlockState) : value }))}
         storyActionState={game.storyActionState} setStoryActionState={(value) => setGame((current) => ({ ...current, storyActionState: typeof value === "function" ? value(current.storyActionState) : value }))}
         onAutoSave={requestSave}
@@ -225,6 +243,27 @@ export function App() {
           requestSave("questCompleted");
         }}
         onFloorCleared={() => { setGame((current) => ({ ...current, currentFloorId: null, currentFloorRun: null, clearedFloorIds: [...new Set([...current.clearedFloorIds, activeFloorId])] })); requestSave("floorCleared"); }}
+        onDungeon10EndingStarted={() => {
+          endingSequenceActiveRef.current = true;
+          coordinatorRef.current?.dispose();
+          const preserved = dungeon10ReturnSaveRef.current;
+          if (preserved) {
+            SaveManager.save({ ...preserved, savedAt: new Date().toISOString() }, "manual");
+          }
+        }}
+        onDungeon10EndingComplete={() => {
+          const preserved = dungeon10ReturnSaveRef.current;
+          if (preserved) {
+            const restoredSave = { ...preserved, savedAt: new Date().toISOString() };
+            SaveManager.save(restoredSave, "manual");
+            const restoredGame = applySaveDataToGameState(restoredSave);
+            setGame(restoredGame);
+            gameRef.current = restoredGame;
+          }
+          endingSequenceActiveRef.current = false;
+          startedAtRef.current = Date.now();
+          setCurrentScreen("title");
+        }}
       />;
       case "question": return <QuestionScreen onNavigate={navigate} onResult={(result) => setQuestionResults((current) => [...current, result])} />;
       default: return <TitleScreen onNavigate={navigate} onOpenSettings={() => setSettingsOpen(true)} hasSave={SaveManager.load().success} onDebugFloorJump={(floorId) => {
