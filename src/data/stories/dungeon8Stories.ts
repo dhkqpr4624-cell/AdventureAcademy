@@ -93,6 +93,7 @@ export const DUNGEON8_FINAL_STORY: StorySequence = {
       ...speak("kaiden-return", "kaiden", "카이든", " ...어쩔 수 없군, 베이스캠프로 돌아가서 그 인물에 대해 더 상의해봐야할 것 같다. "),
       ...speak("theo-return", "theo", "테오", " 알겠습니다, 대장. 그럼 속히 베이스캠프로 돌아가지요. "),
       ...speak("jeon-no", "jeon", "전", " 아니오. 돌아가지 않아도 괜찮습니다.. "),
+      { id: "jeon-sacrifice-bgm", type: "checkpoint", checkpointId: "start-sacrifice-theme", advanceMode: "auto" },
       ...speak("luna-jeon", "luna", "루나", " 전 아저씨?! 언제 따라온거야! "),
       ...speak("jeon-identity", "jeon", "전", " ..하하. 줄곧 제가 누구인지가 궁금했습니다. "),
       ...speak("jeon-called", "jeon", "전", " 머리가 아파 잠시 잠을 청했다가 일어났는데.. 이곳이 저를 부르는 느낌을 받았어요. "),

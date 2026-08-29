@@ -49,40 +49,8 @@
   to { opacity: 0; }
 }
 
-.ending-dialogue {
-  position: absolute;
-  z-index: 10;
-  right: clamp(20px, 4vw, 72px);
-  bottom: clamp(20px, 5vh, 64px);
-  left: clamp(20px, 4vw, 72px);
-  min-height: 148px;
-  padding: 22px 150px 22px 28px;
-  border: 3px solid #d9b767;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgb(12 15 22 / 96%), rgb(25 21 25 / 94%));
-  box-shadow: 0 12px 35px rgb(0 0 0 / 65%);
+.ending-story-dialogue {
   animation: ending-fade-in 400ms ease-in-out both;
-}
-
-.ending-dialogue-speaker {
-  display: block;
-  margin-bottom: 10px;
-  color: #f2cf75;
-  font-size: clamp(1rem, 2vw, 1.25rem);
-}
-
-.ending-dialogue p {
-  margin: 0;
-  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
-  line-height: 1.65;
-  white-space: pre-wrap;
-}
-
-.ending-dialogue button {
-  position: absolute;
-  right: 24px;
-  bottom: 22px;
-  min-width: 96px;
 }
 
 .ending-credits {
@@ -169,7 +137,6 @@
 }
 
 @media (max-width: 720px) {
-  .ending-dialogue { padding-right: 28px; padding-bottom: 76px; }
   .ending-credits { grid-template-columns: 55% 45%; }
   .ending-credits-track { padding-inline: 18px; }
 }

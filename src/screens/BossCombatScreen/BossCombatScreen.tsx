@@ -64,6 +64,7 @@ type BossCombatScreenProps = {
   onNavigate: (screen: ScreenId) => void;
   onPlayerAttack: () => Promise<void>;
   onBossAttack: () => Promise<{ isDefeated: boolean }>;
+  onWrongAnswerBossAttack: () => Promise<{ isDefeated: boolean }>;
   onHeal: (amount: number) => Promise<void>;
   inventoryState: InventoryState;
   setInventoryState: Dispatch<SetStateAction<InventoryState>>;
@@ -78,6 +79,7 @@ export function BossCombatScreen({
   onNavigate,
   onPlayerAttack,
   onBossAttack,
+  onWrongAnswerBossAttack,
   onHeal,
   inventoryState,
   setInventoryState,
@@ -166,8 +168,11 @@ export function BossCombatScreen({
     }, 350);
   };
 
-  const resolveBossAttack = async (continuation: () => void) => {
-    const result = await onBossAttack();
+  const resolveBossAttack = async (
+    continuation: () => void,
+    attack: () => Promise<{ isDefeated: boolean }> = onBossAttack,
+  ) => {
+    const result = await attack();
     if (result.isDefeated) {
       beginNpcSupport(continuation);
       return;
@@ -181,7 +186,7 @@ export function BossCombatScreen({
     setPhase("resolving");
     try {
       if (!pendingResultRef.current.isCorrect) {
-        await resolveBossAttack(advanceQuestion);
+        await resolveBossAttack(advanceQuestion, onWrongAnswerBossAttack);
         return;
       }
       await onPlayerAttack();

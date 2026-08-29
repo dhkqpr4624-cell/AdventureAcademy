@@ -27,6 +27,7 @@ import { createDebugFloorJumpState } from "../debug/debugFloorJump";
 import { changeItemQuantity } from "../game/inventory/inventoryState";
 import { completeQuestStateAfterRewardClaim } from "../game/quest/questRewardCompletionResolver";
 import { playRandomizedOneShot } from "../game/audioOneShot";
+import { playBgm, stopBgm } from "../game/audioBgm";
 
 const BUTTON_CLICK_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/button-clicked-sfx.mp3`;
 
@@ -103,6 +104,18 @@ export function App() {
     document.addEventListener("click", playButtonClick, true);
     return () => document.removeEventListener("click", playButtonClick, true);
   }, []);
+
+  useEffect(() => {
+    if (currentScreen === "baseCamp") {
+      playBgm("village", undefined, { loop: true, volume: 0.5 });
+      return;
+    }
+    if (currentScreen === "dungeon") {
+      playBgm("dungeon", undefined, { loop: true, volume: 0.5 });
+      return;
+    }
+    if (currentScreen === "title" || currentScreen === "question") stopBgm();
+  }, [currentScreen]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {

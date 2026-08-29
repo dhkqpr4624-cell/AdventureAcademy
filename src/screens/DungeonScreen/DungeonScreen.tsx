@@ -117,6 +117,12 @@ import {
 } from "../../game/dungeon/dungeonEventVisualPlacement";
 import { resolveDungeonExitButtonState } from "../../game/dungeon/dungeonExitButtonResolver";
 import { playRandomizedOneShot } from "../../game/audioOneShot";
+import { playBgm, stopBgm } from "../../game/audioBgm";
+import {
+  DUNGEON10_DODGE_FAILURE_DAMAGE,
+  DUNGEON10_WRONG_ANSWER_DAMAGE,
+  runBossDamageBalanceChecks,
+} from "../../game/bossCombat/bossDamageBalance";
 import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
@@ -197,9 +203,7 @@ const FLOOR5_RARE_REWARD = getQuestRareRewardCondition("quest-floor-5-unified-si
 const HIT_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/hit-sfx.mp3`;
 const HEAL_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/heal-sfx.mp3`;
 const DUNGEON10_BOSS_IMAGE_URL = `${import.meta.env.BASE_URL}assets/dungeon10/twisted-civilization-golem.png`;
-// The roar asset is intentionally absent. Assign its future URL here; playback
-// already uses the existing randomized one-shot path.
-const DUNGEON10_BOSS_ROAR_SFX_URL: string | null = null;
+const DUNGEON10_BOSS_ROAR_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/golem-shouting-sfx.wav`;
 
 export function applyFloorMonsterData(
   map: DungeonMapDefinition,
@@ -731,11 +735,22 @@ export function DungeonScreen({
       runDungeonEventFlowChecks();
       runDungeonPlayerStateChecks();
       runEliteRoomChecks();
+      runBossDamageBalanceChecks();
     }
     return () => {
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (floorId !== "floor-10") return;
+    if (floor10BossPhase === "combat") {
+      playBgm("boss-battle", undefined, { loop: true, volume: 0.55 });
+      return () => stopBgm("boss-battle");
+    }
+    if (floor10BossPhase === "ending") stopBgm("boss-battle");
+    else playBgm("dungeon", undefined, { loop: true, volume: 0.5 });
+  }, [floor10BossPhase, floorId]);
 
   useEffect(() => {
     const visuals = visualsRef.current;
@@ -1106,12 +1121,11 @@ export function DungeonScreen({
     });
   };
 
-  const playDungeon10BossAttack = async () => {
+  const playDungeon10BossAttack = async (damage: number) => {
     const visuals = visualsRef.current;
     let damageResult = resolvePlayerDamage(playerHpRef.current, 0);
     if (!visuals) return damageResult;
     await visuals.bossPresentation.playAttack(() => {
-      const damage = getMonsterDamageForFloor(10, "elite");
       playRandomizedOneShot(HIT_SFX_URL);
       damageResult = applyPlayerDamage(damage);
       setDamageFlash(true);
@@ -2521,12 +2535,16 @@ export function DungeonScreen({
           playerState={playerState}
           onNavigate={onNavigate}
           onPlayerAttack={playDungeon10PlayerAttack}
-          onBossAttack={playDungeon10BossAttack}
+          onBossAttack={() => playDungeon10BossAttack(DUNGEON10_DODGE_FAILURE_DAMAGE)}
+          onWrongAnswerBossAttack={() => playDungeon10BossAttack(DUNGEON10_WRONG_ANSWER_DAMAGE)}
           onHeal={healDungeon10Player}
           inventoryState={inventoryState}
           setInventoryState={setInventoryState}
           onInventoryChanged={onInventoryChanged}
-          onGameOver={enterDefeatedState}
+          onGameOver={() => {
+            stopBgm("boss-battle");
+            enterDefeatedState();
+          }}
           onComplete={() => {
             onDungeon10EndingStarted();
             setFloor10BossPhase("ending");
@@ -2727,7 +2745,13 @@ export function DungeonScreen({
       </div>}
       {objectiveEvent === "first" && floorId === "floor-8" && <div className="dungeon-story-overlay">
         <StoryPlayer sequence={DUNGEON8_FINAL_STORY} playerName={playerState.name || DEFAULT_PLAYER_NAME} playerStatus={playerState}
-          presentationMode="baseCampOverlay" onNavigate={onNavigate} onComplete={() => {
+          presentationMode="baseCampOverlay" onNavigate={onNavigate}
+          onCheckpointReached={(_storyId, checkpointId) => {
+            if (checkpointId === "start-sacrifice-theme") {
+              playBgm("sacrifice", undefined, { loop: true, volume: 0.52 });
+            }
+          }}
+          onComplete={() => {
             playerHpRef.current = maxHp; setPlayerHp(maxHp); onStoryEventSeen("floor-8:gongmin-returned-to-history");
             onObjectiveAcquired(runCorrectCountRef.current); setObjectiveEvent(null); onFloorCleared(); onNavigate("baseCamp");
           }} />

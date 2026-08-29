@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { playRandomizedOneShot } from "../../game/audioOneShot";
+import { playBgm, stopBgm } from "../../game/audioBgm";
 import { withSubjectParticle } from "../../game/dungeon/dungeonDialogue";
+import { NPC_BY_ID } from "../../game/npc/npcDefinitions";
 import "./EndingSequenceScreen.css";
 
 type EndingPhase =
@@ -30,9 +32,8 @@ type EndingPhase =
 type DialoguePage = { speaker?: string; text: string };
 
 const FADE_MS = 400;
-const CREDIT_DURATION_MS = 82_000;
+const CREDIT_DURATION_MS = 102_500;
 const GLASS_SFX_URL = `${import.meta.env.BASE_URL}assets/audio/glass-shatter-sfx.wav`;
-const ENDING_BGM_URL = `${import.meta.env.BASE_URL}assets/audio/ending-credit-bgm.wav`;
 const ASSET = {
   core: `${import.meta.env.BASE_URL}assets/ending/golem-core-break.png`,
   golem: `${import.meta.env.BASE_URL}assets/ending/ending-1-golem-down.png`,
@@ -46,6 +47,11 @@ const CREDIT_ACTORS = [
   { name: "루나", imageUrl: `${import.meta.env.BASE_URL}assets/ending/credits/luna.png` },
   { name: "전(공민왕)", imageUrl: `${import.meta.env.BASE_URL}assets/ending/credits/jeon.png` },
 ] as const;
+const ENDING_SPEAKERS = {
+  루나: { portrait: NPC_BY_ID.luna.portraits.default, accent: "#ff8b72" },
+  테오: { portrait: NPC_BY_ID.theo.portraits.default, accent: "#7fc8ff" },
+  카이든: { portrait: NPC_BY_ID.kaiden.portraits.default, accent: "#d9b6ff" },
+} as const;
 
 const AUTO_TRANSITIONS: Partial<Record<EndingPhase, { delay: number; next: EndingPhase }>> = {
   CORE_BREAK_IN: { delay: FADE_MS, next: "CORE_BREAK_HOLD" },
@@ -209,38 +215,11 @@ function CreditSection({ children, creditKey, final = false }: { children: React
 export function EndingSequenceScreen({ playerName, onComplete }: { playerName: string; onComplete: () => void }) {
   const [phase, setPhase] = useState<EndingPhase>("CORE_BREAK_IN");
   const [dialogueIndex, setDialogueIndex] = useState(0);
-  const endingBgmRef = useRef<HTMLAudioElement | null>(null);
-  const bgmRestartTimerRef = useRef<number | null>(null);
-
-  const startEndingBgm = () => {
-    if (endingBgmRef.current || typeof Audio === "undefined") return;
-    const audio = new Audio(ENDING_BGM_URL);
-    audio.loop = false;
-    audio.preload = "auto";
-    audio.volume = 0.65;
-    const restart = () => {
-      bgmRestartTimerRef.current = window.setTimeout(() => {
-        bgmRestartTimerRef.current = null;
-        audio.currentTime = 0;
-        void audio.play().catch(() => undefined);
-      }, 2_500);
-    };
-    audio.onended = restart;
-    endingBgmRef.current = audio;
-    void audio.play().catch(() => undefined);
-  };
 
   useEffect(() => {
     playRandomizedOneShot(GLASS_SFX_URL);
     return () => {
-      if (bgmRestartTimerRef.current !== null) window.clearTimeout(bgmRestartTimerRef.current);
-      const audio = endingBgmRef.current;
-      if (audio) {
-        audio.onended = null;
-        audio.pause();
-        audio.currentTime = 0;
-      }
-      endingBgmRef.current = null;
+      stopBgm("ending-credit");
     };
   }, []);
 
@@ -253,11 +232,17 @@ export function EndingSequenceScreen({ playerName, onComplete }: { playerName: s
 
   useEffect(() => {
     setDialogueIndex(0);
-    if (phase === "BASECAMP_DISAPPEAR_IN") startEndingBgm();
+    if (phase === "BASECAMP_DISAPPEAR_IN") {
+      stopBgm("boss-battle");
+      playBgm("ending-credit", undefined, { volume: 0.65, restartDelayMs: 2_500 });
+    }
   }, [phase]);
 
   const dialogue = DIALOGUES[phase];
   const page = dialogue?.[dialogueIndex];
+  const speaker = page?.speaker && page.speaker in ENDING_SPEAKERS
+    ? ENDING_SPEAKERS[page.speaker as keyof typeof ENDING_SPEAKERS]
+    : null;
   const advanceDialogue = () => {
     if (!dialogue) return;
     if (dialogueIndex + 1 < dialogue.length) {
@@ -290,10 +275,29 @@ export function EndingSequenceScreen({ playerName, onComplete }: { playerName: s
       {layers.partyVisible && <img className={`ending-fullscreen-image ending-party${phase === "PARTY_ENTER_IN" ? " is-fading-in" : ""}${phase === "PLAYER_MONOLOGUE_IN" ? " is-fading-out" : ""}`} src={ASSET.party} alt="포탈로 들어가는 동료들" />}
       {phase.startsWith("CORE_BREAK") && <img className={`ending-core-image${phase === "CORE_BREAK_IN" ? " is-fading-in" : ""}${phase === "CORE_BREAK_OUT" ? " is-fading-out" : ""}`} src={ASSET.core} alt="깨지는 골렘의 핵" />}
       {page && (
-        <section className="ending-dialogue" role="dialog" aria-live="polite">
-          {page.speaker && <strong className="ending-dialogue-speaker">{page.speaker}</strong>}
-          <p>{resolveEndingText(page.text, playerName)}</p>
-          <button type="button" onClick={advanceDialogue}>다음</button>
+        <section
+          key={`${phase}-${dialogueIndex}`}
+          className={`story-dialogue-box ending-story-dialogue${speaker ? "" : " is-narration"}`}
+          role="dialog"
+          aria-live="polite"
+          style={speaker ? ({ "--story-speaker-accent": speaker.accent } as CSSProperties) : undefined}
+        >
+          <div className="story-dialogue-layout">
+            {speaker && page.speaker && (
+              <div className="story-dialogue-portrait-group">
+                <div className="story-portrait-layer" aria-live="polite">
+                  <div className="story-portrait story-portrait-left story-transition-fade is-active">
+                    <img src={speaker.portrait} alt={`${page.speaker} 초상화`} draggable={false} />
+                  </div>
+                </div>
+                <p className="story-speaker-name">{page.speaker}</p>
+              </div>
+            )}
+            <div className="story-dialogue-content">
+              <p className="story-dialogue-text">{resolveEndingText(page.text, playerName)}</p>
+            </div>
+          </div>
+          <button type="button" className="story-next-button" onClick={advanceDialogue}>다음</button>
         </section>
       )}
     </main>
