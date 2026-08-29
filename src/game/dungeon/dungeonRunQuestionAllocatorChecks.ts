@@ -1,6 +1,8 @@
 import { createDungeonRun, createFloor1DungeonRun } from "./generation/floor1DungeonRuntime";
 import { allocateDungeonRunQuestions } from "./dungeonRunQuestionAllocator";
 import { FLOOR1_PREHISTORY_QUESTIONS, FLOOR2_GOJOSEON_QUESTIONS, FLOOR3_THREE_KINGDOMS_QUESTIONS } from "../../data/testQuestions";
+import { FLOOR_QUESTION_POOLS } from "../../data/floorQuestionPools";
+import type { FloorId } from "../floor/floorTypes";
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`[dungeon run question allocator checks] ${message}`);
@@ -77,7 +79,7 @@ export function runDungeonRunQuestionAllocatorChecks() {
   const floor3First = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
   const floor3Repeated = allocateDungeonRunQuestions(floor3Run.map, floor3Run.seed, "floor-3");
   const floor3Assigned = Object.values(floor3First).flat();
-  check(FLOOR3_THREE_KINGDOMS_QUESTIONS.length === 19, "floor 3 pool contains 19 questions");
+  check(FLOOR3_THREE_KINGDOMS_QUESTIONS.length === 17, "floor 3 pool contains 17 questions");
   check(floor3Assigned.length === 10, "one floor 3 run assigns exactly 10 questions");
   check(
     floor3Assigned.every((question) => FLOOR3_THREE_KINGDOMS_QUESTIONS.some((candidate) => candidate.id === question.id)),
@@ -90,5 +92,29 @@ export function runDungeonRunQuestionAllocatorChecks() {
   check(JSON.stringify(floor3First) === JSON.stringify(floor3Repeated), "floor 3 same seed repeats");
   const floor3Different = allocateDungeonRunQuestions(floor3Run.map, "floor3-different-question-seed", "floor-3");
   check(JSON.stringify(floor3First) !== JSON.stringify(floor3Different), "floor 3 new seed reshuffles");
+
+  const expectedPoolCounts: Record<Exclude<FloorId, "floor-10">, number> = {
+    "floor-1": 15,
+    "floor-2": 16,
+    "floor-3": 17,
+    "floor-4": 18,
+    "floor-5": 16,
+    "floor-6": 15,
+    "floor-7": 18,
+    "floor-8": 19,
+    "floor-9": 18,
+  };
+  for (const [floorId, expectedPoolCount] of Object.entries(expectedPoolCounts) as Array<[Exclude<FloorId, "floor-10">, number]>) {
+    const pool = FLOOR_QUESTION_POOLS[floorId];
+    check(pool.length === expectedPoolCount, `${floorId} pool contains ${expectedPoolCount} questions`);
+    check(new Set(pool.map((item) => item.id)).size === pool.length, `${floorId} pool ids are unique`);
+    check(!pool.some((item) => item.prompt.includes("짝수를 모두 고르시오")), `${floorId} excludes the debug even-number question`);
+    const floorRun = createDungeonRun(floorId, `${floorId}-ten-question-check`);
+    const assignments = allocateDungeonRunQuestions(floorRun.map, floorRun.seed, floorId);
+    const floorAssigned = Object.values(assignments).flat();
+    check(floorAssigned.length === 10, `${floorId} assigns exactly 10 questions`);
+    check(new Set(floorAssigned.map((item) => item.id)).size === 10, `${floorId} assigns no duplicate question ids`);
+    check(floorAssigned.every((item) => pool.some((candidate) => candidate.id === item.id)), `${floorId} only uses its registered pool`);
+  }
   console.info("dungeon run question allocator checks: PASS");
 }

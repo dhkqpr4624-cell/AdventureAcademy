@@ -2,7 +2,7 @@ import { DUNGEON_1_TO_9_QUESTION_POOL } from "../../data/floorQuestionPools";
 import type { Question } from "../../types/question";
 import { createSeededRandom } from "../dungeon/generation/seededRandom";
 
-export const BOSS_QUIZ_QUESTION_COUNT = 15;
+export const BOSS_QUIZ_QUESTION_COUNT = 20;
 
 export function createBossQuizQuestions(seed: string): readonly Question[] {
   const uniqueQuestions = [

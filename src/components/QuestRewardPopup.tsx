@@ -31,7 +31,9 @@ export function QuestRewardPopup({
           <article><p className="eyebrow">기본 보상</p><span className="reward-icon">G</span><strong>{baseGold} Gold</strong><small>퀘스트 완료 기본 보상</small></article>
           <article className={rareUnlocked ? "is-unlocked" : "is-locked"}>
             <p className="eyebrow">희귀 보상</p><span className="reward-icon"><ItemIcon item={rareReward} /></span><strong>{rareReward.name}</strong>
-            <small className={rareUnlocked ? "" : "reward-condition-failed"}>정답 {bestCorrect} / {required}</small>
+            <small className={rareUnlocked ? "" : "reward-condition-failed"}>
+              희귀 보상 조건: 정답 {required}개 이상 달성<br />달성: {bestCorrect}개
+            </small>
           </article>
         </div>
         <div className="quest-reward-actions">

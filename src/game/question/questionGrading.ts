@@ -11,15 +11,14 @@ export type NormalizedShortAnswer = {
 
 export function normalizeShortAnswer(value: string): NormalizedShortAnswer {
   const collapsed = value
-    .normalize("NFC")
-    .replace(/[\t\r\n]+/g, " ")
+    .normalize("NFKC")
+    .replace(/\p{White_Space}+/gu, " ")
     .trim()
-    .replace(/ +/g, " ")
-    .toLocaleLowerCase("en-US");
+    .toLocaleLowerCase("ko-KR");
 
   return {
     collapsed,
-    withoutSpaces: collapsed.replace(/ /g, ""),
+    withoutSpaces: collapsed.replace(/[\p{White_Space}\p{Punctuation}]+/gu, ""),
   };
 }
 
