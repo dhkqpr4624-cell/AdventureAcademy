@@ -2956,7 +2956,7 @@ button:focus-visible {
   right: max(3vw, env(safe-area-inset-right));
   bottom: max(2.2vh, env(safe-area-inset-bottom));
   left: max(3vw, env(safe-area-inset-left));
-  z-index: 12;
+  z-index: 40;
   width: 60%;
   margin-inline: auto;
   min-height: clamp(10rem, calc(20vh + 44px), 13.25rem);
