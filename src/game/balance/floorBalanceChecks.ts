@@ -49,6 +49,12 @@ export function runFloorBalanceChecks() {
       `floor ${floor} trap damage never decreases`,
     );
   }
+  for (let floor = 1; floor <= 9; floor += 1) {
+    check(
+      getMonsterDamageForFloor(floor, "elite") > getMonsterDamageForFloor(floor, "normal"),
+      `floor ${floor} elite damage exceeds normal damage`,
+    );
+  }
   check(
     getMonsterDamageForFloor(6) > getMonsterDamageForFloor(1),
     "monster damage grows with floor HP",

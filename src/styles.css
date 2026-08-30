@@ -2711,11 +2711,9 @@ button:focus-visible {
 }
 
 .story-illust-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 10;
-  display: grid;
-  place-items: center;
   box-sizing: border-box;
   padding: 0;
   overflow: visible;
@@ -2726,15 +2724,18 @@ button:focus-visible {
 }
 
 .story-illust-overlay img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
   width: auto;
   height: auto;
   max-width: min(64.8vw, calc(100% - 2rem));
-  max-height: min(61.2vh, calc(100% - 2rem));
+  max-height: min(56svh, calc(100% - 14rem));
   object-fit: contain;
   image-rendering: pixelated;
   opacity: 0;
-  transform: none;
+  transform: translate(-50%, -50%);
   transition: opacity var(--story-illust-fade) ease;
 }
 
@@ -3793,8 +3794,18 @@ button:focus-visible {
 }
 
 .dungeon-story-overlay .story-player[aria-label="고려시대의 사회와 문화"]:has(.story-camera.is-shaking) .story-illust-overlay img {
-  translate: 0;
-  animation: dungeon5-gate-illust-shake 1500ms ease-in-out;
+  animation: dungeon-centered-illust-shake 1500ms ease-in-out;
+}
+
+@keyframes dungeon-centered-illust-shake {
+  0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+  12% { transform: translate(-50%, -50%) translateX(-12px); }
+  24% { transform: translate(-50%, -50%) translateX(12px); }
+  36% { transform: translate(-50%, -50%) translateX(-10px); }
+  48% { transform: translate(-50%, -50%) translateX(9px); }
+  60% { transform: translate(-50%, -50%) translateX(-8px); }
+  72% { transform: translate(-50%, -50%) translateX(7px); }
+  84% { transform: translate(-50%, -50%) translateX(-4px); }
 }
 
 @keyframes dungeon5-gate-illust-shake {

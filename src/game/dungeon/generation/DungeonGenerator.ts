@@ -68,7 +68,11 @@ export function selectRequiredStoryRoomIds(
   useSingleShortestPath = false,
 ): string[] {
   if (requiredCount <= 0) return [];
-  const eligible = map.rooms.filter((room) => room.id !== map.startRoomId && !room.isFinalQuestRoom);
+  const eligible = map.rooms.filter((room) =>
+    room.id !== map.startRoomId &&
+    !room.isFinalQuestRoom &&
+    room.type === "empty"
+  );
   const adjacency = new Map(map.rooms.map((room) => [room.id, [] as string[]]));
   for (const connection of map.connections) {
     adjacency.get(connection.fromRoomId)?.push(connection.toRoomId);

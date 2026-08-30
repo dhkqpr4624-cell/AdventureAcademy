@@ -4,7 +4,7 @@ import { DUNGEON9_CLUE_STORIES, DUNGEON9_FINAL_STORY } from "./data/stories/dung
 import { NPC_STORY_SEQUENCES } from "./data/stories/npcStories";
 import { createDebugFloorJumpState } from "./debug/debugFloorJump";
 import { selectRequiredStoryRoomIds } from "./game/dungeon/generation/DungeonGenerator";
-import { TEST_DUNGEON_MAP } from "./game/dungeon/testDungeonMap";
+import { createDungeonRun } from "./game/dungeon/generation/floor1DungeonRuntime";
 import { FLOOR_DEFINITIONS } from "./game/floor/floorDefinitions";
 import { getItemDefinition } from "./game/inventory/itemDefinitions";
 import { getMonsterVisualDefinition } from "./game/monster/monsterDefinitions";
@@ -33,8 +33,10 @@ export function runDungeon9ContentChecks(): void {
   assert(ACHIEVEMENT_DEFINITIONS.some((entry) => entry.id === "achievement-floor-9-rare-reward"), "floor 9 achievement");
   assert(getQuestRareRewardCondition(quest.id).floorId === "floor-9", "floor 9 rare reward condition");
 
-  const floorMap = prepareFloorDungeonMap(TEST_DUNGEON_MAP, "floor-9", "dungeon9-check");
-  const storyRoomIds = selectRequiredStoryRoomIds(floorMap, 3);
+  const dungeonRun = createDungeonRun("floor-9", "dungeon9-check");
+  assert(dungeonRun.source === "generated", "floor 9 check uses generated map");
+  const floorMap = prepareFloorDungeonMap(dungeonRun.map, "floor-9", dungeonRun.seed);
+  const storyRoomIds = selectRequiredStoryRoomIds(floorMap, 3, true);
   assert(storyRoomIds.length === 3, "exactly three selected story rooms");
   assert(storyRoomIds.every((roomId) => floorMap.rooms.find((room) => room.id === roomId)?.type === "empty"), "story rooms are non-combat rooms");
 
