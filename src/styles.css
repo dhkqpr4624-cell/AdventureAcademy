@@ -2956,7 +2956,7 @@ button:focus-visible {
   right: max(3vw, env(safe-area-inset-right));
   bottom: max(2.2vh, env(safe-area-inset-bottom));
   left: max(3vw, env(safe-area-inset-left));
-  z-index: 40;
+  z-index: 1000;
   width: 60%;
   margin-inline: auto;
   min-height: clamp(10rem, calc(20vh + 44px), 13.25rem);
@@ -3022,6 +3022,20 @@ button:focus-visible {
   inset: 0;
   z-index: 100;
   pointer-events: auto;
+}
+
+/*
+ * StoryPlayer creates an isolated stacking context.  When it is rendered next
+ * to a story image (for example the floor 2 completion image), raising only
+ * the dialogue inside that isolated context cannot overtake the sibling image.
+ * Lift the existing StoryPlayer context while dialogue is present; the outer
+ * overlay still preserves the application's popup hierarchy.
+ */
+.base-camp-story-overlay > .story-player:has(> .story-dialogue-box),
+.dungeon-story-overlay > .story-player:has(> .story-dialogue-box),
+.quest-story-overlay > .story-player:has(> .story-dialogue-box),
+.dungeon-four-story > .story-player:has(> .story-dialogue-box) {
+  z-index: 200;
 }
 
 .story-player-baseCampOverlay {
@@ -3278,7 +3292,7 @@ button:focus-visible {
   position: absolute;
   right: max(20%, env(safe-area-inset-right));
   bottom: calc(max(2.2vh, env(safe-area-inset-bottom)) + clamp(10rem, calc(20vh + 44px), 13.25rem) + 0.7rem);
-  z-index: 13;
+  z-index: 1001;
   display: grid;
   grid-auto-rows: 1fr;
   width: max-content;
