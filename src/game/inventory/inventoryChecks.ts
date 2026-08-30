@@ -4,7 +4,7 @@ import {
   getItemQuantity,
   recalculatePlayerMaxHp,
 } from "./inventoryState";
-import { purchaseShopItem } from "./shopResolver";
+import { getPotionMaxQuantity, purchaseShopItem } from "./shopResolver";
 
 const check = (value: boolean, message: string) => {
   if (!value) throw new Error(`[inventory checks] ${message}`);
@@ -24,6 +24,37 @@ export function runInventoryChecks() {
     : medium1;
   check(!medium2.success && medium2.reason === "maxQuantity", "medium potion cap");
   check(!purchaseShopItem(INITIAL_INVENTORY_STATE, 0, "potion-medium").success, "insufficient gold");
+
+  const smallPouch1 = purchaseShopItem(INITIAL_INVENTORY_STATE, 500, "upgrade-small-potion-pouch");
+  check(
+    smallPouch1.success && getPotionMaxQuantity(smallPouch1.inventory, "potion-small") === 4,
+    "first small potion pouch raises capacity to 4",
+  );
+  const smallPouch2 = smallPouch1.success
+    ? purchaseShopItem(smallPouch1.inventory, smallPouch1.gold, "upgrade-small-potion-pouch")
+    : smallPouch1;
+  check(
+    smallPouch2.success && getPotionMaxQuantity(smallPouch2.inventory, "potion-small") === 5,
+    "second small potion pouch raises capacity to 5",
+  );
+  const smallPouch3 = smallPouch2.success
+    ? purchaseShopItem(smallPouch2.inventory, smallPouch2.gold, "upgrade-small-potion-pouch")
+    : smallPouch2;
+  check(!smallPouch3.success && smallPouch3.reason === "maxQuantity", "third small potion pouch is blocked");
+
+  const mediumPouch1 = purchaseShopItem(INITIAL_INVENTORY_STATE, 500, "upgrade-medium-potion-pouch");
+  check(
+    mediumPouch1.success && getPotionMaxQuantity(mediumPouch1.inventory, "potion-medium") === 3,
+    "medium potion pouch raises capacity to 3",
+  );
+  const mediumPouch2 = mediumPouch1.success
+    ? purchaseShopItem(mediumPouch1.inventory, mediumPouch1.gold, "upgrade-medium-potion-pouch")
+    : mediumPouch1;
+  check(!mediumPouch2.success && mediumPouch2.reason === "maxQuantity", "second medium potion pouch is blocked");
+  check(
+    !purchaseShopItem(INITIAL_INVENTORY_STATE, 99, "upgrade-small-potion-pouch").success,
+    "potion pouch respects insufficient gold",
+  );
 
   const armorInventory = {
     ...INITIAL_INVENTORY_STATE,

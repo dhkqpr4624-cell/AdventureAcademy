@@ -99,6 +99,16 @@ export const ITEM_DEFINITION_REGISTRY: Record<string, ItemDefinition> = {
     rarity: "uncommon", description: "던전 전투 중 HP를 35 회복한다.",
     icon: `${import.meta.env.BASE_URL}assets/items/potion-medium.png`, stackable: true,
   },
+  "upgrade-small-potion-pouch": {
+    id: "upgrade-small-potion-pouch", name: "소형 포션 주머니", type: "misc",
+    rarity: "uncommon", description: "소형 포션 최대 소지 수가 1 증가합니다. 최대 2회 구매할 수 있습니다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/small-potion-pouch.png`, stackable: true,
+  },
+  "upgrade-medium-potion-pouch": {
+    id: "upgrade-medium-potion-pouch", name: "중형 포션 주머니", type: "misc",
+    rarity: "rare", description: "중형 포션 최대 소지 수가 1 증가합니다. 최대 1회 구매할 수 있습니다.",
+    icon: `${import.meta.env.BASE_URL}assets/items/medium-potion-pouch.png`, stackable: true,
+  },
 };
 
 export const getItemDefinition = (itemId: string) =>

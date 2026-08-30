@@ -1,6 +1,6 @@
 import { getItemDefinition } from "../game/inventory/itemDefinitions";
 import { getItemQuantity, type InventoryState } from "../game/inventory/inventoryState";
-import { SHOP_PRODUCTS } from "../game/inventory/shopResolver";
+import { getShopProductMaxQuantity, SHOP_PRODUCTS } from "../game/inventory/shopResolver";
 import { ItemIcon } from "./ItemIcon";
 
 export function ShopPopup({
@@ -17,11 +17,15 @@ export function ShopPopup({
           {SHOP_PRODUCTS.map((product) => {
             const item = getItemDefinition(product.itemId)!;
             const quantity = getItemQuantity(inventory, product.itemId);
-            const capped = quantity >= product.maxQuantity;
+            const maxQuantity = getShopProductMaxQuantity(inventory, product.itemId) ?? 0;
+            const capped = quantity >= maxQuantity;
+            const status = product.kind === "upgrade"
+              ? capped ? "최대 구매 완료" : `구매 완료 ${quantity}/${maxQuantity}`
+              : `보유 ${quantity} / 최대 ${maxQuantity}`;
             return (
               <article key={product.itemId}>
                 <span className="item-icon"><ItemIcon item={item} /></span>
-                <div><strong>{item.name}</strong><p>{item.description}</p><small>보유 {quantity} / 최대 {product.maxQuantity}</small></div>
+                <div><strong>{item.name}</strong><p>{item.description}</p><small>{status}</small></div>
                 <button type="button" disabled={capped || gold < product.price} onClick={() => onBuy(product.itemId)}>{product.price} G</button>
               </article>
             );

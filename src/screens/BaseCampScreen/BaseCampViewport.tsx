@@ -427,13 +427,6 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
     });
   }, [clampedCenter.x, clampedCenter.y, mode, renderedScale, viewport.height, viewport.width]);
 
-  const adjustZoom = useCallback((delta: number) => {
-    setPlayCamera((current) => ({
-      ...current,
-      zoom: clamp(current.zoom + delta, MIN_ZOOM, MAX_ZOOM),
-    }));
-  }, []);
-
   return (
     <div
       ref={viewportRef}
@@ -463,18 +456,6 @@ export const BaseCampViewport = forwardRef<BaseCampViewportController, BaseCampV
           />
         )}
       </div>
-      {mode === "play" && (
-        <div className="base-camp-zoom-controls" aria-label="개발용 확대 축소">
-          <span>개발용 ZOOM</span>
-          <button type="button" onClick={() => adjustZoom(-0.1)}>
-            −
-          </button>
-          <output>{playCamera.zoom.toFixed(1)}×</output>
-          <button type="button" onClick={() => adjustZoom(0.1)}>
-            +
-          </button>
-        </div>
-      )}
       {import.meta.env.DEV && mode === "play" && (
         <BaseCampFocusDevTool
           mode={mode}

@@ -36,7 +36,6 @@ import { TornClothCompletionStory } from "../../components/TornClothCompletionSt
 import { PrehistoryCompletionStory } from "../../components/PrehistoryCompletionStory";
 import memoryBeforeUrl from "../../assets/quest/memory-fragments-before.png";
 import memoryAfterUrl from "../../assets/quest/memory-fragments-complete.png";
-import { Phase21ArmorDebug } from "../../debug/Phase21ArmorDebug";
 import { getQuestRareRewardCondition } from "../../game/quest/questRareRewardConditions";
 import { AchievementPopup } from "../../components/AchievementPopup";
 import { ACHIEVEMENT_DEFINITIONS } from "../../data/achievementDefinitions";
@@ -366,13 +365,6 @@ export function BaseCampScreen({
     questAcceptProcessingRef.current = false;
   };
 
-  const openFloorList = () => {
-    const entrance = BASE_CAMP_MAP.interactionRegions.find(
-      (region) => region.id === "dungeonEntrance",
-    );
-    if (entrance) void focusDungeonEntranceAndOpen(entrance);
-  };
-
   const closeFloorList = () => {
     setFloorListOpen(false);
     setSelectedRegionId(null);
@@ -461,31 +453,6 @@ export function BaseCampScreen({
           </button>
         </div>
       )}
-
-      <nav className="base-camp-main-controls" aria-label="베이스캠프 이동">
-        <button
-          type="button"
-          disabled={interactionLocked}
-          onClick={openFloorList}
-        >
-          던전
-        </button>
-        <button
-          type="button"
-          disabled={interactionLocked}
-          onClick={() => onNavigate("title")}
-        >
-          타이틀
-        </button>
-      </nav>
-
-      <Phase21ArmorDebug
-        inventory={inventoryState}
-        onGrant={(nextInventory) => {
-          setInventoryState(nextInventory);
-          onAutoSave("itemAcquired");
-        }}
-      />
 
       {storySequenceId && NPC_STORY_SEQUENCES[storySequenceId] && (
         <div className={`base-camp-story-overlay ${storySequenceId === "npc-theo-floor-7-quest-available" ? "dungeon7-quest-story-overlay" : ""}`}>

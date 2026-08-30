@@ -2764,8 +2764,9 @@ button:focus-visible {
 
 .intro-text-advance {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: 100%;
   padding: 8vh 10vw;
@@ -2774,16 +2775,23 @@ button:focus-visible {
   background: transparent;
 }
 
+.intro-text-content {
+  display: block;
+  max-width: 80vw;
+  text-align: center;
+}
+
 .intro-text-line {
+  display: inline;
   font-size: clamp(1.25rem, 2.5vw, 2rem);
   line-height: 1.8;
   animation: intro-text-reveal 500ms ease-out both;
 }
 
 .intro-text-caret {
-  position: absolute;
-  right: max(2rem, env(safe-area-inset-right));
-  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  display: inline-block;
+  margin-left: 0.35em;
+  vertical-align: 0.05em;
   color: #e9bd45;
   font-size: 1.35rem;
   opacity: 0;

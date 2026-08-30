@@ -170,7 +170,11 @@ export function App() {
       case "baseCamp": return <BaseCampScreen
         onNavigate={navigate} playerState={game.playerState}
         onEnterDungeon={(floorId) => {
-          setGame((current) => ({ ...current, currentFloorId: floorId }));
+          setGame((current) => ({
+            ...current,
+            currentFloorId: floorId,
+            currentFloorRun: floorId === "floor-10" ? null : current.currentFloorRun,
+          }));
           navigate("dungeon");
         }}
         setPlayerState={(value) => setGame((current) => ({ ...current, playerState: typeof value === "function" ? value(current.playerState) : value }))}

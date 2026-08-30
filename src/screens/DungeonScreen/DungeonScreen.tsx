@@ -424,9 +424,11 @@ export function DungeonScreen({
 }: DungeonScreenProps) {
   const activeFloorNumber = getFloorNumber(floorId);
   const questStoryEnabled = floorQuestStatus !== "completed";
+  const shouldRestoreSavedFloorRun =
+    floorId !== "floor-10" && savedFloorRun?.floorId === floorId;
   const [dungeonRun] = useState(() => floorId === "floor-10"
     ? {
-        seed: savedFloorRun?.floorId === floorId ? savedFloorRun.seed : "floor-10-fixed",
+        seed: "floor-10-fixed",
         map: DUNGEON10_MAP,
         generationResult: {
           success: false as const,
@@ -437,7 +439,7 @@ export function DungeonScreen({
       }
     : createDungeonRun(
         floorId,
-        savedFloorRun?.floorId === floorId
+        shouldRestoreSavedFloorRun
           ? savedFloorRun.seed
           : undefined,
       ));
@@ -492,7 +494,7 @@ export function DungeonScreen({
   const roomProgressRef = useRef<Record<string, DungeonRoomProgress>>((() => {
     const restored = restoreRoomProgress(
       dungeonMap,
-      savedFloorRun?.floorId === floorId
+      shouldRestoreSavedFloorRun
         ? savedFloorRun.roomProgress
         : undefined,
     );
@@ -519,7 +521,7 @@ export function DungeonScreen({
   const [floor5RewardOpen, setFloor5RewardOpen] = useState(false);
   const [dungeonMode, setDungeonMode] = useState<DungeonMode>("exploration");
   const [currentRoomId, setCurrentRoomId] = useState(
-    savedFloorRun?.floorId === floorId &&
+    shouldRestoreSavedFloorRun &&
       dungeonMap.rooms.some((room) => room.id === savedFloorRun.currentRoomId)
       ? savedFloorRun.currentRoomId
       : dungeonMap.startRoomId,
@@ -916,7 +918,7 @@ export function DungeonScreen({
       bossPresentation,
     };
     if (
-      savedFloorRun?.floorId === floorId &&
+      shouldRestoreSavedFloorRun &&
       currentRoomId !== dungeonMap.startRoomId
     ) {
       window.setTimeout(() => {
