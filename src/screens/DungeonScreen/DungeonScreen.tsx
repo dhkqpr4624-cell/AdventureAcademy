@@ -123,6 +123,7 @@ import {
   DUNGEON10_WRONG_ANSWER_DAMAGE,
   runBossDamageBalanceChecks,
 } from "../../game/bossCombat/bossDamageBalance";
+import { createBossQuizAttemptSeed } from "../../game/bossCombat/BossQuizFlow";
 import { allocateDungeonRunQuestions } from "../../game/dungeon/dungeonRunQuestionAllocator";
 import { resolveDungeonGoldDrop } from "../../game/dungeon/dungeonGoldDropResolver";
 import { changeItemQuantity, getItemQuantity, type InventoryState } from "../../game/inventory/inventoryState";
@@ -443,6 +444,9 @@ export function DungeonScreen({
           ? savedFloorRun.seed
           : undefined,
       ));
+  const [bossQuizAttemptSeed, setBossQuizAttemptSeed] = useState(() =>
+    floorId === "floor-10" ? createBossQuizAttemptSeed() : dungeonRun.seed,
+  );
   const dungeonMap = floorId === "floor-10"
     ? dungeonRun.map
     : prepareFloorDungeonMap(dungeonRun.map, floorId, dungeonRun.seed);
@@ -2010,6 +2014,7 @@ export function DungeonScreen({
     if (floorId === "floor-10") {
       visualsRef.current?.bossPresentation.reset();
       setFloor10BossPhase("idle");
+      setBossQuizAttemptSeed(createBossQuizAttemptSeed());
     }
     movementProcessingRef.current = false;
     roomEventProcessingRef.current = false;
@@ -2496,7 +2501,7 @@ export function DungeonScreen({
 
       {floorId === "floor-10" && floor10BossPhase === "combat" && (
         <BossCombatScreen
-          seed={dungeonRun.seed}
+          seed={bossQuizAttemptSeed}
           playerState={playerState}
           onNavigate={onNavigate}
           onPlayerAttack={playDungeon10PlayerAttack}

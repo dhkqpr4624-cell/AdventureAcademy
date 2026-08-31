@@ -4,6 +4,13 @@ import { createSeededRandom } from "../dungeon/generation/seededRandom";
 
 export const BOSS_QUIZ_QUESTION_COUNT = 20;
 
+let bossQuizAttemptSerial = 0;
+
+export function createBossQuizAttemptSeed(): string {
+  bossQuizAttemptSerial += 1;
+  return `dungeon10-boss-attempt-${Date.now()}-${bossQuizAttemptSerial}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function createBossQuizQuestions(seed: string): readonly Question[] {
   const uniqueQuestions = [
     ...new Map(
